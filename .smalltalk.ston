@@ -1,0 +1,18 @@
+SmalltalkCISpec {
+  #loading : [
+    SCIMetacelloLoadSpec {
+      #baseline : 'IngSoft2',
+      #directory : 'repository',
+      #load : [ 'development' ],
+      #platforms : [  #pharo ]
+    }
+  ],
+  #testing : {
+    #coverage : {
+       #packages : [ 'IngSoft2-Model' ]
+    },
+    #include : {
+       #packages : [ 'IngSoft2-Tests' ]
+    }
+  }
+}
