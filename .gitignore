@@ -4,19 +4,8 @@
 # system image
 *.image
 
-# Pharo Smalltalk Debug log file
-PharoDebug.log
+# Dot env file 
+*.env
 
-# Squeak Smalltalk Debug log file
-SqueakDebug.log
-
-# Monticello package cache
-/package-cache
-
-# playground cache
-/play-cache
-/play-stash
-
-# Metacello-github cache
-/github-cache
-github-*.zip
+node_modules/
+package-lock.json
