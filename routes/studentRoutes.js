@@ -3,7 +3,7 @@ const {createStudent, getStudentById} = require('../controllers/studentControlle
 
 const router = express.Router();
 
-router.post('/', createStudent);
+router.post('/register', createStudent);
 router.get('/:id', getStudentById);
 
 module.exports = router;

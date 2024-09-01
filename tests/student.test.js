@@ -14,8 +14,10 @@ describe('Student model (SQLlite memory)', () => {
 
   it('Should create a student', async () => {
     const res = await request(app)
-      .post('/students')
+      .post('/students/register')
       .send({
+        name: 'Juan',
+        lastname: 'Perez',
         email: 'juan@asd.com',
         password: '123',
       });
@@ -32,4 +34,23 @@ describe('Student model (SQLlite memory)', () => {
     expect(res.body).toHaveProperty('id');
     expect(res.body.email).toBe('juan@asd.com');
   });
+
+  it('Should not find a student by invalid id', async () => {
+    const res = await request(app).get(`/students/${999}`);
+    expect(res.statusCode).toBe(404);
+    expect(res.body.message).toBe('Student not found');
+  });
+
+  it('Should not create a student with invalid email', async () => {
+    const res = await request(app)
+      .post('/students/register')
+      .send({
+        name: 'Juan',
+        lastname: 'Perez',
+        email: 'juan@asd',
+        password: '123',
+      });
+
+      expect(res.statusCode).toBe(400);
+  });  
 }); 
