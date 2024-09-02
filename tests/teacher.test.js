@@ -1,65 +1,67 @@
 const request = require('supertest');
 const app = require('../app');
 const sequelize = require('../config/database');
-const Student = require('../models/studentModel');
+const Teacher = require('../models/teacherModel');
 
-describe('Student API', () => {
+describe('Teacher API', () => {
   beforeAll(async () => {
     await sequelize.sync({ force: true });
   }, 10000);
-  
+
   afterAll(async () => {
     await sequelize.close();
   });
 
-  it('Should create a new student', async () => {
+  it('Should create a new teacher', async () => {
     const response = await request(app)
-      .post('/students/register')
+      .post('/teachers/register')
       .send({
-        name: 'Balti',
+        name: 'Dr. Turanza',
         lastname: 'Turanza',
-        email: 'balti@asd.com',
+        subjects: ['Mathematics'],
+        email: 'turanza@asd.com',
         password: 'password',
       });
-
+  
     expect(response.status).toBe(201);
-    expect(response.body.email).toBe('balti@asd.com');
-});
+    expect(response.body.email).toBe('turanza@asd.com');
+  });
 
-  it('Should get a student by id', async () => {
-    const createdStudent = await Student.create({
-      name: 'Fran',
+  it('Should get a teacher by id', async () => {
+    const createdTeacher = await Teacher.create({
+      name: 'Prof. Peñoñori',
       lastname: 'Peñoñori',
+      subjects: JSON.stringify(['Physics']),
       email: 'peñoñori@asd.com',
       password: 'password',
     });
   
     const response = await request(app)
-      .get(`/students/${createdStudent.id}`);
+      .get(`/teachers/${createdTeacher.id}`);
   
     expect(response.status).toBe(200);
     expect(response.body.email).toBe('peñoñori@asd.com');
   });
 
-  it('Should not get a student by invalid id', async () => {
+  it('Should not get a teacher by invalid id', async () => {
     const response = await request(app)
-      .get('/students/999');
-  
+      .get('/teachers/999');
+
     expect(response.status).toBe(404);
-    expect(response.body.message).toBe('Student not found');
+    expect(response.body.message).toBe('Teacher not found');
   });
 
-  it('Should not create a student with invalid email', async () => {
+  it('Should not create a teacher with invalid email', async () => {
     const response = await request(app)
-      .post('/students/register')
+      .post('/teachers/register')
       .send({
         name: 'Invalid',
-        lastname: 'Email',
+        lastname: 'Invalid',
+        subjects: [],
         email: 'invalidemail',
         password: 'password',
       });
   
     expect(response.status).toBe(400);
-
   });
 });

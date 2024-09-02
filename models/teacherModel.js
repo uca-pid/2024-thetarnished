@@ -1,7 +1,7 @@
 const  DataTypes  = require('sequelize');
 const sequelize = require('../config/database');
 
-const Student = sequelize.define('Student', {
+const Teacher = sequelize.define('Teacher', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -27,9 +27,13 @@ const Student = sequelize.define('Student', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  subjects: {
+    type: DataTypes.TEXT,
+    allowNull: false
+  }
 }, {
-  tableName: 'students',
+  tableName: 'teachers',
   timestamps: true,
 });
 
-module.exports = Student;
+module.exports = Teacher;
