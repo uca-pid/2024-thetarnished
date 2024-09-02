@@ -29,7 +29,44 @@ const getTeacherById = async (req, res) => {
   }
 };
 
+const updateTeacher = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, lastname, subjects } = req.body;
+    const subjectsString = JSON.stringify(subjects);
+    const teacher = await Teacher.findByPk(id);
+    if (!teacher) {
+      return res.status(404).json({ message: 'Teacher not found' });
+    }
+    teacher.name = name;
+    teacher.lastname = lastname;
+    teacher.subjects = subjectsString;
+    await teacher.save();
+    return res.status(200).json(teacher);
+  } catch (error) {
+    /* istanbul ignore next */
+    return res.status(400).json({ message: `Error updating teacher: ${error.message}` });
+  }
+};
+
+const deleteTeacher = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const teacher = await Teacher.findByPk(id);
+    if (!teacher) {
+      return res.status(404).json({ message: 'Teacher not found' });
+    }
+    await teacher.destroy();
+    return res.status(200).json({ message: 'Teacher deleted successfully' });
+  } catch (error) {
+    /* istanbul ignore next */
+    return res.status(400).json({ message: `Error deleting teacher: ${error.message}` });
+  }
+};
+
 module.exports = {
   createTeacher,
   getTeacherById,
+  updateTeacher,
+  deleteTeacher
 };

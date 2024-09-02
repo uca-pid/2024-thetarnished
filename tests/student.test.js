@@ -60,6 +60,59 @@ describe('Student API', () => {
       });
   
     expect(response.status).toBe(400);
+  });
 
+  it("Should update student's name", async () => {
+    const createdStudent = await Student.create({
+      name: 'Fran',
+      lastname: 'Peñoñori',
+      email: 'pen@asd.com',
+      password: 'password',
+    });
+
+    const updatedStudentData = {
+      name: 'Jorge',
+      lastname: 'Peñoñori',
+    };
+
+    const response = await request(app)
+      .put(`/students/update/${createdStudent.id}`)
+      .send(updatedStudentData);
+
+    expect(response.status).toBe(200);
+    expect(response.body.name).toBe('Jorge');
+  });
+
+  it("Should delete a student", async () => {
+    const student = await Student.create({
+      name: 'Fran',
+      lastname: 'Peñoñori',
+      email: 'dasdasdas@asdasd.com',
+      password: 'password',
+    });
+
+    const response = await request(app)
+    .delete(`/students/delete/${student.id}`);
+
+    expect(response.status).toBe(200);
+
+    const studentFound = await Student.findByPk(student.id);
+    expect(studentFound).toBeNull();
+  });
+
+  it("Should not be possible to update a student with invalid id", async () => {
+    const response = await request(app)
+      .put('/students/update/999')
+      .send({
+        name: 'Invalid',
+        lastname: 'Invalid',
+      });
+      expect(response.status).toBe(404);
+  });
+
+  it("Should not be possible to delete a student with invalid id", async () => {
+    const response = await request(app)
+      .delete('/students/delete/999');
+      expect(response.status).toBe(404);
   });
 });
