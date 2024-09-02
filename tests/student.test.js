@@ -1,56 +1,65 @@
-const sequelize = require('../config/databaseTest');
-const request = require('supertest')
+const request = require('supertest');
 const app = require('../app');
-//const Student = require('../models/studentModel');
+const sequelize = require('../config/database');
+const Student = require('../models/studentModel');
 
-describe('Student model (SQLlite memory)', () => {
+describe('Student API', () => {
   beforeAll(async () => {
-    await sequelize.sync();
-  });
-
+    await sequelize.sync({ force: true });
+  }, 10000);
+  
   afterAll(async () => {
     await sequelize.close();
   });
 
-  it('Should create a student', async () => {
-    const res = await request(app)
+  it('Should create a new student', async () => {
+    const response = await request(app)
       .post('/students/register')
       .send({
-        name: 'Juan',
-        lastname: 'Perez',
-        email: 'juan@asd.com',
-        password: '123',
+        name: 'Balti',
+        lastname: 'Turanza',
+        email: 'balti@asd.com',
+        password: 'password',
       });
 
-      expect(res.statusCode).toBe(201);
-      expect(res.body).toHaveProperty('id');
-      expect(res.body.email).toBe('juan@asd.com');
+    expect(response.status).toBe(201);
+    expect(response.body.email).toBe('balti@asd.com');
+});
+
+  it('Should get a student by id', async () => {
+    const createdStudent = await Student.create({
+      name: 'Fran',
+      lastname: 'Peñoñori',
+      email: 'peñoñori@asd.com',
+      password: 'password',
+    });
+  
+    const response = await request(app)
+      .get(`/students/${createdStudent.id}`);
+  
+    expect(response.status).toBe(200);
+    expect(response.body.email).toBe('peñoñori@asd.com');
   });
 
-  it('Should find a student by id', async () => {
-    const res = await request(app).get(`/students/${1}`);
-
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty('id');
-    expect(res.body.email).toBe('juan@asd.com');
-  });
-
-  it('Should not find a student by invalid id', async () => {
-    const res = await request(app).get(`/students/${999}`);
-    expect(res.statusCode).toBe(404);
-    expect(res.body.message).toBe('Student not found');
+  it('Should not get a student by invalid id', async () => {
+    const response = await request(app)
+      .get('/students/999');
+  
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe('Student not found');
   });
 
   it('Should not create a student with invalid email', async () => {
-    const res = await request(app)
+    const response = await request(app)
       .post('/students/register')
       .send({
-        name: 'Juan',
-        lastname: 'Perez',
-        email: 'juan@asd',
-        password: '123',
+        name: 'Invalid',
+        lastname: 'Email',
+        email: 'invalidemail',
+        password: 'password',
       });
+  
+    expect(response.status).toBe(400);
 
-      expect(res.statusCode).toBe(400);
-  });  
-}); 
+  });
+});

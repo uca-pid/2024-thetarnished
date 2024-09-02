@@ -1,12 +1,12 @@
-const sequelize = require('../config/databaseTest');
-const request = require('supertest')
+const request = require('supertest');
 const app = require('../app');
+const sequelize = require('../config/database');
+const Teacher = require('../models/teacherModel');
 
-
-describe('Teacher model (SQL memory)', () => {
+describe('Teacher API', () => {
   beforeAll(async () => {
     await sequelize.sync({ force: true });
-  });
+  }, 10000);
 
   afterAll(async () => {
     await sequelize.close();
@@ -16,26 +16,34 @@ describe('Teacher model (SQL memory)', () => {
     const response = await request(app)
       .post('/teachers/register')
       .send({
-        name: 'Juan',
-        lastname: 'Perez',
-        email: 'juan@asd.com',
-        password: '123',
-        subjects: ['Math', 'Science']
+        name: 'Dr. Turanza',
+        lastname: 'Turanza',
+        subjects: ['Mathematics'],
+        email: 'turanza@asd.com',
+        password: 'password',
       });
-
+  
     expect(response.status).toBe(201);
-    expect(response.body.email).toBe('juan@asd.com');
+    expect(response.body.email).toBe('turanza@asd.com');
   });
 
   it('Should get a teacher by id', async () => {
+    const createdTeacher = await Teacher.create({
+      name: 'Prof. Peñoñori',
+      lastname: 'Peñoñori',
+      subjects: JSON.stringify(['Physics']),
+      email: 'peñoñori@asd.com',
+      password: 'password',
+    });
+  
     const response = await request(app)
-      .get('/teachers/1');
-    
+      .get(`/teachers/${createdTeacher.id}`);
+  
     expect(response.status).toBe(200);
-    expect(response.body.email).toBe('juan@asd.com');
+    expect(response.body.email).toBe('peñoñori@asd.com');
   });
 
-  it('Should not get a teacher by id', async () => {
+  it('Should not get a teacher by invalid id', async () => {
     const response = await request(app)
       .get('/teachers/999');
 
@@ -47,11 +55,13 @@ describe('Teacher model (SQL memory)', () => {
     const response = await request(app)
       .post('/teachers/register')
       .send({
-        name: 'Juan',
-        lastname: 'Perez',
-        email: 'juan@asd',
-        password: '123',
-        subjects: ['Math', 'Science']
+        name: 'Invalid',
+        lastname: 'Invalid',
+        subjects: [],
+        email: 'invalidemail',
+        password: 'password',
       });
+  
+    expect(response.status).toBe(400);
   });
 });
