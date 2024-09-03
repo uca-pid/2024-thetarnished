@@ -1,41 +1,35 @@
 const request = require('supertest');
 const app = require('../app');
-const sequelize = require('../config/database');
 const Student = require('../models/studentModel');
 
 describe('Student API', () => {
-  beforeAll(async () => {
-    await sequelize.sync({ force: true });
-  }, 10000);
   
-  afterAll(async () => {
-    await sequelize.close();
-  });
-
   it('Should create a new student', async () => {
-    const response = await request(app)
-      .post('/students/register')
-      .send({
-        name: 'Balti',
-        lastname: 'Turanza',
-        email: 'balti@asd.com',
-        password: 'password',
-      });
+  const student = await request(app)
+    .post('/students/register')
+    .send({
+      firstname: 'Balti',
+      lastname: 'Turanza',
+      email: 'balti@asd.com',
+      password: 'password',
+    });
 
-    expect(response.status).toBe(201);
-    expect(response.body.email).toBe('balti@asd.com');
+
+  expect(student.status).toBe(201);
+  expect(student.body.email).toBe('balti@asd.com');
+
 });
 
   it('Should get a student by id', async () => {
     const createdStudent = await Student.create({
-      name: 'Fran',
+      firstname: 'Fran',
       lastname: 'Peñoñori',
       email: 'peñoñori@asd.com',
       password: 'password',
     });
   
     const response = await request(app)
-      .get(`/students/${createdStudent.id}`);
+      .get(`/students/${createdStudent.studentid}`);
   
     expect(response.status).toBe(200);
     expect(response.body.email).toBe('peñoñori@asd.com');
@@ -53,7 +47,7 @@ describe('Student API', () => {
     const response = await request(app)
       .post('/students/register')
       .send({
-        name: 'Invalid',
+        firstname: 'Invalid',
         lastname: 'Email',
         email: 'invalidemail',
         password: 'password',
@@ -64,39 +58,40 @@ describe('Student API', () => {
 
   it("Should update student's name", async () => {
     const createdStudent = await Student.create({
-      name: 'Fran',
+      firstname: 'Fran',
       lastname: 'Peñoñori',
       email: 'pen@asd.com',
       password: 'password',
     });
 
     const updatedStudentData = {
-      name: 'Jorge',
+      firstname: 'Jorge',
       lastname: 'Peñoñori',
     };
 
     const response = await request(app)
-      .put(`/students/update/${createdStudent.id}`)
+      .put(`/students/update/${createdStudent.studentid}`)
       .send(updatedStudentData);
 
     expect(response.status).toBe(200);
-    expect(response.body.name).toBe('Jorge');
+    expect(response.body.firstname).toBe('Jorge');
   });
 
   it("Should delete a student", async () => {
     const student = await Student.create({
-      name: 'Fran',
+      firstname: 'Fran',
       lastname: 'Peñoñori',
       email: 'dasdasdas@asdasd.com',
       password: 'password',
     });
-
+    
     const response = await request(app)
-    .delete(`/students/delete/${student.id}`);
+    
+    .delete(`/students/delete/${student.studentid}`);
 
     expect(response.status).toBe(200);
-
-    const studentFound = await Student.findByPk(student.id);
+    
+    const studentFound = await Student.findByPk(student.studentid);
     expect(studentFound).toBeNull();
   });
 
@@ -104,7 +99,7 @@ describe('Student API', () => {
     const response = await request(app)
       .put('/students/update/999')
       .send({
-        name: 'Invalid',
+        firstname: 'Invalid',
         lastname: 'Invalid',
       });
       expect(response.status).toBe(404);

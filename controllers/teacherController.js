@@ -2,10 +2,9 @@ const Teacher = require('../models/teacherModel');
 
 const createTeacher = async (req, res) => {
   try {
-    const { name, lastname, email, password, subjects } = req.body;
-    const role = 'teacher';
-    const subjectsString = JSON.stringify(subjects);
-    const teacher = await Teacher.create({ name, lastname, email, password, subjects: subjectsString, role });
+    const { firstname, lastname, email, password } = req.body;
+
+    const teacher = await Teacher.create({ firstname, lastname, email, password});
 
     return res.status(201).json(teacher);
   } catch (error) {
@@ -21,7 +20,6 @@ const getTeacherById = async (req, res) => {
     if (!teacher) {
       return res.status(404).json({ message: 'Teacher not found' });
     }
-    teacher.subjects = JSON.parse(teacher.subjects);
     return res.status(200).json(teacher);
   } catch (error) {
     /* istanbul ignore next */
@@ -32,15 +30,13 @@ const getTeacherById = async (req, res) => {
 const updateTeacher = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, lastname, subjects } = req.body;
-    const subjectsString = JSON.stringify(subjects);
+    const { firstname, lastname  } = req.body;
     const teacher = await Teacher.findByPk(id);
     if (!teacher) {
       return res.status(404).json({ message: 'Teacher not found' });
     }
-    teacher.name = name;
+    teacher.firstname = firstname;
     teacher.lastname = lastname;
-    teacher.subjects = subjectsString;
     await teacher.save();
     return res.status(200).json(teacher);
   } catch (error) {

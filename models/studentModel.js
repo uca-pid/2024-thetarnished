@@ -2,12 +2,12 @@ const  DataTypes  = require('sequelize');
 const sequelize = require('../config/database');
 
 const Student = sequelize.define('Student', {
-  id: {
+  studentid: {
     type: DataTypes.INTEGER,
     primaryKey: true,
-    autoIncrement: true,
+    autoIncrement: true
   },
-  name: {
+  firstname: {
     type: DataTypes.STRING,
     allowNull: false,
   },
@@ -26,10 +26,10 @@ const Student = sequelize.define('Student', {
   password: {
     type: DataTypes.STRING,
     allowNull: false,
-  },
+  }
 }, {
-  tableName: 'students',
-  timestamps: true,
+  tableName: 'students', // Explicitly set the table name
+  timestamps: false // Disables createdAt and updatedAt
 });
 
 module.exports = Student;

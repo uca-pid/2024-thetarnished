@@ -1,24 +1,16 @@
 const request = require('supertest');
 const app = require('../app');
-const sequelize = require('../config/database');
 const Teacher = require('../models/teacherModel');
 
 describe('Teacher API', () => {
-  beforeAll(async () => {
-    await sequelize.sync({ force: true });
-  }, 10000);
-
-  afterAll(async () => {
-    await sequelize.close();
-  });
+   
 
   it('Should create a new teacher', async () => {
     const response = await request(app)
       .post('/teachers/register')
       .send({
-        name: 'Dr. Turanza',
+        firstname: 'Dr. Turanza',
         lastname: 'Turanza',
-        subjects: ['Mathematics'],
         email: 'turanza@asd.com',
         password: 'password',
       });
@@ -30,15 +22,14 @@ describe('Teacher API', () => {
 
   it('Should get a teacher by id', async () => {
     const createdTeacher = await Teacher.create({
-      name: 'Prof. Peñoñori',
+      firstname: 'Prof. Peñoñori',
       lastname: 'Peñoñori',
-      subjects: JSON.stringify(['Physics']),
       email: 'peñoñori@asd.com',
       password: 'password',
     });
   
     const response = await request(app)
-      .get(`/teachers/${createdTeacher.id}`);
+      .get(`/teachers/${createdTeacher.teacherid}`);
   
     expect(response.status).toBe(200);
     expect(response.body.email).toBe('peñoñori@asd.com');
@@ -68,37 +59,34 @@ describe('Teacher API', () => {
 
   it("Should update teacher's name", async () => {
     const teacher = await Teacher.create({
-      name: 'John',
+      firstname: 'John',
       lastname: 'Doe',
       email: 'john.doe@example.com',
       password: 'password',
-      subjects: JSON.stringify(['Math', 'Physics']),
     });
 
     const updatedTeacherData = {
-      name: 'Elmasca',
+      firstname: 'juancito',
       lastname: teacher.lastname,
-      subjects: JSON.parse(teacher.subjects),
     };
 
     const response = await request(app)
-      .put(`/teachers/update/${teacher.id}`)
+      .put(`/teachers/update/${teacher.teacherid}`)
       .send(updatedTeacherData);
 
     expect(response.status).toBe(200);
-    expect(response.body.name).toBe('Elmasca');
+    expect(response.body.firstname).toBe('juancito');
   });
 
   it("Should delete a teacher", async () => {
     const teacher = await Teacher.create({
-      name: 'John',
+      firstname: 'John',
       lastname: 'Doe',
       email: 'juan@asd.com',
       password: '123',
-      subjects: JSON.stringify(['Math', 'Physics']),
     });
     const response = await request(app)
-    .delete(`/teachers/delete/${teacher.id}`)
+    .delete(`/teachers/delete/${teacher.teacherid}`)
 
     expect(response.status).toBe(200);
 
