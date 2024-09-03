@@ -1,18 +1,21 @@
 const request = require('supertest');
 const app = require('../app');
 const Teacher = require('../models/teacherModel');
+const sequelize = require('../config/database');
 
-describe('Teacher API', () => {
-   
+describe('Teacher API', () => { 
+
+  
 
   it('Should create a new teacher', async () => {
     const response = await request(app)
       .post('/teachers/register')
       .send({
-        firstname: 'Dr. Turanza',
+        firstname: 'Dr. Turanzita',
         lastname: 'Turanza',
         email: 'turanza@asd.com',
         password: 'password',
+        subjects: [1,2,3],
       });
   
     expect(response.status).toBe(201);
@@ -111,10 +114,6 @@ describe('Teacher API', () => {
     expect(response.status).toBe(404);
   });
 
-
-// FROM NOW ON, THIS ARE THE TESTS FOR THE ASSIGN SUBJECT TO TEACHER
-
-
   it("Should assign a subject to a teacher", async () => {
    
     const teacher = await Teacher.create({
@@ -123,7 +122,6 @@ describe('Teacher API', () => {
       email: 'smith@asd.com',
       password: 'password',
     });
-  
     
     const response = await request(app)
       .post(`/teachers/assign-subject/${teacher.teacherid}`)

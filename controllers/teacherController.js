@@ -5,12 +5,14 @@ const Subject = require('../models/subjectModel');
 
 const createTeacher = async (req, res) => {
   try {
-    const { firstname, lastname, email, password } = req.body;
-
-    const teacher = await Teacher.create({ firstname, lastname, email, password});
+    const { firstname, lastname, email, password, subjects } = req.body;
+    const teacher = await Teacher.create({ firstname, lastname, email, password });
+    for(let subject of subjects) {
+      await SubjectTeacher.create({ teacherid: teacher.teacherid, subjectid: subject });
+    }
     return res.status(201).json(teacher);
   } catch (error) {
-    return res.status(400).json({ message: `Error creating teacher: ${error.message}` });
+    return res.status(400).json({ message: `Error creating teacher: ${error.message}`});
   }
 };
 
@@ -62,17 +64,10 @@ const deleteTeacher = async (req, res) => {
   }
 };
 
-
-// THIS IS ASSIGN SUBJECT TO TEACHER
-
-
 const assignSubjectToTeacher = async (req, res) => {
   try {
     const { teacherid } = req.params; 
     const { subjectid } = req.body; 
-
-    console.log(`Assigning subject ${subjectid} to teacher ${teacherid}`);
-
     
     const teacher = await Teacher.findByPk(teacherid);
     if (!teacher) {
