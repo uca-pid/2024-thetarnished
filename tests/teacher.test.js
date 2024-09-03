@@ -110,4 +110,63 @@ describe('Teacher API', () => {
     .delete('/teachers/delete/999');
     expect(response.status).toBe(404);
   });
+
+
+// FROM NOW ON, THIS ARE THE TESTS FOR THE ASSIGN SUBJECT TO TEACHER
+
+
+  it("Should assign a subject to a teacher", async () => {
+   
+    const teacher = await Teacher.create({
+      firstname: 'Prof. Smith',
+      lastname: 'Smith',
+      email: 'smith@asd.com',
+      password: 'password',
+    });
+  
+    
+    const response = await request(app)
+      .post(`/teachers/assign-subject/${teacher.teacherid}`)
+      .send({
+        subjectid: 1, 
+      });
+  
+    expect(response.status).toBe(201);
+    expect(response.body.message).toBe('Subject assigned to teacher successfully');
+  });
+
+
+  it('Should return 404 if the teacher is not found', async () => {
+    const nonExistentTeacherId = 9999; 
+  
+    const response = await request(app)
+      .post(`/teachers/assign-subject/${nonExistentTeacherId}`)
+      .send({
+        subjectid: 1, 
+      });
+  
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe('Teacher not found');
+  });
+  
+  it('Should return 404 if the subject is not found', async () => {
+    
+    const teacher = await Teacher.create({
+      firstname: 'Prf. Smith',
+      lastname: 'Smith',
+      email: 'smithereens@asd.com',
+      password: 'password',
+    });
+  
+    const nonExistentSubjectId = 9999; 
+  
+    const response = await request(app)
+      .post(`/teachers/assign-subject/${teacher.teacherid}`)
+      .send({
+        subjectid: nonExistentSubjectId, 
+      });
+  
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe('Subject not found');
+  });
 });

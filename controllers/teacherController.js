@@ -1,11 +1,13 @@
 const Teacher = require('../models/teacherModel');
+const SubjectTeacher = require('../models/subjectTeacherModel');
+const Subject = require('../models/subjectModel');
+
 
 const createTeacher = async (req, res) => {
   try {
     const { firstname, lastname, email, password } = req.body;
 
     const teacher = await Teacher.create({ firstname, lastname, email, password});
-
     return res.status(201).json(teacher);
   } catch (error) {
     return res.status(400).json({ message: `Error creating teacher: ${error.message}` });
@@ -60,9 +62,47 @@ const deleteTeacher = async (req, res) => {
   }
 };
 
+
+// THIS IS ASSIGN SUBJECT TO TEACHER
+
+
+const assignSubjectToTeacher = async (req, res) => {
+  try {
+    const { teacherid } = req.params; 
+    const { subjectid } = req.body; 
+
+    console.log(`Assigning subject ${subjectid} to teacher ${teacherid}`);
+
+    
+    const teacher = await Teacher.findByPk(teacherid);
+    if (!teacher) {
+      return res.status(404).json({ message: 'Teacher not found' });
+    }
+
+    
+    const subject = await Subject.findByPk(subjectid);
+    if (!subject) {
+      return res.status(404).json({ message: 'Subject not found' });
+    }
+
+    await SubjectTeacher.create({ teacherid, subjectid });
+
+    return res.status(201).json({ message: 'Subject assigned to teacher successfully' });
+  } catch (error) {
+    /* istanbul ignore next */
+    console.error('Error assigning subject to teacher:', error);
+    /* istanbul ignore next */
+    return res.status(400).json({ message: `Error assigning subject to teacher: ${error.message}` });
+  }
+};
+
+
+
+
 module.exports = {
   createTeacher,
   getTeacherById,
   updateTeacher,
-  deleteTeacher
+  deleteTeacher,
+  assignSubjectToTeacher,
 };
