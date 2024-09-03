@@ -1,5 +1,9 @@
 const express = require('express');
 const {createStudent, getStudentById, updateStudent, deleteStudent} = require('../controllers/studentController');
+const app = express();
+app.use(express.json()); // This parses incoming JSON requests
+
+
 
 const router = express.Router();
 

@@ -8,5 +8,4 @@ router.get('/:id', getTeacherById);
 router.put('/update/:id', updateTeacher);
 router.delete('/delete/:id', deleteTeacher);
 
-
 module.exports = router;
