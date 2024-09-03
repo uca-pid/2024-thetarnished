@@ -9,7 +9,7 @@ const SubjectTeacher = sequelize.define('SubjectTeacher', {
       model: 'teachers',
       key: 'teacherid'
     },
-    primaryKey: true // Mark teacherid as part of the composite primary key
+    primaryKey: true
   },
   subjectid: {
     type: DataTypes.INTEGER,
@@ -18,12 +18,12 @@ const SubjectTeacher = sequelize.define('SubjectTeacher', {
       model: 'subjects',
       key: 'subjectid'
     },
-    primaryKey: true // Mark subjectid as part of the composite primary key
+    primaryKey: true 
   }
 }, {
   tableName: 'subjectteacher',
   timestamps: false,
-  // Disable the default 'id' field creation
+
   id: false,
 });
 

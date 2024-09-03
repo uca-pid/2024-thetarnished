@@ -28,8 +28,8 @@ const Student = sequelize.define('Student', {
     allowNull: false,
   }
 }, {
-  tableName: 'students', // Explicitly set the table name
-  timestamps: false // Disables createdAt and updatedAt
+  tableName: 'students', 
+  timestamps: false 
 });
 
 module.exports = Student;
