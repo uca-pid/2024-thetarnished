@@ -171,4 +171,22 @@ describe('Teacher API', () => {
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Subject not found');
   });
+
+  it("Should remove a subject from a teacher", async () => {
+    const teacher = await Teacher.create({
+      firstname: 'Prof. Smith',
+      lastname: 'Smith',
+      email: 'smitheeee@asd.com',
+      password: 'password',
+      subjects: [1,2,3],
+    });
+    const response = await request(app)
+    .delete(`/teachers/remove-subject/${teacher.teacherid}`)
+    .send({
+      subjectid: 1,
+    });
+    expect(response.status).toBe(200);
+    expect(response.body.message).toBe('Subject removed from teacher successfully');
+  });
+  
 });

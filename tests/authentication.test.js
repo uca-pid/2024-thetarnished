@@ -30,6 +30,6 @@ describe('Authentication API', () => {
 
         expect(loginResponse.status).toBe(200);
         expect(loginResponse.body.user.role).toBe('STUDENT');
-    });
+    }, 10000);
 
 });

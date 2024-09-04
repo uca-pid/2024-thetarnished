@@ -97,7 +97,24 @@ const assignSubjectToTeacher = async (req, res) => {
   }
 };
 
-
+const removeSubjectFromTeacher = async (req, res) => {
+  try {
+    const { teacherid } = req.params;
+    const { subjectid } = req.body;
+    const teacher = await Teacher.findByPk(teacherid);
+    if (!teacher) {
+      return res.status(404).json({ message: 'Teacher not found' });
+    }
+    const subject = await Subject.findByPk(subjectid);
+    if (!subject) {
+      return res.status(404).json({ message: 'Subject not found' });
+    }
+    await SubjectTeacher.destroy({ where: { teacherid, subjectid } });
+    return res.status(200).json({ message: 'Subject removed from teacher successfully' });
+  } catch(error){
+     return res.status(400).json({ message: `Error deleting subject from teacher: ${error.message}` });
+  }
+};
 
 
 module.exports = {
@@ -106,4 +123,5 @@ module.exports = {
   updateTeacher,
   deleteTeacher,
   assignSubjectToTeacher,
+  removeSubjectFromTeacher
 };
