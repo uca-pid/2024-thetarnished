@@ -1,13 +1,16 @@
 const request = require('supertest');
 const app = require('../app');
 const Teacher = require('../models/teacherModel');
+const SubjectTeacher = require('../models/subjectTeacherModel');
 const sequelize = require('../config/database');
 
 describe('Teacher API', () => { 
 
-  
+  afterAll(async () => {
+    await sequelize.query('TRUNCATE TABLE teachers CASCADE');
+  });
 
-  it('Should create a new teacher', async () => {
+  it('Should create a new teacher with 3 subjects assigned', async () => {
     const response = await request(app)
       .post('/teachers/register')
       .send({
@@ -20,7 +23,8 @@ describe('Teacher API', () => {
   
     expect(response.status).toBe(201);
     expect(response.body.email).toBe('turanza@asd.com');
-  
+    const quantity = await SubjectTeacher.count();
+    expect(quantity).toBe(3);  
   });
 
   it('Should get a teacher by id', async () => {

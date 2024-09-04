@@ -1,16 +1,22 @@
 const Teacher = require('../models/teacherModel');
 const SubjectTeacher = require('../models/subjectTeacherModel');
 const Subject = require('../models/subjectModel');
+const bcrypt = require('bcrypt');
 
 
 const createTeacher = async (req, res) => {
   try {
     const { firstname, lastname, email, password, subjects } = req.body;
-    const teacher = await Teacher.create({ firstname, lastname, email, password });
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const teacher = await Teacher.create({ firstname, lastname, email, password: hashedPassword });
+
     for(let subject of subjects) {
       await SubjectTeacher.create({ teacherid: teacher.teacherid, subjectid: subject });
     }
+
     return res.status(201).json(teacher);
+
   } catch (error) {
     return res.status(400).json({ message: `Error creating teacher: ${error.message}`});
   }

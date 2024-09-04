@@ -32,7 +32,7 @@ describe('Student API', () => {
       email: 'peñoñori@asd.com',
       password: 'password',
     });
-  
+
     const response = await request(app)
       .get(`/students/${createdStudent.studentid}`);
   
