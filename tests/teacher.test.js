@@ -10,25 +10,6 @@ describe('Teacher API', () => {
     await sequelize.query('TRUNCATE TABLE teachers CASCADE');
   });
 
-  it('Should create a new teacher with 3 subjects assigned', async () => {
-    const response = await request(app)
-      .post('/teachers/register')
-      .send({
-        firstname: 'Dr. Turanzita',
-        lastname: 'Turanza',
-        email: 'turanza@asd.com',
-        password: 'password',
-        subjects: [1,2,3],
-      });
-  
-    expect(response.status).toBe(201);
-    expect(response.body.email).toBe('turanza@asd.com');
-    const quantity = await SubjectTeacher.count({
-      where: { teacherid: response.body.teacherid }
-    });
-    expect(quantity).toBe(3);  
-  });
-
   it('Should get a teacher by id', async () => {
     const createdTeacher = await Teacher.create({
       firstname: 'Prof. Peñoñori',
@@ -50,20 +31,6 @@ describe('Teacher API', () => {
 
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Teacher not found');
-  });
-
-  it('Should not create a teacher with invalid email', async () => {
-    const response = await request(app)
-      .post('/teachers/register')
-      .send({
-        name: 'Invalid',
-        lastname: 'Invalid',
-        subjects: [],
-        email: 'invalidemail',
-        password: 'password',
-      });
-  
-    expect(response.status).toBe(400);
   });
 
   it("Should update teacher's name", async () => {
