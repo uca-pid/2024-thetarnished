@@ -19,11 +19,30 @@ oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN})
 
 const createUser = async (req, res) => {
     try{
-        const {firstname, lastname, email, password, subjects, role} = req.body;
+        const {firstname, lastname, email, password, subjects = [], role} = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
         if(!validator.isEmail(email)){
             return res.status(400).json({message: 'Invalid email'});
         }
+        const query = `
+            SELECT * FROM (
+            SELECT studentid, firstname, lastname, email, 'STUDENT' as role FROM students
+            UNION ALL
+            SELECT teacherid, firstname, lastname, email, 'TEACHER' as role FROM teachers
+            ) as users
+            WHERE email = ? LIMIT 1;
+        `;
+          
+          const [user] = await sequelize.query(query, {
+              replacements: [email],
+              type: QueryTypes.SELECT
+          });
+        if(user){
+            return res.status(404).json({message: 'User already exists'})
+        }
+
+        const bigIntSubjects = subjects.map(id => BigInt(id));
+
         if(role === 'STUDENT'){
             const user = await Student.create({
                 firstname,
@@ -40,7 +59,7 @@ const createUser = async (req, res) => {
                 email,
                 password: hashedPassword,
             });
-            for(let subject of subjects) {
+            for(let subject of bigIntSubjects) {
                 await SubjectTeacher.create({ teacherid: user.teacherid, subjectid: subject });
             }
             return res.status(201).json({message: 'User created successfully', user});

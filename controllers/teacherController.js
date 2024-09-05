@@ -54,19 +54,20 @@ const assignSubjectToTeacher = async (req, res) => {
   try {
     const { teacherid } = req.params; 
     const { subjectid } = req.body; 
+
+    const bigIntSubjectId = BigInt(subjectid);
     
     const teacher = await Teacher.findByPk(teacherid);
     if (!teacher) {
       return res.status(404).json({ message: 'Teacher not found' });
     }
-
     
-    const subject = await Subject.findByPk(subjectid);
+    const subject = await Subject.findByPk(bigIntSubjectId);
     if (!subject) {
       return res.status(404).json({ message: 'Subject not found' });
     }
-
-    await SubjectTeacher.create({ teacherid, subjectid });
+    
+    await SubjectTeacher.create({ teacherid: teacherid, subjectid: bigIntSubjectId });
 
     return res.status(201).json({ message: 'Subject assigned to teacher successfully' });
   } catch (error) {

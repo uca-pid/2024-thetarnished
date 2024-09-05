@@ -99,7 +99,7 @@ describe('Teacher API', () => {
     const response = await request(app)
       .post(`/teachers/assign-subject/${teacher.teacherid}`)
       .send({
-        subjectid: 1, 
+        subjectid: "1000899336829206529", 
       });
   
     expect(response.status).toBe(201);
@@ -147,12 +147,12 @@ describe('Teacher API', () => {
       lastname: 'Smith',
       email: 'smitheeee@asd.com',
       password: 'password',
-      subjects: [1,2,3],
+      subjects: ["1000899336829206529", "1000899336829304833"],
     });
     const response = await request(app)
     .delete(`/teachers/remove-subject/${teacher.teacherid}`)
     .send({
-      subjectid: 1,
+      subjectid: "1000899336829304833",
     });
     expect(response.status).toBe(200);
     expect(response.body.message).toBe('Subject removed from teacher successfully');
@@ -176,7 +176,7 @@ describe('Teacher API', () => {
       lastname: 'Smith',
       email: 'smithee11@asd.com',
       password: 'password',
-      subjects: [1,2,3],
+      subjects: ["1000899336829206529", "1000899336829304833"],
     });
     const nonExistentSubjectId = 9999;
     const response = await request(app) 

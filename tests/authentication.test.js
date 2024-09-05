@@ -11,7 +11,7 @@ describe('Authentication API', () => {
                 lastname: 'Turanza',
                 email: 'linkandlearnonline@gmail.com',
                 password: 'password',
-                subjects: [1, 3],
+                subjects: ["1000899336829206529", "1000899336829304833"],
                 role:"TEACHER",
             });
 
@@ -53,8 +53,6 @@ describe('Authentication API', () => {
                 email: "balti111@asd.com",
                 password: "password",
         });
-
-        console.log(loginResponse.body.user);
 
         expect(loginResponse.status).toBe(200);
         expect(loginResponse.body.user.role).toBe('STUDENT');
