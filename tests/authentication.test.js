@@ -1,23 +1,52 @@
 const request = require('supertest');
 const app = require('../app');
-const Student = require('../models/studentModel');
-const Teacher = require('../models/teacherModel');
-const sequelize = require('../config/database');
 
 describe('Authentication API', () => {
 
-    it("Should create and login a student", async () => {
+    it("Should register a teacher", async () => {
         const registerResponse = await request(app)
-            .post('/students/register')
+            .post('/authentication/register')
+            .send({
+                firstname: 'Balti',
+                lastname: 'Turanza',
+                email: 'linkandlearnonline@gmail.com',
+                password: 'password',
+                subjects: [1, 3],
+                role:"TEACHER",
+            });
+
+        expect(registerResponse.status).toBe(201);
+    });
+
+    it("Should register a student", async () => {
+        const registerResponse = await request(app)
+            .post('/authentication/register')
             .send({
                 firstname: 'Balti',
                 lastname: 'Turanza',
                 email: 'balti111@asd.com',
                 password: 'password',
+                role:"STUDENT",
             });
 
         expect(registerResponse.status).toBe(201);
+    });
 
+    it('Should not register a student with wrong email', async () => {
+        const registerResponse = await request(app)
+            .post('/authentication/register')
+            .send({
+                firstname: 'Balti',
+                lastname: 'Turanza',
+                email: 'asddas',
+                password: 'password',
+                role:"STUDENT",
+            });
+        expect(registerResponse.status).toBe(400);
+        expect(registerResponse.body.message).toBe('Invalid email');
+    });
+
+    it("Should login a student", async () => {
         const loginResponse = await request(app)
             .post('/authentication/login')
             .send({
@@ -29,7 +58,7 @@ describe('Authentication API', () => {
 
         expect(loginResponse.status).toBe(200);
         expect(loginResponse.body.user.role).toBe('STUDENT');
-    }, 10000);
+    });
 
     it("Should not login a student with wrong email", async () => {
         const loginResponse = await request(app)
@@ -53,5 +82,25 @@ describe('Authentication API', () => {
 
         expect(loginResponse.status).toBe(401);
         expect(loginResponse.body.message).toBe('Invalid password') 
+    });
+
+    it("Should send an email to a user", async () => {
+        const response = await request(app)
+            .post('/authentication/send-email')
+            .send({
+                email: "linkandlearnonline@gmail.com",
+            });
+
+        expect(response.status).toBe(200);
+    });
+
+    it("Should not send an email to a non existent user", async () => {
+        const response = await request(app)
+            .post('/authentication/send-email')
+            .send({
+                email: "jorge@gmail.com",
+            });
+        expect(response.status).toBe(404);
+        expect(response.body.message).toBe('User not found')
     });
 });

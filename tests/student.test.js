@@ -8,22 +8,6 @@ describe('Student API', () => {
   afterAll(async () => {
     await sequelize.query('TRUNCATE TABLE students CASCADE');
   });
-  
-  it('Should create a new student', async () => {
-  const student = await request(app)
-    .post('/students/register')
-    .send({
-      firstname: 'Balti',
-      lastname: 'Turanza',
-      email: 'balti@asd.com',
-      password: 'password',
-    });
-
-
-  expect(student.status).toBe(201);
-  expect(student.body.email).toBe('balti@asd.com');
-
-});
 
   it('Should get a student by id', async () => {
     const createdStudent = await Student.create({
@@ -46,19 +30,6 @@ describe('Student API', () => {
   
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Student not found');
-  });
-
-  it('Should not create a student with invalid email', async () => {
-    const response = await request(app)
-      .post('/students/register')
-      .send({
-        firstname: 'Invalid',
-        lastname: 'Email',
-        email: 'invalidemail',
-        password: 'password',
-      });
-  
-    expect(response.status).toBe(400);
   });
 
   it("Should update student's name", async () => {
