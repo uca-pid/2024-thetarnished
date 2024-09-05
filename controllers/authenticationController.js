@@ -14,7 +14,6 @@ const loginUser = async (req, res) => {
         } else{
             role = 'STUDENT';
         }
-
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
           }
@@ -35,7 +34,7 @@ const loginUser = async (req, res) => {
             }
           });
     }catch (error){
-        "istambul ignore next";
+         /* istanbul ignore next */
         return res.status(500).json({message: 'Internal server error'});
     }
 };

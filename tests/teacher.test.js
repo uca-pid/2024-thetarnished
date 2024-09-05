@@ -23,7 +23,9 @@ describe('Teacher API', () => {
   
     expect(response.status).toBe(201);
     expect(response.body.email).toBe('turanza@asd.com');
-    const quantity = await SubjectTeacher.count();
+    const quantity = await SubjectTeacher.count({
+      where: { teacherid: response.body.teacherid }
+    });
     expect(quantity).toBe(3);  
   });
 
@@ -188,5 +190,34 @@ describe('Teacher API', () => {
     expect(response.status).toBe(200);
     expect(response.body.message).toBe('Subject removed from teacher successfully');
   });
-  
+
+  it('Should not remove subject if teacher does not exists', async () => {
+    const nonExistentTeacherId = 9999;
+    const response = await request(app)
+      .delete(`/teachers/remove-subject/${nonExistentTeacherId}`)
+      .send({
+        subjectid: 1,
+      });
+
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe('Teacher not found');
+  });
+
+  it('Should not remove subject if subject does not exists', async () => {
+    const teacher = await Teacher.create({
+      firstname: 'Prof. Smith',
+      lastname: 'Smith',
+      email: 'smithee11@asd.com',
+      password: 'password',
+      subjects: [1,2,3],
+    });
+    const nonExistentSubjectId = 9999;
+    const response = await request(app) 
+    .delete(`/teachers/remove-subject/${teacher.teacherid}`)
+    .send({
+      subjectid: nonExistentSubjectId,
+    });
+    
+    expect(response.status).toBe(404);
+  });
 });

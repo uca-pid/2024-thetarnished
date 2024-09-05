@@ -112,6 +112,7 @@ const removeSubjectFromTeacher = async (req, res) => {
     await SubjectTeacher.destroy({ where: { teacherid, subjectid } });
     return res.status(200).json({ message: 'Subject removed from teacher successfully' });
   } catch(error){
+    /* istanbul ignore next */
      return res.status(400).json({ message: `Error deleting subject from teacher: ${error.message}` });
   }
 };
