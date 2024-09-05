@@ -38,7 +38,7 @@ const createUser = async (req, res) => {
               type: QueryTypes.SELECT
           });
         if(user){
-            return res.status(404).json({message: 'User already exists'})
+            return res.status(400).json({message: 'User already exists'})
         }
 
         const bigIntSubjects = subjects.map(id => BigInt(id));

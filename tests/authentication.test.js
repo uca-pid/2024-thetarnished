@@ -32,6 +32,21 @@ describe('Authentication API', () => {
         expect(registerResponse.status).toBe(201);
     });
 
+    it("Should not register a user if it already exists", async () => {
+        const registerResponse = await request(app)
+            .post('/authentication/register')
+            .send({
+                firstname: 'Balti',
+                lastname: 'Turanza',
+                email: 'linkandlearnonline@gmail.com',
+                password: 'password',
+                role:"STUDENT",
+            });
+
+        expect(registerResponse.status).toBe(400);
+        expect(registerResponse.body.message).toBe('User already exists');
+    }),
+
     it('Should not register a student with wrong email', async () => {
         const registerResponse = await request(app)
             .post('/authentication/register')

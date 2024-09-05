@@ -1,6 +1,18 @@
 const Teacher = require('../models/teacherModel');
 const SubjectTeacher = require('../models/subjectTeacherModel');
 const Subject = require('../models/subjectModel');
+const sequelize = require('../config/database');
+
+
+const getAllTeachers = async (req, res) => {
+  try {
+    const teachers = await Teacher.findAll();
+    return res.status(200).json(teachers);
+  } catch (error) {
+    /* istanbul ignore next */
+    return res.status(400).json({ message: `Error getting teachers: ${error.message}` });
+  }
+};
 
 const getTeacherById = async (req, res) => {
   try {
@@ -98,11 +110,34 @@ const removeSubjectFromTeacher = async (req, res) => {
   }
 };
 
+const getAllTeachersDictatingASubjectById = async (req, res) => {
+  try {
+    const { subjectid } = req.params;
+
+    const [teachers] = await sequelize.query(`
+      SELECT t.teacherid, t.firstname, t.lastname
+      FROM teachers t
+      JOIN subjectteacher st ON t.teacherid = st.teacherid
+      WHERE st.subjectid = :subjectid
+    `, {
+      replacements: { subjectid: subjectid },
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    return res.status(200).json(teachers);
+  } catch (error) {
+    return res.status(400).json({ message: `Error getting teachers: ${error.message}` });
+  }
+};
+
+
 
 module.exports = {
   getTeacherById,
   updateTeacher,
   deleteTeacher,
   assignSubjectToTeacher,
-  removeSubjectFromTeacher
+  removeSubjectFromTeacher,
+  getAllTeachers,
+  getAllTeachersDictatingASubjectById
 };

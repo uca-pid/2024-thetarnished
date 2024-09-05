@@ -1,7 +1,6 @@
 const request = require('supertest');
 const app = require('../app');
 const Teacher = require('../models/teacherModel');
-const SubjectTeacher = require('../models/subjectTeacherModel');
 const sequelize = require('../config/database');
 
 describe('Teacher API', () => { 
@@ -186,5 +185,12 @@ describe('Teacher API', () => {
     });
     
     expect(response.status).toBe(404);
+  });
+
+  it("Should retrieve all teachers that disctate an specific subject", async () => {
+    const response = await request(app)
+    .get("/teachers/all-dictating/1000899336829206529");
+    console.log(response.body);
+    expect(response.status).toBe(200);
   });
 });

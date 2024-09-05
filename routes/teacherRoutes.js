@@ -1,8 +1,10 @@
 const express = require('express');
-const {getTeacherById, updateTeacher, deleteTeacher, assignSubjectToTeacher, removeSubjectFromTeacher} = require('../controllers/teacherController');
+const {getTeacherById, updateTeacher, deleteTeacher, assignSubjectToTeacher, removeSubjectFromTeacher, getAllTeachersDictatingASubjectById, getAllTeachers} = require('../controllers/teacherController');
 
 const router = express.Router();
 
+router.get('/all-dictating/:subjectid', getAllTeachersDictatingASubjectById);
+router.get('/all-teachers', getAllTeachers);
 router.get('/:id', getTeacherById);
 router.put('/update/:id', updateTeacher);
 router.delete('/delete/:id', deleteTeacher);
