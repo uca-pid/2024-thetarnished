@@ -1,8 +1,13 @@
 const request = require('supertest');
 const app = require('../app');
 const Student = require('../models/studentModel');
+const sequelize = require('../config/database');
 
 describe('Student API', () => {
+
+  afterAll(async () => {
+    await sequelize.query('TRUNCATE TABLE students CASCADE');
+  });
   
   it('Should create a new student', async () => {
   const student = await request(app)
@@ -27,7 +32,7 @@ describe('Student API', () => {
       email: 'peñoñori@asd.com',
       password: 'password',
     });
-  
+
     const response = await request(app)
       .get(`/students/${createdStudent.studentid}`);
   
