@@ -2,7 +2,6 @@ const request = require('supertest');
 const app = require('../app');
 
 describe('Authentication API', () => {
-
     it("Should register a teacher", async () => {
         const registerResponse = await request(app)
             .post('/authentication/register')
@@ -11,7 +10,7 @@ describe('Authentication API', () => {
                 lastname: 'Turanza',
                 email: 'linkandlearnonline@gmail.com',
                 password: 'password',
-                subjects: [1, 3],
+                subjects: ["1000899336829206529", "1000899336829304833"],
                 role:"TEACHER",
             });
 
@@ -31,6 +30,21 @@ describe('Authentication API', () => {
 
         expect(registerResponse.status).toBe(201);
     });
+
+    it("Should not register a user if it already exists", async () => {
+        const registerResponse = await request(app)
+            .post('/authentication/register')
+            .send({
+                firstname: 'Balti',
+                lastname: 'Turanza',
+                email: 'linkandlearnonline@gmail.com',
+                password: 'password',
+                role:"STUDENT",
+            });
+
+        expect(registerResponse.status).toBe(400);
+        expect(registerResponse.body.message).toBe('User already exists');
+    }),
 
     it('Should not register a student with wrong email', async () => {
         const registerResponse = await request(app)
@@ -53,8 +67,6 @@ describe('Authentication API', () => {
                 email: "balti111@asd.com",
                 password: "password",
         });
-
-        console.log(loginResponse.body.user);
 
         expect(loginResponse.status).toBe(200);
         expect(loginResponse.body.user.role).toBe('STUDENT');

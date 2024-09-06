@@ -1,7 +1,6 @@
 const request = require('supertest');
 const app = require('../app');
 const Teacher = require('../models/teacherModel');
-const SubjectTeacher = require('../models/subjectTeacherModel');
 const sequelize = require('../config/database');
 
 describe('Teacher API', () => { 
@@ -99,7 +98,7 @@ describe('Teacher API', () => {
     const response = await request(app)
       .post(`/teachers/assign-subject/${teacher.teacherid}`)
       .send({
-        subjectid: 1, 
+        subjectid: "1000899336829206529", 
       });
   
     expect(response.status).toBe(201);
@@ -147,12 +146,12 @@ describe('Teacher API', () => {
       lastname: 'Smith',
       email: 'smitheeee@asd.com',
       password: 'password',
-      subjects: [1,2,3],
+      subjects: ["1000899336829206529", "1000899336829304833"],
     });
     const response = await request(app)
     .delete(`/teachers/remove-subject/${teacher.teacherid}`)
     .send({
-      subjectid: 1,
+      subjectid: "1000899336829304833",
     });
     expect(response.status).toBe(200);
     expect(response.body.message).toBe('Subject removed from teacher successfully');
@@ -176,7 +175,7 @@ describe('Teacher API', () => {
       lastname: 'Smith',
       email: 'smithee11@asd.com',
       password: 'password',
-      subjects: [1,2,3],
+      subjects: ["1000899336829206529", "1000899336829304833"],
     });
     const nonExistentSubjectId = 9999;
     const response = await request(app) 
@@ -186,5 +185,12 @@ describe('Teacher API', () => {
     });
     
     expect(response.status).toBe(404);
+  });
+
+  it("Should retrieve all teachers that disctate an specific subject", async () => {
+    const response = await request(app)
+    .get("/teachers/all-dictating/1000899336829206529");
+    expect(response.status).toBe(200);
+    expect(response.body.length).toBe(2);
   });
 });
