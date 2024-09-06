@@ -2,7 +2,6 @@ const request = require('supertest');
 const app = require('../app');
 
 describe('Authentication API', () => {
-
     it("Should register a teacher", async () => {
         const registerResponse = await request(app)
             .post('/authentication/register')

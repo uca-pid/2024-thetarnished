@@ -115,13 +115,12 @@ const getAllTeachersDictatingASubjectById = async (req, res) => {
     const { subjectid } = req.params;
 
     const [teachers] = await sequelize.query(`
-      SELECT t.teacherid, t.firstname, t.lastname
-      FROM teachers t
-      JOIN subjectteacher st ON t.teacherid = st.teacherid
-      WHERE st.subjectid = :subjectid
+    SELECT * from teachers 
+    JOIN subjectteacher 
+    ON teachers.teacherid = subjectteacher.teacherid 
+    WHERE subjectid = :subjectid
     `, {
       replacements: { subjectid: subjectid },
-      type: sequelize.QueryTypes.SELECT
     });
 
     return res.status(200).json(teachers);

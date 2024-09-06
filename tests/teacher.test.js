@@ -190,7 +190,7 @@ describe('Teacher API', () => {
   it("Should retrieve all teachers that disctate an specific subject", async () => {
     const response = await request(app)
     .get("/teachers/all-dictating/1000899336829206529");
-    console.log(response.body);
     expect(response.status).toBe(200);
+    expect(response.body.length).toBe(2);
   });
 });
