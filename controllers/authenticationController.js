@@ -75,7 +75,7 @@ const loginUser = async (req, res) => {
         const {email, password} = req.body;
         let user =  await Student.findOne({where: {email}});
         let role;
-
+        console.log(user);
         if(!user){
             user = await Teacher.findOne({where: {email}});
             role = 'TEACHER';
@@ -108,7 +108,7 @@ const loginUser = async (req, res) => {
 };
 
 const sendEmailToUser = async (req, res) => {
-
+    
     const email = req.body.email    
 
     try {
@@ -130,6 +130,7 @@ const sendEmailToUser = async (req, res) => {
         }
         
         const accessToken = await oAuth2Client.getAccessToken()
+        
         const transport = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -146,8 +147,8 @@ const sendEmailToUser = async (req, res) => {
             from: 'Fran Peno <fpenonori@gmail.com>',
             to: email,
             subject: 'Hello from Gmail using API',
-            text: 'Hello from gmail emial using API',
-            html: '<h1>Hello from gmail emial using API</h1>',
+            text: 'Hello from gmail email using API',
+            html: '<h1>Hello from gmail email using API</h1>',
         };
 
         const result = await transport.sendMail(mailOptions)

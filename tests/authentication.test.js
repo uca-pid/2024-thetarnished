@@ -1,8 +1,34 @@
 const request = require('supertest');
 const app = require('../app');
-
+const Subject = require('../models/subjectModel');
 describe('Authentication API', () => {
+
+    afterAll(async () => {
+        await Subject.destroy({
+            where: {
+                subjectname: 'dummytest'
+            }
+        });
+        await Subject.destroy({
+            where: {
+                subjectname: 'dummytest2'
+            }
+        });
+    });
+
     it("Should register a teacher", async () => {
+            const dummytest = await request(app)
+                .post('/subject/create')
+                .send({
+                    subjectname: "dummytest"
+                });
+
+            console.log(dummytest.body.subjectid);
+            const dummytest2 = await request(app)
+            .post('/subject/create')
+            .send({
+                subjectname: "dummytest2"
+            });
         const registerResponse = await request(app)
             .post('/authentication/register')
             .send({
@@ -10,7 +36,7 @@ describe('Authentication API', () => {
                 lastname: 'Turanza',
                 email: 'linkandlearnonline@gmail.com',
                 password: 'password',
-                subjects: ["1000899336829206529", "1000899336829304833"],
+                subjects: [`${dummytest.body.subjectid}`, `${dummytest2.body.subjectid}`],
                 role:"TEACHER",
             });
 
