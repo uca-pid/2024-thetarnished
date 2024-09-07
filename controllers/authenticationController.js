@@ -75,7 +75,7 @@ const loginUser = async (req, res) => {
         const {email, password} = req.body;
         let user =  await Student.findOne({where: {email}});
         let role;
-        console.log(user);
+        
         if(!user){
             user = await Teacher.findOne({where: {email}});
             role = 'TEACHER';
@@ -85,7 +85,8 @@ const loginUser = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
           }
-
+          console.log(user.password);
+          console.log(password);
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if(!isPasswordValid){
             return res.status(401).json({message: 'Invalid password'});

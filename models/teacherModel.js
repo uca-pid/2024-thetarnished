@@ -1,35 +1,35 @@
-const  DataTypes  = require('sequelize');
+const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
 const Teacher = sequelize.define('Teacher', {
   teacherid: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: true,
+    autoIncrement: true
   },
   firstname: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: false
   },
   lastname: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: false
   },
   email: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
     validate: {
-      isEmail: true,
-    },
+      isEmail: true
+    }
   },
   password: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: false
   }
 }, {
   tableName: 'teachers',
-  timestamps: false,
+  timestamps: false
 });
 
 module.exports = Teacher;

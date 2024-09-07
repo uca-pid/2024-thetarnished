@@ -10,12 +10,12 @@ describe('Teacher API', () => {
     await sequelize.query('TRUNCATE TABLE teachers CASCADE');
   
     const subjectsToDelete = [
-      'dummytestteacher', 
-      'dummytestteacher2', 
-      'dummytestteacher3', 
-      'dummytestteacher4', 
-      'dummytestteacher5', 
-      'dummytestteacher6'
+      'testSubject', 
+      'testSubject2', 
+      'testSubject3', 
+      'testSubject4', 
+      'testSubject5', 
+      'testSubject6'
     ];
   
     await Subject.destroy({
@@ -115,16 +115,16 @@ describe('Teacher API', () => {
       password: 'password',
     });
 
-    const dummytestteacher = await request(app)
+    const testSubject = await request(app)
             .post('/subject/create')
             .send({
-                subjectname: "dummytestteacher"
+                subjectname: "testSubject"
             });
     
     const response = await request(app)
       .post(`/teachers/assign-subject/${teacher.teacherid}`)
       .send({
-        subjectid: `${dummytestteacher.body.subjectid}`, 
+        subjectid: `${testSubject.body.subjectid}`, 
       });
   
     expect(response.status).toBe(201);
@@ -168,28 +168,29 @@ describe('Teacher API', () => {
 
   it("Should remove a subject from a teacher", async () => {
 
-    const dummytestteacher2 = await request(app)
+    const testSubject2 = await request(app)
             .post('/subject/create')
             .send({
-                subjectname: "dummytestteacher2"
+                subjectname: "testSubject2"
             });
-    const dummytestteacher3 = await request(app)
+    const testSubject3 = await request(app)
             .post('/subject/create')
             .send({
-                subjectname: "dummytestteacher3"
+                subjectname: "testSubject3"
             });
+    
 
     const teacher = await Teacher.create({
       firstname: 'Prof. Smith',
       lastname: 'Smith',
       email: 'smitheeee@asd.com',
       password: 'password',
-      subjects: [`${dummytestteacher2.body.subjectid}`, `${dummytestteacher3.body.subjectid}`],
+      subjects: [`${testSubject2.body.subjectid}`, `${testSubject3.body.subjectid}`],
     });
     const response = await request(app)
     .delete(`/teachers/remove-subject/${teacher.teacherid}`)
     .send({
-      subjectid: `${dummytestteacher3.body.subjectid}`,
+      subjectid: `${testSubject3.body.subjectid}`,
     });
     expect(response.status).toBe(200);
     expect(response.body.message).toBe('Subject removed from teacher successfully');
@@ -209,23 +210,23 @@ describe('Teacher API', () => {
 
   it('Should not remove subject if subject does not exists', async () => {
 
-    const dummytestteacher4 = await request(app)
+    const testSubject4 = await request(app)
             .post('/subject/create')
             .send({
-                subjectname: "dummytestteacher4"
+                subjectname: "testSubject4"
             });
 
-    const dummytestteacher5 = await request(app)
+    const testSubject5 = await request(app)
             .post('/subject/create')
             .send({
-                subjectname: "dummytestteacher5"
+                subjectname: "testSubject5"
             });        
     const teacher = await Teacher.create({
       firstname: 'Prof. Smith',
       lastname: 'Smith',
       email: 'smithee11@asd.com',
       password: 'password',
-      subjects: [`${dummytestteacher4.body.subjectid}`, `${dummytestteacher5.body.subjectid}`],
+      subjects: [`${testSubject4.body.subjectid}`, `${testSubject5.body.subjectid}`],
     });
     const nonExistentSubjectId = 9999;
     const response = await request(app) 
@@ -239,10 +240,10 @@ describe('Teacher API', () => {
 
   it("Should retrieve all teachers that dictate an specific subject", async () => {
 
-    const dummytestteacher6 = await request(app)
+    const testSubject6 = await request(app)
             .post('/subject/create')
             .send({
-                subjectname: "dummytestteacher6"
+                subjectname: "testSubject6"
             });
       
     const registerResponse = await request(app)
@@ -252,7 +253,7 @@ describe('Teacher API', () => {
                 lastname: 'Turanza',
                 email: 'agusT@gmail.com',
                 password: 'password',
-                subjects: [`${dummytestteacher6.body.subjectid}`],
+                subjects: [`${testSubject6.body.subjectid}`],
                 role:"TEACHER",
             });
     const registerTeacher = await request(app)
@@ -262,13 +263,13 @@ describe('Teacher API', () => {
                 lastname: 'Turanza',
                 email: 'agusTuranza@gmail.com',
                 password: 'password',
-                subjects: [`${dummytestteacher6.body.subjectid}`],
+                subjects: [`${testSubject6.body.subjectid}`],
                 role:"TEACHER",
             });
 
             
     const response = await request(app)
-    .get(`/teachers/all-dictating/${dummytestteacher6.body.subjectid}`);
+    .get(`/teachers/all-dictating/${testSubject6.body.subjectid}`);
     expect(response.status).toBe(200);
     expect(response.body.length).toBe(2);
   });
