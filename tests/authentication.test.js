@@ -1,6 +1,8 @@
 const request = require('supertest');
 const app = require('../app');
 const Subject = require('../models/subjectModel');
+const sequelize = require('../config/database');
+
 
 describe('Authentication API', () => {
     beforeAll(async () => {
@@ -22,18 +24,23 @@ describe('Authentication API', () => {
     
 
     afterAll(async () => {
-        await Subject.destroy({
-            where: {
-                subjectname: 'authSubjectTest'
-            }
-        });
-        await Subject.destroy({
-            where: {
-                subjectname: 'authSubjectTest2'
-            }
-        });
 
+        await sequelize.query('TRUNCATE TABLE subjectteacher CASCADE');
+        try {
+            const subject = await Subject.findOne({ where: { subjectname: 'authSubjectTest' } });
+            if (subject) {
+                const deletedCount = await Subject.destroy({
+                    where: { subjectname: 'authSubjectTest' }
+                });
+                console.log(`${deletedCount} subject(s) deleted`);
+            } else {
+                console.log('No subject found with the given name');
+            }
+        } catch (error) {
+            console.error('Error in afterAll cleanup:', error);
+        }
     });
+    
 
     it("Should register a teacher", async () => {
 

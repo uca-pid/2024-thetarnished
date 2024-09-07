@@ -16,7 +16,7 @@ describe('Schedule API', () => {
             password: 'password'
         });
         teacherId = teacher.teacherid;
-    });
+    });1
 
 
     afterAll(async () => {
