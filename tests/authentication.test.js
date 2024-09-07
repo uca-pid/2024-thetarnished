@@ -69,7 +69,7 @@ describe('Authentication API', () => {
                 password: 'password',
                 role:"STUDENT",
             });
-        console.log(registerResponse.body);
+
 
         expect(registerResponse.status).toBe(201);
     });
@@ -116,18 +116,18 @@ describe('Authentication API', () => {
         expect(registerResponse.body.message).toBe('Invalid email');
     });
 
-    // it("Should login a student", async () => {
+    it("Should login a student", async () => {
 
-    //     const loginResponse = await request(app)
-    //         .post('/authentication/login')
-    //         .send({
-    //             email: "MTOM@gmail.com",
-    //             password: "password",
-    //     });
-    //     console.log(loginResponse.body);
-    //     expect(loginResponse.status).toBe(200);
-    //     expect(loginResponse.body.user.role).toBe('STUDENT');
-    // });
+        const loginResponse = await request(app)
+            .post('/authentication/login')
+            .send({
+                email: "MTOM@gmail.com",
+                password: "password",
+        });
+        console.log(loginResponse.body);
+        expect(loginResponse.status).toBe(200);
+        expect(loginResponse.body.user.role).toBe('STUDENT');
+    });
 
     it("Should not login a student with wrong email", async () => {
         const loginResponse = await request(app)
