@@ -2,6 +2,9 @@ const request = require('supertest');
 const app = require('../app');
 const Subject = require('../models/subjectModel');
 const sequelize = require('../config/database');
+const Student = require('../models/studentModel');
+const Teacher = require('../models/teacherModel');
+const bcrypt = require('bcrypt');
 
 
 describe('Authentication API', () => {
@@ -28,7 +31,9 @@ describe('Authentication API', () => {
         } catch (error) {
             console.error('Error in afterAll cleanup:', error);
         }
+        await sequelize.query('TRUNCATE TABLE students CASCADE');
     });
+    
     
 
     it("Should register a teacher", async () => {
@@ -167,4 +172,53 @@ describe('Authentication API', () => {
         expect(response.status).toBe(404);
         expect(response.body.message).toBe('User not found')
     });
+
+    it('Should not change the password if the user is not found', async () => {
+        const hashedPassword = await bcrypt.hash('oldpassword', 10);
+        await Student.create({
+            firstname: 'Fran',
+            lastname: 'Peñoñori',
+            email: '12312@asd.com',
+            password: hashedPassword,
+        });
+        const response = await request(app)
+          .put('/authentication/change-password')
+          .send({ oldPassword: "oldpassword", newPassword: 'newPassword', email: 'nonexistent@asd.com' });
+    
+        expect(response.status).toBe(404);
+        expect(response.body.message).toBe('User not found');
+      });
+
+      it('Should return 401 if the old password is incorrect', async () => {
+        const hashedPassword = await bcrypt.hash('oldpassword', 10);
+        await Student.create({
+            firstname: 'Fran',
+            lastname: 'Peñoñori',
+            email: 'adsgffgdfdsasdaffd@asd.com',
+            password: hashedPassword,
+        });
+        const response = await request(app)
+          .put('/authentication/change-password')
+          .send({ oldPassword: "wrongpassword", newPassword: 'newPassword', email: 'adsgffgdfdsasdaffd@asd.com' });
+    
+        expect(response.status).toBe(401);
+        expect(response.body.message).toBe('Invalid password');
+      });
+
+      it('Should successfully change password for a student', async () => {
+        const hashedPassword = await bcrypt.hash('oldpassword', 10);
+        await Student.create({
+            firstname: 'Fran',
+            lastname: 'Peñoñori',
+            email: 'adsgffgdfdsaffd@asd.com',
+            password: hashedPassword,
+        });
+
+        const response = await request(app)
+          .put('/authentication/change-password')
+          .send({ oldPassword: "oldpassword", newPassword: 'newPassword', email: 'adsgffgdfdsaffd@asd.com' });
+
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('Password changed successfully');
+      });
 });

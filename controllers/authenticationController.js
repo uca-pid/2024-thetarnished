@@ -178,12 +178,11 @@ const changeUserPassword = async (req, res) => {
         student ? await Student.update({ password: hashedPassword }, { where: { email: email } }) 
         : await Teacher.update({ password: hashedPassword }, { where: { email: email } });
         return res.status(200).json({message: 'Password changed successfully'});
-        
+
     }catch(error){
         /* istanbul ignore next */
         return res.status(500).json({message: 'Internal server error'});
     }
-
 }
 
 module.exports = {loginUser, sendEmailToUser, createUser, changeUserPassword};
