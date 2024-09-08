@@ -135,7 +135,7 @@ const sendEmailToUser = async (req, res) => {
             service: 'gmail',
             auth: {
                 type: 'Oauth2',
-                user: 'fpenonori@gmail.com',
+                user: 'linkandlearnonline@gmail.com',
                 clientId: CLIENT_ID,
                 clientSecret: CLIENT_SECRET,
                 refreshToken: REFRESH_TOKEN,
@@ -144,7 +144,7 @@ const sendEmailToUser = async (req, res) => {
         })
 
         const mailOptions = {
-            from: 'Fran Peno <fpenonori@gmail.com>',
+            from: 'Link and Learn <linkandlearnonline@gmail.com>',
             to: email,
             subject: 'Hello from Gmail using API',
             text: 'Hello from gmail email using API',
@@ -157,7 +157,33 @@ const sendEmailToUser = async (req, res) => {
         /* istanbul ignore next */
         return res.status(500).json({message: 'Internal server error'}); 
     }
-
 };
 
-module.exports = {loginUser, sendEmailToUser, createUser};
+const changeUserPassword = async (req, res) => {
+    try{
+        const {oldPassword, newPassword, email} = req.body;
+
+        const student = await Student.findOne({where: {email}});
+        const teacher = await Teacher.findOne({where: {email}});
+        if(!student && !teacher){
+            return res.status(404).json({message: 'User not found'});
+        }
+        const foundUser = student ? student : teacher;
+        const isPasswordValid = await bcrypt.compare(oldPassword, foundUser.password);
+        if(!isPasswordValid){
+            return res.status(401).json({message: 'Invalid password'});
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        student ? await Student.update({ password: hashedPassword }, { where: { email: email } }) 
+        : await Teacher.update({ password: hashedPassword }, { where: { email: email } });
+        return res.status(200).json({message: 'Password changed successfully'});
+        
+    }catch(error){
+        /* istanbul ignore next */
+        return res.status(500).json({message: 'Internal server error'});
+    }
+
+}
+
+module.exports = {loginUser, sendEmailToUser, createUser, changeUserPassword};
