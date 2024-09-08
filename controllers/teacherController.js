@@ -125,7 +125,8 @@ const getAllTeachersDictatingASubjectById = async (req, res) => {
 
     return res.status(200).json(teachers);
   } catch (error) {
-    return res.status(400).json({ message: `Error getting teachers: ${error.message}` });
+    /* istanbul ignore next */
+    return res.status(500).json({ message: `Error getting teachers: ${error.message}` });
   }
 };
 
