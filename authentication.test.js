@@ -1,12 +1,12 @@
 const request = require('supertest');
 const app = require('../app');
 const Subject = require('../models/subjectModel');
-const sequelize = require('../config/database');
+// const sequelize = require('../config/database');
 const Student = require('../models/studentModel');
 const Teacher = require('../models/teacherModel');
 const bcrypt = require('bcrypt');
-const { gmail } = require('googleapis/build/src/apis/gmail');
-const { TEXT } = require('sequelize');
+// const { gmail } = require('googleapis/build/src/apis/gmail');
+// const { TEXT } = require('sequelize');
 
 
 describe('Authentication API', () => {
