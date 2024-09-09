@@ -3,26 +3,34 @@ const app = require('../app');
 const Teacher = require('../models/teacherModel');
 const sequelize = require('../config/database');
 const Subject = require('../models/subjectModel');
+const SubjectTeacher = require('../models/subjectTeacherModel');
+const bcrypt = require('bcrypt');
 
 describe('Teacher API', () => { 
 
-  afterAll(async () => {
-    await sequelize.query('TRUNCATE TABLE teachers CASCADE');
-  
-    const subjectsToDelete = [
-      'testSubject', 
-      'testSubject2', 
-      'testSubject3', 
-      'testSubject4', 
-      'testSubject5', 
-      'testSubject6'
-    ];
-  
-    await Subject.destroy({
-      where: {
-        subjectname: subjectsToDelete
-      }
+    let teacher;
+    const teacherFirstName = 'John';
+    const teacherLastName = 'Doe';
+    const teacherEmail = 'testTeacher1@example.com';
+    const oldPassword = 'oldpassword';
+    let teacherID;
+
+    beforeAll(async () => {
+        const hashedOldPassword = await bcrypt.hash(oldPassword, 10);
+        subjectTest = await Subject.create({
+            subjectname: 'authSubjectTest'
+        });
+        subjectTestID = subjectTest.subjectid;
+        teacher = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: teacherEmail, password: hashedOldPassword, subjects: []});
+        teacherID = teacher.teacherid;
     });
+
+    
+    afterAll(async () => {
+      await SubjectTeacher.destroy({ where: { teacherid: teacherID } });
+      await Teacher.destroy({ where: { email: teacherEmail } });
+      await Subject.destroy({ where: { subjectname: 'authSubjectTest' } });
+
   });
 
   it('Should get a teacher by id', async () => {
@@ -31,34 +39,29 @@ describe('Teacher API', () => {
       lastname: 'Peñoñori',
       email: 'peñoñori@asd.com',
       password: 'password',
+
     });
-  
+    
+  it('Should get a teacher by id', async () => {
+
     const response = await request(app)
-      .get(`/teachers/${createdTeacher.teacherid}`);
+      .get(`/teachers/${teacher.teacherid}`);
   
     expect(response.status).toBe(200);
-    expect(response.body.email).toBe('peñoñori@asd.com');
+    expect(response.body.email).toBe(teacherEmail);
   });
 
   it('Should not get a teacher by invalid id', async () => {
     const response = await request(app)
-      .get('/teachers/999');
-
+      .get('/teachers/112358');
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Teacher not found');
   });
 
   it("Should update teacher's name", async () => {
-    const teacher = await Teacher.create({
-      firstname: 'John',
-      lastname: 'Doe',
-      email: 'john.doe@example.com',
-      password: 'password',
-    });
-
     const updatedTeacherData = {
-      firstname: 'juancito',
-      lastname: teacher.lastname,
+      firstname: 'Jack',
+      lastname: 'Smith',
     };
 
     const response = await request(app)
@@ -66,31 +69,25 @@ describe('Teacher API', () => {
       .send(updatedTeacherData);
 
     expect(response.status).toBe(200);
-    expect(response.body.firstname).toBe('juancito');
+    expect(response.body.firstname).toBe('Jack');
+    expect(response.body.lastname).toBe('Smith');
   });
 
   it("Should delete a teacher", async () => {
-    const teacher = await Teacher.create({
-      firstname: 'John',
-      lastname: 'Doe',
-      email: 'juan@asd.com',
-      password: '123',
-    });
     const response = await request(app)
     .delete(`/teachers/delete/${teacher.teacherid}`)
 
     expect(response.status).toBe(200);
-
     const teacherFound = await Teacher.findByPk(teacher.id);
     expect(teacherFound).toBeNull();
   });
 
   it("Should not be possible to update a teacher with invalid id", async () => {
     const response = await request(app)
-      .put('/teachers/update/999')
+      .put('/teachers/update/112358')
       .send({
-        name: 'Invalid',
-        lastname: 'Invalid',
+        name: 'invalidId',
+        lastname: 'invalidId',
         subjects: [],
       });
       expect(response.status).toBe(404);
@@ -98,175 +95,173 @@ describe('Teacher API', () => {
 
   it("Should not be possible to delete a teacher with invalid id", async () => {
     const response = await request(app)
-    .delete('/teachers/delete/999');
+    .delete('/teachers/delete/112358');
     expect(response.status).toBe(404);
   });
 
   it("Should assign a subject to a teacher", async () => {
-   
-    const teacher = await Teacher.create({
-      firstname: 'Prof. Smith',
-      lastname: 'Smith',
-      email: 'smith@asd.com',
-      password: 'password',
+
+    const newTeacher = await Teacher.create({ firstname: 'John', lastname: 'Doe', email: 'testNewTeacher1@example.com', password: 'password', subjects: []});
+    const testSubject = await Subject.create({
+      subjectname: 'newTestSubject1'
     });
 
-    const testSubject = await request(app)
-            .post('/subject/create')
-            .send({
-                subjectname: "testSubject"
-            });
-    
     const response = await request(app)
-      .post(`/teachers/assign-subject/${teacher.teacherid}`)
+      .post(`/teachers/assign-subject/${newTeacher.teacherid}`)
       .send({
-        subjectid: `${testSubject.body.subjectid}`, 
+        subjectid: `${testSubject.subjectid}`, 
       });
-  
+      
     expect(response.status).toBe(201);
     expect(response.body.message).toBe('Subject assigned to teacher successfully');
+    await SubjectTeacher.destroy({ where: { teacherid: newTeacher.teacherid } });
+    await Subject.destroy({ where: { subjectname: testSubject.subjectname } });
+    await Teacher.destroy({ where: { email: newTeacher.email } });
   });
 
-
   it('Should return 404 if the teacher is not found', async () => {
-    const nonExistentTeacherId = 9999; 
-  
+    const existentSubjectId = '1001938504758198273'; 
     const response = await request(app)
-      .post(`/teachers/assign-subject/${nonExistentTeacherId}`)
+      .post('/teachers/assign-subject/112358')
       .send({
-        subjectid: 1, 
+        subjectid: existentSubjectId, 
       });
-  
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Teacher not found');
   });
   
   it('Should return 404 if the subject is not found', async () => {
-    
-    const teacher = await Teacher.create({
-      firstname: 'Prf. Smith',
-      lastname: 'Smith',
-      email: 'smithereens@asd.com',
-      password: 'password',
-    });
   
-    const nonExistentSubjectId = 9999; 
-  
+    const nonExistentSubjectId = 112358;
+    const newTeacher = await Teacher.create({ firstname: 'John', lastname: 'Doe', email: 'testNewTeacherFail@example.com', password: 'password', subjects: []});
     const response = await request(app)
-      .post(`/teachers/assign-subject/${teacher.teacherid}`)
+      .post(`/teachers/assign-subject/${newTeacher.teacherid}`)
       .send({
-        subjectid: nonExistentSubjectId, 
+        subjectid: `${nonExistentSubjectId}`, 
       });
   
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Subject not found');
+    await Teacher.destroy({ where: { teacherid: newTeacher.teacherid } });
   });
 
   it("Should remove a subject from a teacher", async () => {
 
-    const testSubject2 = await request(app)
-            .post('/subject/create')
-            .send({
-                subjectname: "testSubject2"
-            });
-    const testSubject3 = await request(app)
-            .post('/subject/create')
-            .send({
-                subjectname: "testSubject3"
-            });
-    
-
-    const teacher = await Teacher.create({
-      firstname: 'Prof. Smith',
-      lastname: 'Smith',
-      email: 'smitheeee@asd.com',
-      password: 'password',
-      subjects: [`${testSubject2.body.subjectid}`, `${testSubject3.body.subjectid}`],
+    const newTeacherEmail = 'johnnycage8@gmail.com';
+    const Subject1 = await Subject.create({
+      subjectname: "newSubject"
+    });
+    const Subject2 = await Subject.create({
+      subjectname: "anotherNewSubject"
+    });
+    const newTeacher = await Teacher.create({
+      firstname: 'John',
+      lastname: 'Cage',
+      email: newTeacherEmail,
+      password: oldPassword,
+      subjects: [`${Subject1.subjectid}`, `${Subject2.subjectid}`],
     });
     const response = await request(app)
-    .delete(`/teachers/remove-subject/${teacher.teacherid}`)
-    .send({
-      subjectid: `${testSubject3.body.subjectid}`,
-    });
+      .delete(`/teachers/remove-subject/${newTeacher.teacherid}`)
+      .send({
+        subjectid: `${Subject1.subjectid}`,
+      });
     expect(response.status).toBe(200);
     expect(response.body.message).toBe('Subject removed from teacher successfully');
+    await SubjectTeacher.destroy({ where: { teacherid: newTeacher.teacherid } });
+    await Teacher.destroy({ where: { email: newTeacherEmail } });
+    await Subject.destroy({ where: { subjectname: `${Subject1.subjectname}` } });
+    await Subject.destroy({ where: { subjectname: `${Subject2.subjectname}` } });
   });
 
-  it('Should not remove subject if teacher does not exists', async () => {
+  it('Should not remove subject if teacher does not exist', async () => {
     const nonExistentTeacherId = 9999;
     const response = await request(app)
       .delete(`/teachers/remove-subject/${nonExistentTeacherId}`)
       .send({
-        subjectid: 1,
+        subjectid: subjectTest.subjectid,
       });
 
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Teacher not found');
   });
 
-  it('Should not remove subject if subject does not exists', async () => {
+  it('Should not remove subject if subject does not exist', async () => {
 
-    const testSubject4 = await request(app)
-            .post('/subject/create')
-            .send({
-                subjectname: "testSubject4"
-            });
-
-    const testSubject5 = await request(app)
-            .post('/subject/create')
-            .send({
-                subjectname: "testSubject5"
-            });        
-    const teacher = await Teacher.create({
-      firstname: 'Prof. Smith',
-      lastname: 'Smith',
-      email: 'smithee11@asd.com',
-      password: 'password',
-      subjects: [`${testSubject4.body.subjectid}`, `${testSubject5.body.subjectid}`],
+    const firstTestSubect = await Subject.create({
+      subjectname: "firstTestSubject"
     });
+
+    const secondTestSubject = await Subject.create({
+      subjectname: "secondTestSubject"
+    });
+     
+    const yetAnotherTeacher = await Teacher.create({
+      firstname: 'Jacob',
+      lastname: 'Smith',
+      email: 'jacobsmith@gmail.com',
+      password: oldPassword,
+      subjects: [`${firstTestSubect.subjectid}`, `${secondTestSubject.subjectid}`],
+    });
+    
     const nonExistentSubjectId = 9999;
     const response = await request(app) 
-    .delete(`/teachers/remove-subject/${teacher.teacherid}`)
+    .delete(`/teachers/remove-subject/${yetAnotherTeacher.teacherid}`)
     .send({
       subjectid: nonExistentSubjectId,
     });
     
     expect(response.status).toBe(404);
+    await SubjectTeacher.destroy({ where: { teacherid: yetAnotherTeacher.teacherid } });
+    await Teacher.destroy({ where: { email: yetAnotherTeacher.email } });
+    await Subject.destroy({ where: { subjectname: `${firstTestSubect.subjectname}` } });
+    await Subject.destroy({ where: { subjectname: `${secondTestSubject.subjectname}` } });
   });
 
   it("Should retrieve all teachers that dictate an specific subject", async () => {
 
-    const testSubject6 = await request(app)
-            .post('/subject/create')
-            .send({
-                subjectname: "testSubject6"
-            });
-      
-    const registerResponse = await request(app)
-            .post('/authentication/register')
-            .send({
-                firstname: 'Agustin',
-                lastname: 'Turanza',
-                email: 'agusT@gmail.com',
-                password: 'password',
-                subjects: [`${testSubject6.body.subjectid}`],
-                role:"TEACHER",
-            });
-    const registerTeacher = await request(app)
-            .post('/authentication/register')
-            .send({
-                firstname: 'Agustin',
-                lastname: 'Turanza',
-                email: 'agusTuranza@gmail.com',
-                password: 'password',
-                subjects: [`${testSubject6.body.subjectid}`],
-                role:"TEACHER",
-            });
+    const commonTestSubject = await Subject.create({
+      subjectname: "commonTestSubject3"
+    });
 
-            
-    const response = await request(app)
-    .get(`/teachers/all-dictating/${testSubject6.body.subjectid}`);
+    const firstCommonTeacher = await Teacher.create({
+      firstname: 'Sean',
+      lastname: 'Smith',
+      email: 'seansmith7@gmail.com',
+      password: oldPassword,
+    });
+
+    const secondCommonTeacher = await Teacher.create({
+      firstname: 'Seamus',
+      lastname: 'Smith',
+      email: 'seamussmith8@gmail.com',
+      password: oldPassword,
+    });
+
+    await request(app).post(`/teachers/assign-subject/${firstCommonTeacher.teacherid}`).send({
+      subjectid: `${commonTestSubject.subjectid}`,
+    });
+    
+    await request(app).post(`/teachers/assign-subject/${secondCommonTeacher.teacherid}`).send({
+      subjectid: `${commonTestSubject.subjectid}`,
+    });
+
+    const response = await request(app).get(`/teachers/all-dictating/${commonTestSubject.subjectid}`);
+
     expect(response.status).toBe(200);
     expect(response.body.length).toBe(2);
+    
+    await SubjectTeacher.destroy({ where: { teacherid: firstCommonTeacher.teacherid } });
+    await SubjectTeacher.destroy({ where: { teacherid: secondCommonTeacher.teacherid } });
+    await Teacher.destroy({ where: { email: firstCommonTeacher.email } });
+    await Teacher.destroy({ where: { email: secondCommonTeacher.email } });
+    await Subject.destroy({ where: { subjectname: `${commonTestSubject.subjectname}` } });
   });
+
+  it("Should retrieve all teachers", async () => {
+    const response = await request(app).get('/teachers/all-teachers');
+    expect(response.status).toBe(200);
+    expect(response.body.length).toBeGreaterThanOrEqual(1);
+  });
+
 });

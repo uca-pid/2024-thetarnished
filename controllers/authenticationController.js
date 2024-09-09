@@ -232,8 +232,7 @@ const changeUserPassword = async (req, res) => {
         }
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-        student ? await Student.update({ password: hashedPassword }, { where: { email: email } }) 
-        : await Teacher.update({ password: hashedPassword }, { where: { email: email } });
+        student ? await Student.update({ password: hashedPassword }, { where: { email: email } }) : await Teacher.update({ password: hashedPassword }, { where: { email: email } });
         return res.status(200).json({message: 'Password changed successfully'});
 
     }catch(error){
