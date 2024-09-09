@@ -72,81 +72,97 @@ const createUser = async (req, res) => {
     }
 };
 
+const findUser = async (email) => {
+    let user = await Student.findOne({ where: { email } });
+    if (!user) {
+        user = await Teacher.findOne({ where: { email } });
+    }
+    return user;
+};
+
+const getSubjectsForTeacher = async (teacherId) => {
+    const subjectIds = await SubjectTeacher.findAll({
+        attributes: ['subjectid'],
+        where: { teacherid: teacherId }
+    });
+    const subjectIdsArray = subjectIds.map(record => record.subjectid);
+
+    if (subjectIdsArray.length) {
+        return await Subject.findAll({
+            where: { subjectid: subjectIdsArray }
+        });
+    }
+    return [];
+};
+
+const getScheduleForTeacher = async (teacherId) => {
+    const schedule = await Schedule.findAll({
+        where: { teacherid: teacherId },
+        include: {
+            model: Teacher,
+            attributes: ['firstname', 'lastname', 'email']
+        }
+    });
+
+    if (schedule.length) {
+        return schedule.map(sch => ({
+            start_time: sch.start_time,
+            end_time: sch.end_time,
+            teacherid: sch.teacherid,
+            dayofweek: sch.dayofweek
+        }));
+    }
+    return [];
+};
+
 const loginUser = async (req, res) => {
-    try{
-        const {email, password} = req.body;
-        let user =  await Student.findOne({where: {email}});
+    try {
+        const { email, password } = req.body;
+        
+        const user = await findUser(email);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
         let role;
         let userid;
         let formattedSchedule = [];
         let subjects = [];
         
-        if(!user){
-            user = await Teacher.findOne({where: {email}});
+        if (user instanceof Teacher) {
             role = 'TEACHER';
             userid = user.teacherid;
-
-            const subjectIds = await SubjectTeacher.findAll({
-                attributes: ['subjectid'],
-                where: { teacherid: userid }
-            });
-            const subjectIdsArray = subjectIds.map(record => record.subjectid);
-
-            if(subjectIdsArray.length) {
-                subjects = await Subject.findAll({
-                    where: {
-                        subjectid: subjectIdsArray
-                    }
-                });
-            }
-
-            const schedule = await Schedule.findAll({
-                where: { teacherid: userid },
-                include: {
-                  model: Teacher,
-                  attributes: ['firstname', 'lastname', 'email']
-                }
-              });
-            
-              if (schedule.length) {
-                formattedSchedule = schedule.map(sch => ({
-                    start_time: sch.start_time,
-                    end_time: sch.end_time,
-                    teacherid: sch.teacherid,
-                    dayofweek: sch.dayofweek
-                }))
-              }
-        } else{
+            subjects = await getSubjectsForTeacher(userid);
+            formattedSchedule = await getScheduleForTeacher(userid);
+        } else {
             role = 'STUDENT';
             userid = user.studentid;
-            formattedSchedule = []
+            formattedSchedule = [];
         }
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-          }
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
-        if(!isPasswordValid){
-            return res.status(401).json({message: 'Invalid password'});
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: 'Invalid password' });
         }
 
         return res.status(200).json({
             message: 'Login successful',
             user: {
-              id: userid,
-              firstname: user.firstname,
-              lastname: user.lastname,
-              email: user.email,
-              role: role,
-              schedule: formattedSchedule,
-              subjects: subjects
+                id: userid,
+                firstname: user.firstname,
+                lastname: user.lastname,
+                email: user.email,
+                role: role,
+                schedule: formattedSchedule,
+                subjects: subjects
             }
-          });
-    }catch (error){
-         /* istanbul ignore next */
-        return res.status(500).json({message: 'Internal server error'});
+        });
+    } catch (error) {
+        /* istanbul ignore next */
+        return res.status(500).json({ message: 'Internal server error' });
     }
 };
+
 
 const sendEmailToUser = async (req, res) => {
     

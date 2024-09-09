@@ -121,7 +121,7 @@ describe('Authentication API', () => {
         const loginResponse = await request(app)
             .post('/authentication/login')
             .send({
-                email: "balti2@asd.com",
+                email: "balti22@asd.com",
                 password: "password2",
         });
 
