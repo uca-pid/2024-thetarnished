@@ -8,6 +8,8 @@ const { QueryTypes } = require('sequelize');
 const SubjectTeacher = require('../models/subjectTeacherModel');
 require('dotenv').config()
 const validator = require('validator');
+const Schedule = require('../models/scheduleModel');
+const Subject = require('../models/subjectModel');
 
 const CLIENT_ID = process.env.CLIENT_ID
 const CLIENT_SECRET = process.env.CLIENT_SECRET
@@ -70,45 +72,100 @@ const createUser = async (req, res) => {
     }
 };
 
-const loginUser = async (req, res) => {
-    try{
-        const {email, password} = req.body;
-        let user =  await Student.findOne({where: {email}});
-        let role;
+const findUser = async (email) => {
+    let user = await Student.findOne({ where: { email } });
+    if (!user) {
+        user = await Teacher.findOne({ where: { email } });
+    }
+    return user;
+};
 
-        if(!user){
-            user = await Teacher.findOne({where: {email}});
-            role = 'TEACHER';
-        } else{
-            role = 'STUDENT';
+const getSubjectsForTeacher = async (teacherId) => {
+    const subjectIds = await SubjectTeacher.findAll({
+        attributes: ['subjectid'],
+        where: { teacherid: teacherId }
+    });
+    const subjectIdsArray = subjectIds.map(record => record.subjectid);
+
+    if (subjectIdsArray.length) {
+        return await Subject.findAll({
+            where: { subjectid: subjectIdsArray }
+        });
+    }
+    return [];
+};
+
+const getScheduleForTeacher = async (teacherId) => {
+    const schedule = await Schedule.findAll({
+        where: { teacherid: teacherId },
+        include: {
+            model: Teacher,
+            attributes: ['firstname', 'lastname', 'email']
         }
+    });
+
+    if (schedule.length) {
+        return schedule.map(sch => ({
+            start_time: sch.start_time,
+            end_time: sch.end_time,
+            teacherid: sch.teacherid,
+            dayofweek: sch.dayofweek
+        }));
+    }
+    return [];
+};
+
+const loginUser = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        const user = await findUser(email);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
-          }
+        }
+        
+        let role;
+        let userid;
+        let formattedSchedule = [];
+        let subjects = [];
+        
+        if (user instanceof Teacher) {
+            role = 'TEACHER';
+            userid = user.teacherid;
+            subjects = await getSubjectsForTeacher(userid);
+            formattedSchedule = await getScheduleForTeacher(userid);
+        } else {
+            role = 'STUDENT';
+            userid = user.studentid;
+            formattedSchedule = [];
+        }
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
-        if(!isPasswordValid){
-            return res.status(401).json({message: 'Invalid password'});
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: 'Invalid password' });
         }
 
         return res.status(200).json({
             message: 'Login successful',
             user: {
-              id: user.id,
-              firstname: user.firstname,
-              lastname: user.lastname,
-              email: user.email,
-              role: role
+                id: userid,
+                firstname: user.firstname,
+                lastname: user.lastname,
+                email: user.email,
+                role: role,
+                schedule: formattedSchedule,
+                subjects: subjects
             }
-          });
-    }catch (error){
-         /* istanbul ignore next */
-        return res.status(500).json({message: 'Internal server error'});
+        });
+    } catch (error) {
+        /* istanbul ignore next */
+        return res.status(500).json({ message: 'Internal server error' });
     }
 };
 
-const sendEmailToUser = async (req, res) => {
 
+const sendEmailToUser = async (req, res) => {
+    
     const email = req.body.email    
 
     try {
@@ -130,11 +187,12 @@ const sendEmailToUser = async (req, res) => {
         }
         
         const accessToken = await oAuth2Client.getAccessToken()
+        
         const transport = nodemailer.createTransport({
             service: 'gmail',
             auth: {
                 type: 'Oauth2',
-                user: 'fpenonori@gmail.com',
+                user: 'linkandlearnonline@gmail.com',
                 clientId: CLIENT_ID,
                 clientSecret: CLIENT_SECRET,
                 refreshToken: REFRESH_TOKEN,
@@ -143,11 +201,11 @@ const sendEmailToUser = async (req, res) => {
         })
 
         const mailOptions = {
-            from: 'Fran Peno <fpenonori@gmail.com>',
+            from: 'Link and Learn <linkandlearnonline@gmail.com>',
             to: email,
             subject: 'Hello from Gmail using API',
-            text: 'Hello from gmail emial using API',
-            html: '<h1>Hello from gmail emial using API</h1>',
+            text: 'Hello from gmail email using API',
+            html: '<h1>Hello from gmail email using API</h1>',
         };
 
         const result = await transport.sendMail(mailOptions)
@@ -156,7 +214,32 @@ const sendEmailToUser = async (req, res) => {
         /* istanbul ignore next */
         return res.status(500).json({message: 'Internal server error'}); 
     }
-
 };
 
-module.exports = {loginUser, sendEmailToUser, createUser};
+const changeUserPassword = async (req, res) => {
+    try{
+        const {oldPassword, newPassword, email} = req.body;
+
+        const student = await Student.findOne({where: {email}});
+        const teacher = await Teacher.findOne({where: {email}});
+        if(!student && !teacher){
+            return res.status(404).json({message: 'User not found'});
+        }
+        const foundUser = student ? student : teacher;
+        const isPasswordValid = await bcrypt.compare(oldPassword, foundUser.password);
+        if(!isPasswordValid){
+            return res.status(401).json({message: 'Invalid password'});
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        student ? await Student.update({ password: hashedPassword }, { where: { email: email } }) 
+        : await Teacher.update({ password: hashedPassword }, { where: { email: email } });
+        return res.status(200).json({message: 'Password changed successfully'});
+
+    }catch(error){
+        /* istanbul ignore next */
+        return res.status(500).json({message: 'Internal server error'});
+    }
+}
+
+module.exports = {loginUser, sendEmailToUser, createUser, changeUserPassword};

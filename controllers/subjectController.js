@@ -1,6 +1,5 @@
 const sequelize = require('../config/database');
 const Subject = require('../models/subjectModel');
-const SubjectTeacher = require('../models/subjectTeacherModel');
 
 const getAllSubjects = async (req, res) =>{
     const response = await Subject.findAll();

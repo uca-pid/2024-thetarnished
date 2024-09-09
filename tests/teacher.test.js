@@ -2,11 +2,27 @@ const request = require('supertest');
 const app = require('../app');
 const Teacher = require('../models/teacherModel');
 const sequelize = require('../config/database');
+const Subject = require('../models/subjectModel');
 
 describe('Teacher API', () => { 
 
   afterAll(async () => {
     await sequelize.query('TRUNCATE TABLE teachers CASCADE');
+  
+    const subjectsToDelete = [
+      'testSubject', 
+      'testSubject2', 
+      'testSubject3', 
+      'testSubject4', 
+      'testSubject5', 
+      'testSubject6'
+    ];
+  
+    await Subject.destroy({
+      where: {
+        subjectname: subjectsToDelete
+      }
+    });
   });
 
   it('Should get a teacher by id', async () => {
@@ -94,11 +110,17 @@ describe('Teacher API', () => {
       email: 'smith@asd.com',
       password: 'password',
     });
+
+    const testSubject = await request(app)
+            .post('/subject/create')
+            .send({
+                subjectname: "testSubject"
+            });
     
     const response = await request(app)
       .post(`/teachers/assign-subject/${teacher.teacherid}`)
       .send({
-        subjectid: "1000899336829206529", 
+        subjectid: `${testSubject.body.subjectid}`, 
       });
   
     expect(response.status).toBe(201);
@@ -141,17 +163,30 @@ describe('Teacher API', () => {
   });
 
   it("Should remove a subject from a teacher", async () => {
+
+    const testSubject2 = await request(app)
+            .post('/subject/create')
+            .send({
+                subjectname: "testSubject2"
+            });
+    const testSubject3 = await request(app)
+            .post('/subject/create')
+            .send({
+                subjectname: "testSubject3"
+            });
+    
+
     const teacher = await Teacher.create({
       firstname: 'Prof. Smith',
       lastname: 'Smith',
       email: 'smitheeee@asd.com',
       password: 'password',
-      subjects: ["1000899336829206529", "1000899336829304833"],
+      subjects: [`${testSubject2.body.subjectid}`, `${testSubject3.body.subjectid}`],
     });
     const response = await request(app)
     .delete(`/teachers/remove-subject/${teacher.teacherid}`)
     .send({
-      subjectid: "1000899336829304833",
+      subjectid: `${testSubject3.body.subjectid}`,
     });
     expect(response.status).toBe(200);
     expect(response.body.message).toBe('Subject removed from teacher successfully');
@@ -170,12 +205,24 @@ describe('Teacher API', () => {
   });
 
   it('Should not remove subject if subject does not exists', async () => {
+
+    const testSubject4 = await request(app)
+            .post('/subject/create')
+            .send({
+                subjectname: "testSubject4"
+            });
+
+    const testSubject5 = await request(app)
+            .post('/subject/create')
+            .send({
+                subjectname: "testSubject5"
+            });        
     const teacher = await Teacher.create({
       firstname: 'Prof. Smith',
       lastname: 'Smith',
       email: 'smithee11@asd.com',
       password: 'password',
-      subjects: ["1000899336829206529", "1000899336829304833"],
+      subjects: [`${testSubject4.body.subjectid}`, `${testSubject5.body.subjectid}`],
     });
     const nonExistentSubjectId = 9999;
     const response = await request(app) 
@@ -187,9 +234,38 @@ describe('Teacher API', () => {
     expect(response.status).toBe(404);
   });
 
-  it("Should retrieve all teachers that disctate an specific subject", async () => {
+  it("Should retrieve all teachers that dictate an specific subject", async () => {
+
+    const testSubject6 = await request(app)
+            .post('/subject/create')
+            .send({
+                subjectname: "testSubject6"
+            });
+      
+    const registerResponse = await request(app)
+            .post('/authentication/register')
+            .send({
+                firstname: 'Agustin',
+                lastname: 'Turanza',
+                email: 'agusT@gmail.com',
+                password: 'password',
+                subjects: [`${testSubject6.body.subjectid}`],
+                role:"TEACHER",
+            });
+    const registerTeacher = await request(app)
+            .post('/authentication/register')
+            .send({
+                firstname: 'Agustin',
+                lastname: 'Turanza',
+                email: 'agusTuranza@gmail.com',
+                password: 'password',
+                subjects: [`${testSubject6.body.subjectid}`],
+                role:"TEACHER",
+            });
+
+            
     const response = await request(app)
-    .get("/teachers/all-dictating/1000899336829206529");
+    .get(`/teachers/all-dictating/${testSubject6.body.subjectid}`);
     expect(response.status).toBe(200);
     expect(response.body.length).toBe(2);
   });

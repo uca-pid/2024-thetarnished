@@ -10,6 +10,11 @@ describe('Subject API', () => {
                 subjectname: 'Test'
             }
         });
+        await Subject.destroy({
+            where: {
+                subjectname: 'dummy'
+            }
+        });
     });
 
     it("Should get all subjects", async () => {
@@ -20,8 +25,15 @@ describe('Subject API', () => {
     });
 
     it("Should get subject by id", async () => {
+
+        const dummy = await request(app)
+            .post('/subject/create')
+            .send({
+                subjectname: "dummy"
+            });
+
         const response = await request(app)
-            .get('/subject/1000884118929276929');
+            .get(`/subject/${dummy.body.subjectid}`);	
         expect(response.status).toBe(200);
     });
 
@@ -38,7 +50,7 @@ describe('Subject API', () => {
         const response = await request(app)
             .post('/subject/create')
             .send({
-                subjectname: "Test"
+                subjectname: "Testings"
             });
         expect(response.status).toBe(400);
     });
