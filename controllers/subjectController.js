@@ -12,10 +12,11 @@ const getSubjectById = async (req, res) =>{
 }
 
 const createSubject = async (req, res) =>{
+    const { subjectname } = req.body;
     try{
         const subjectAlreadyExists = await Subject.findOne({
         where: {
-            subjectname: req.body.subjectname
+            subjectname: subjectname
         }
     });
     if(subjectAlreadyExists){

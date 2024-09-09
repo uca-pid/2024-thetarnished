@@ -29,7 +29,7 @@ describe('Authentication API', () => {
         });
         subjectTestID = subjectTest.subjectid;
         student = await Student.create({ firstname: studentFirstName, lastname: studentLastName, email: studentEmail, password: hashedOldPassword});
-        teacher = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: teacherEmail, password: hashedOldPassword, subjects: [subjectTestID]});
+        teacher = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: teacherEmail, password: hashedOldPassword, subjects: []});
     });
     
     afterAll(async () => {
@@ -50,8 +50,8 @@ describe('Authentication API', () => {
                 role:"TEACHER",
             });
         expect(registerResponse.status).toBe(201);
-        const email = 'linkandlearnonline@gmail.com';
-        await Teacher.destroy({ where: { email } });
+        const email = 'linkandlearn@gmail.com';
+        await Teacher.destroy({ where: { email: email } });
     });
 
     it("Should register a student", async () => {
@@ -66,7 +66,7 @@ describe('Authentication API', () => {
             });
 
         expect(registerResponse.status).toBe(201);
-        await Student.destroy({ where: { email: 'anotheremail@asd.com' } });
+        await Student.destroy({ where: { email: 'anotheremail@gmail.com' } });
     });
 
     it("Should not register a user if it already exists", async () => {

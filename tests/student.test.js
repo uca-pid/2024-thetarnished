@@ -9,7 +9,7 @@ describe('Student API', () => {
   let student;
   const studentFirstName = 'Jane';
   const studentLastName = 'Doe';
-  const studentEmail = 'testStudent@example.com';
+  const studentEmail = 'testStudent2@example.com';
   const password = 'password';
 
   beforeAll(async () => {
