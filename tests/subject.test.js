@@ -2,6 +2,7 @@ const request = require('supertest');
 const app = require('../app');
 const Subject = require('../models/subjectModel');
 const Teacher = require('../models/teacherModel');
+const SubjectTeacher = require('../models/subjectTeacherModel');
 
 describe('Subject API', () => {
 
@@ -27,6 +28,8 @@ describe('Subject API', () => {
     afterAll(async () => {
         await Subject.destroy({ where: { subjectname: `${subject1name}` }});
         await Subject.destroy({ where: { subjectname: `${subject2name}` }});
+        await SubjectTeacher.destroy({ where: { teacherid: teacher.teacherid } });
+        console.log(teacher.teacherid);
         await Teacher.destroy({ where: { email: teacherEmail } });
     });
 
