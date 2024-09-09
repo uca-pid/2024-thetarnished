@@ -12,7 +12,7 @@ const {
 
 const router = express.Router();
 
-router.post('/create', createSchedule);
+router.post('/create/:teacherid', createSchedule);
 router.get('/all', getAllSchedules);
 router.get('/teacher/:teacherid', getScheduleByTeacher);
 router.put('/update/:id', updateSchedule);

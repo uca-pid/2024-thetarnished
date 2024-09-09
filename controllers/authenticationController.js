@@ -8,6 +8,8 @@ const { QueryTypes } = require('sequelize');
 const SubjectTeacher = require('../models/subjectTeacherModel');
 require('dotenv').config()
 const validator = require('validator');
+const Schedule = require('../models/scheduleModel');
+const Subject = require('../models/subjectModel');
 
 const CLIENT_ID = process.env.CLIENT_ID
 const CLIENT_SECRET = process.env.CLIENT_SECRET
@@ -75,12 +77,49 @@ const loginUser = async (req, res) => {
         const {email, password} = req.body;
         let user =  await Student.findOne({where: {email}});
         let role;
+        let userid;
+        let formattedSchedule = [];
+        let subjects = [];
         
         if(!user){
             user = await Teacher.findOne({where: {email}});
             role = 'TEACHER';
+            userid = user.teacherid;
+
+            const subjectIds = await SubjectTeacher.findAll({
+                attributes: ['subjectid'],
+                where: { teacherid: userid }
+            });
+            const subjectIdsArray = subjectIds.map(record => record.subjectid);
+
+            if(subjectIdsArray.length) {
+                subjects = await Subject.findAll({
+                    where: {
+                        subjectid: subjectIdsArray
+                    }
+                });
+            }
+
+            const schedule = await Schedule.findAll({
+                where: { teacherid: userid },
+                include: {
+                  model: Teacher,
+                  attributes: ['firstname', 'lastname', 'email']
+                }
+              });
+            
+              if (schedule.length) {
+                formattedSchedule = schedule.map(sch => ({
+                    start_time: sch.start_time,
+                    end_time: sch.end_time,
+                    teacherid: sch.teacherid,
+                    dayofweek: sch.dayofweek
+                }))
+              }
         } else{
             role = 'STUDENT';
+            userid = user.studentid;
+            formattedSchedule = []
         }
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -94,11 +133,13 @@ const loginUser = async (req, res) => {
         return res.status(200).json({
             message: 'Login successful',
             user: {
-              id: user.id,
+              id: userid,
               firstname: user.firstname,
               lastname: user.lastname,
               email: user.email,
-              role: role
+              role: role,
+              schedule: formattedSchedule,
+              subjects: subjects
             }
           });
     }catch (error){

@@ -33,8 +33,6 @@ describe('Authentication API', () => {
         }
         await sequelize.query('TRUNCATE TABLE students CASCADE');
     });
-    
-    
 
     it("Should register a teacher", async () => {
 

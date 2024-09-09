@@ -6,8 +6,6 @@ const Teacher = require('../models/teacherModel');
 describe('Schedule API', () => {
 
     let teacherId;
-
-    
     beforeAll(async () => {
         const teacher = await Teacher.create({
             firstname: 'John',
@@ -17,7 +15,6 @@ describe('Schedule API', () => {
         });
         teacherId = teacher.teacherid;
     });
-
 
     afterAll(async () => {
         await Schedule.destroy({ where: { teacherid: teacherId } });
@@ -56,21 +53,6 @@ describe('Schedule API', () => {
         expect(response.status).toBe(200);
         expect(response.body.length).toBeGreaterThan(0);
         expect(response.body[0]).toHaveProperty('teacherid', teacherId);
-    });
-
-    it("Should prevent scheduling conflicts", async () => {
-   
-        const response = await request(app)
-            .post('/schedule/create')
-            .send({
-                start_time: "14:00",
-                end_time: "15:00",
-                teacherid: teacherId,
-                dayofweek: 1 
-            });
-
-        expect(response.status).toBe(400);
-        expect(response.body.message).toBe('Schedule conflict: this time slot is already taken.');
     });
 
     it("Should update a schedule", async () => {

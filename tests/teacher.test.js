@@ -25,10 +25,6 @@ describe('Teacher API', () => {
     });
   });
 
-
-  
-
-
   it('Should get a teacher by id', async () => {
     const createdTeacher = await Teacher.create({
       firstname: 'Prof. Peñoñori',

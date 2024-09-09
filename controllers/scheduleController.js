@@ -4,35 +4,35 @@ const { Op } = require('sequelize');
 
 
 const createSchedule = async (req, res) => {
-  const { start_time, end_time, teacherid, dayofweek } = req.body;
-
+  const { schedule } = req.body;
+  const { teacherid } = req.params;
+  
   try {
+    const createdSchedules = [];
 
-    const existingSchedule = await Schedule.findOne({
-      where: {
-        teacherid,
-        dayofweek,
-        start_time,
-      }
-    });
+    const teacherSchedules = await Schedule.findAll({ where: { teacherid: teacherid } });
 
-    if (existingSchedule) {
-      return res.status(400).json({ message: 'Schedule conflict: this time slot is already taken.' });
+    if (teacherSchedules.length !== 0) {
+      await Schedule.destroy({ where: { teacherid } });
     }
 
+    for (const entry of schedule) {
+      const { start_time, end_time, dayofweek } = entry;
+      const newSchedule = await Schedule.create({
+        start_time: start_time,
+        end_time: end_time,
+        teacherid: teacherid,
+        dayofweek: dayofweek
+      });
 
-    const newSchedule = await Schedule.create({
-      start_time,
-      end_time,
-      teacherid,
-      dayofweek
-    });
-    
-    return res.status(201).json(newSchedule);
+      createdSchedules.push(newSchedule);
+    }
+    return res.status(201).json(createdSchedules);
   } catch (error) {
-    return res.status(500).json({ message: 'Error creating schedule', error });
+    return res.status(500).json({ message: 'Error creating schedules', error });
   }
 };
+
 
 const getAllSchedules = async (req, res) => {
     try {
@@ -56,7 +56,7 @@ const getScheduleByTeacher = async (req, res) => {
 
   try {
     const schedules = await Schedule.findAll({
-      where: { teacherid },
+      where: { teacherid: teacherid },
       include: {
         model: Teacher,
         attributes: ['firstname', 'lastname', 'email']
@@ -119,22 +119,24 @@ const updateSchedule = async (req, res) => {
   };
   
   
-const deleteSchedule = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const schedule = await Schedule.findByPk(id);
-
-    if (!schedule) {
-      return res.status(404).json({ message: 'Schedule not found' });
+  const deleteSchedule = async (teacherId) => {
+    const { id } = req.body;
+  
+    try {
+      const schedules = await Schedule.findAll({ where: { teacherid: teacherId } });
+  
+      if (schedules.length === 0) {
+        return res.status(404).json({ message: 'No schedules found for this teacher' });
+      }
+  
+      await Schedule.destroy({ where: { teacherid: id } });
+  
+      return res.status(200).json({ message: 'Schedules deleted successfully' });
+    } catch (error) {
+      return res.status(500).json({ message: 'Error deleting schedules', error });
     }
-
-    await schedule.destroy();
-    return res.status(200).json({ message: 'Schedule deleted successfully' });
-  } catch (error) {
-    return res.status(500).json({ message: 'Error deleting schedule', error });
-  }
-};
+  };
+  
 
 module.exports = {
   createSchedule,
