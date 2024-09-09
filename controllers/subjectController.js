@@ -35,7 +35,7 @@ const createSubject = async (req, res) =>{
 const getAllSubjectsDictatedByTeachers = async (req, res) => {
     try {
       const [results, metadata] = await sequelize.query(`
-        SELECT s.subjectid, s.subjectname
+        SELECT DISTINCT s.subjectid, s.subjectname
         FROM subjects s
         INNER JOIN subjectteacher st ON s.subjectid = st.subjectid
       `);
@@ -46,7 +46,6 @@ const getAllSubjectsDictatedByTeachers = async (req, res) => {
       return res.status(500).json({ message: 'Internal server error' });
     }
   };
-  
 
 module.exports = {
     getAllSubjects,

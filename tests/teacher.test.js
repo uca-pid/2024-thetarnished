@@ -24,11 +24,22 @@ describe('Teacher API', () => {
         teacher = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: teacherEmail, password: hashedOldPassword, subjects: []});
         teacherID = teacher.teacherid;
     });
+
     
     afterAll(async () => {
       await SubjectTeacher.destroy({ where: { teacherid: teacherID } });
       await Teacher.destroy({ where: { email: teacherEmail } });
       await Subject.destroy({ where: { subjectname: 'authSubjectTest' } });
+
+  });
+
+  it('Should get a teacher by id', async () => {
+    const createdTeacher = await Teacher.create({
+      firstname: 'Prof. Peñoñori',
+      lastname: 'Peñoñori',
+      email: 'peñoñori@asd.com',
+      password: 'password',
+
     });
     
   it('Should get a teacher by id', async () => {

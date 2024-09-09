@@ -1,12 +1,9 @@
 const request = require('supertest');
 const app = require('../app');
 const Subject = require('../models/subjectModel');
-// const sequelize = require('../config/database');
 const Student = require('../models/studentModel');
 const Teacher = require('../models/teacherModel');
 const bcrypt = require('bcrypt');
-// const { gmail } = require('googleapis/build/src/apis/gmail');
-// const { TEXT } = require('sequelize');
 
 
 describe('Authentication API', () => {
@@ -36,7 +33,7 @@ describe('Authentication API', () => {
         await Student.destroy({ where: { email: studentEmail } });
         await Teacher.destroy({ where: { email: teacherEmail } });
     });
-    
+
     it("Should register a teacher", async () => {
 
         const registerResponse = await request(app)
@@ -117,6 +114,7 @@ describe('Authentication API', () => {
                 email: "wrongemail@gmail.com",
                 password: oldPassword,
     });
+
 
     expect(loginResponse.status).toBe(404);
     expect(loginResponse.body.message).toBe('User not found')    
