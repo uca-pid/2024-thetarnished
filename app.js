@@ -4,6 +4,7 @@ const teacherRoutes = require('./routes/teacherRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
 const autenthicationRoutes = require('./routes/authenticationRoutes'); 
 const scheduleRoutes = require('./routes/scheduleRoutes');
+const resetRoutes = require('./routes/resetRoutes');
 const defineAssociations = require('./models/associations');
 const cors = require('cors');
 
@@ -17,6 +18,7 @@ app.use(cors({
 
 defineAssociations();
 app.use(express.json());
+app.use('/reset', resetRoutes);
 app.use('/students', studentRoutes);
 app.use('/teachers', teacherRoutes);
 app.use('/authentication', autenthicationRoutes);

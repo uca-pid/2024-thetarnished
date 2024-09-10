@@ -1,12 +1,12 @@
 const bcrypt = require('bcrypt');
 const Student = require('../models/studentModel');
 const Teacher = require('../models/teacherModel');
-const nodemailer = require('nodemailer')
 const { google } = require('googleapis');
 const sequelize = require('../config/database');
 const { QueryTypes } = require('sequelize');
 const SubjectTeacher = require('../models/subjectTeacherModel');
 require('dotenv').config()
+const nodemailer = require('nodemailer')
 const validator = require('validator');
 const Schedule = require('../models/scheduleModel');
 const Subject = require('../models/subjectModel');
@@ -163,6 +163,30 @@ const loginUser = async (req, res) => {
     }
 };
 
+const changeUserPassword = async (req, res) => {
+    try{
+        const {oldPassword, newPassword, email} = req.body;
+
+        const student = await Student.findOne({where: {email}});
+        const teacher = await Teacher.findOne({where: {email}});
+        if(!student && !teacher){
+            return res.status(404).json({message: 'User not found'});
+        }
+        const foundUser = student ? student : teacher;
+        const isPasswordValid = await bcrypt.compare(oldPassword, foundUser.password);
+        if(!isPasswordValid){
+            return res.status(401).json({message: 'Invalid password'});
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        student ? await Student.update({ password: hashedPassword }, { where: { email: email } }) : await Teacher.update({ password: hashedPassword }, { where: { email: email } });
+        return res.status(200).json({message: 'Password changed successfully'});
+
+    }catch(error){
+        /* istanbul ignore next */
+        return res.status(500).json({message: 'Internal server error'});
+    }
+}
 
 const sendEmailToUser = async (req, res) => {
     
@@ -215,30 +239,5 @@ const sendEmailToUser = async (req, res) => {
         return res.status(500).json({message: 'Internal server error'}); 
     }
 };
-
-const changeUserPassword = async (req, res) => {
-    try{
-        const {oldPassword, newPassword, email} = req.body;
-
-        const student = await Student.findOne({where: {email}});
-        const teacher = await Teacher.findOne({where: {email}});
-        if(!student && !teacher){
-            return res.status(404).json({message: 'User not found'});
-        }
-        const foundUser = student ? student : teacher;
-        const isPasswordValid = await bcrypt.compare(oldPassword, foundUser.password);
-        if(!isPasswordValid){
-            return res.status(401).json({message: 'Invalid password'});
-        }
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-        student ? await Student.update({ password: hashedPassword }, { where: { email: email } }) : await Teacher.update({ password: hashedPassword }, { where: { email: email } });
-        return res.status(200).json({message: 'Password changed successfully'});
-
-    }catch(error){
-        /* istanbul ignore next */
-        return res.status(500).json({message: 'Internal server error'});
-    }
-}
 
 module.exports = {loginUser, sendEmailToUser, createUser, changeUserPassword};

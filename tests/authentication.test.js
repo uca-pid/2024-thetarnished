@@ -137,6 +137,8 @@ describe('Authentication API', () => {
             .post('/authentication/send-email')
             .send({
                 email: studentEmail,
+                subject: "Test subject",
+                message: "Test message",
         });
         expect(response.status).toBe(200);;
     });
