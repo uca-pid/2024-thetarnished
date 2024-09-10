@@ -35,7 +35,7 @@ const Reservation = sequelize.define('Reservation', {
     onDelete: 'CASCADE',
   },
   datetime: {
-    type: DataTypes.DATEONLY,
+    type: DataTypes.DATE,  
     allowNull: false,
   },
   teacher_id: {

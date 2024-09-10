@@ -18,7 +18,10 @@ const createReservation = async (req, res) => {
         const teacher_idBigint = BigInt(teacher_id);
         const subject_idBigint = BigInt(subject_id);
         const schedule_idBigint = BigInt(schedule_id);
-        const reservationFormattedDate = moment(reservationDate).format('YYYY-MM-DD');
+        const reservationFormattedDate = moment(`${reservationDate.format('YYYY-MM-DD')} ${start_time}`, 'YYYY-MM-DD HH:mm:ss')
+            .subtract(6, 'hours') //Esto se hace para que la fecha se guarde en la base de datos en formato UTC, si no la base de datos no la entiende
+            .format('YYYY-MM-DD HH:mm:ss');
+        
         const existingReservation = await Reservation.findOne({
             where: {
                 teacher_id: teacher_idBigint,
