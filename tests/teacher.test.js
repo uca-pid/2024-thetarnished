@@ -40,7 +40,7 @@ describe('Teacher API', () => {
       password: 'password',
     });
   });
-  
+
   it('Should get a teacher by id', async () => {
     const response = await request(app)
       .get(`/teachers/${teacher.teacherid}`);
@@ -261,5 +261,4 @@ describe('Teacher API', () => {
     expect(response.status).toBe(200);
     expect(response.body.length).toBeGreaterThanOrEqual(1);
   });
-
 });

@@ -130,8 +130,6 @@ const getAllTeachersDictatingASubjectById = async (req, res) => {
   }
 };
 
-
-
 module.exports = {
   getTeacherById,
   updateTeacher,
