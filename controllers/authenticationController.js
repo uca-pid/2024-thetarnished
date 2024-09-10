@@ -240,4 +240,21 @@ const sendEmailToUser = async (req, res) => {
     }
 };
 
-module.exports = {loginUser, sendEmailToUser, createUser, changeUserPassword};
+const editProfile = async (req, res) => {
+    try{
+        const {newFirstname, newLastname, email} = req.body;
+        const student = await Student.findOne({where: {email}});
+        const teacher = await Teacher.findOne({where: {email}});
+        if(!student && !teacher){
+            return res.status(404).json({message: 'User not found'});
+        }
+        const foundUser = student ? student : teacher;
+        student ? await Student.update({ firstname: newFirstname, lastname: newLastname }, { where: { email: email } }) : await Teacher.update({ firstname: newFirstname, lastname: newLastname }, { where: { email: email } });
+        return res.status(200).json({message: 'Profile updated successfully'});
+    }catch(error){
+        /* istanbul ignore next */
+        return res.status(500).json({message: 'Internal server error'});
+    }
+}
+
+module.exports = {loginUser, sendEmailToUser, createUser, changeUserPassword, editProfile};
