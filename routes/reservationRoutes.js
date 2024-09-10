@@ -2,14 +2,16 @@ const express = require('express');
 const {
     createReservation,
     deleteReservation,
-    getReservationsByTeacher
+    getReservationsByTeacher,
+    getReservationsByStudentId
 } = require('../controllers/reservationController');
 
 const router = express.Router();
 
-router.get('/reservations/teacher/:teacher_id', getReservationsByTeacher);
-router.get('/reservations/create', createReservation);
-router.get('/reservations/delete/:id', deleteReservation);
 
-
+router.post('/create', createReservation);
+router.delete('/delete/:id', deleteReservation);
+router.get('/student/:student_id', getReservationsByStudentId);
+router.get('/teacher/:teacher_id', getReservationsByTeacher);
 module.exports = router;
+

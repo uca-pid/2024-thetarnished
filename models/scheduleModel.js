@@ -32,6 +32,10 @@ const Schedule = sequelize.define('Schedule', {
       min: 1,
       max: 7
     }
+  },
+  istaken: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   }
 }, {
   tableName: 'schedule',
