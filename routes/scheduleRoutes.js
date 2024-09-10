@@ -6,8 +6,6 @@ const {
   createSchedule,
   getAllSchedules,
   getScheduleByTeacher,
-  updateSchedule,
-  deleteSchedule
 } = require('../controllers/scheduleController');
 
 const router = express.Router();
@@ -15,7 +13,5 @@ const router = express.Router();
 router.post('/create/:teacherid', createSchedule);
 router.get('/all', getAllSchedules);
 router.get('/teacher/:teacherid', getScheduleByTeacher);
-router.put('/update/:id', updateSchedule);
-router.delete('/delete/:id', deleteSchedule);
 
 module.exports = router;

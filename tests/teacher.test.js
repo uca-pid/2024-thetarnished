@@ -30,8 +30,7 @@ describe('Teacher API', () => {
       await SubjectTeacher.destroy({ where: { teacherid: teacherID } });
       await Teacher.destroy({ where: { email: teacherEmail } });
       await Subject.destroy({ where: { subjectname: 'authSubjectTest' } });
-
-  });
+    });
 
   it('Should get a teacher by id', async () => {
     const createdTeacher = await Teacher.create({
@@ -39,11 +38,10 @@ describe('Teacher API', () => {
       lastname: 'Peñoñori',
       email: 'peñoñori@asd.com',
       password: 'password',
-
     });
-    
+  });
+  
   it('Should get a teacher by id', async () => {
-
     const response = await request(app)
       .get(`/teachers/${teacher.teacherid}`);
   
