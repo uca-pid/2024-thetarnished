@@ -118,6 +118,7 @@ const getAllTeachersDictatingASubjectById = async (req, res) => {
     JOIN subjectteacher 
     ON teachers.teacherid = subjectteacher.teacherid 
     WHERE subjectid = :subjectid
+    AND istaken = false
     `, {
       replacements: { subjectid: subjectid },
     });

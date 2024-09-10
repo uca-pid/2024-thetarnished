@@ -1,18 +1,18 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');  // Assuming you have set up the Sequelize instance
+const sequelize = require('../config/database');
 
 const Reservation = sequelize.define('Reservation', {
   id: {
     type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: true,
+    autoIncrement: true, // Use autoIncrement for identity columns
   },
   student_id: {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
-      model: 'students', 
-      key: 'studentid',  
+      model: 'students',
+      key: 'studentid',
     },
     onDelete: 'CASCADE',
   },
@@ -20,8 +20,8 @@ const Reservation = sequelize.define('Reservation', {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
-      model: 'schedule', 
-      key: 'scheduleid',  
+      model: 'schedule',
+      key: 'scheduleid',
     },
     onDelete: 'CASCADE',
   },
@@ -29,12 +29,12 @@ const Reservation = sequelize.define('Reservation', {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
-      model: 'subjects', // Name of the table
-      key: 'subjectid',   // Foreign key referencing subjectid in subjects table
+      model: 'subjects',
+      key: 'subjectid',
     },
     onDelete: 'CASCADE',
   },
-  date: {
+  datetime: {
     type: DataTypes.DATEONLY,
     allowNull: false,
   },
@@ -42,14 +42,14 @@ const Reservation = sequelize.define('Reservation', {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
-      model: 'teachers', 
-      key: 'teacherid', 
+      model: 'teachers',
+      key: 'teacherid',
     },
     onDelete: 'CASCADE',
   },
 }, {
   tableName: 'reservations',
-  timestamps: false, 
+  timestamps: false,
 });
 
 module.exports = Reservation;

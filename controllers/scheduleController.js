@@ -1,12 +1,8 @@
 const Schedule = require('../models/scheduleModel');
 const Teacher = require('../models/teacherModel');
+
 const { Op } = require('sequelize');
 
-
-const Schedule = require('../models/scheduleModel');
-const Teacher = require('../models/teacherModel');
-const { Op } = require('sequelize');
-const moment = require('moment'); // For date calculations
 
 const createSchedule = async (req, res) => {
   const { schedule } = req.body;
@@ -14,44 +10,30 @@ const createSchedule = async (req, res) => {
   
   try {
     const createdSchedules = [];
-    const currentDayOfWeek = moment().isoWeekday(); 
-    const teacherSchedules = await Schedule.findAll({ where: { teacherid } });
+
+    const teacherSchedules = await Schedule.findAll({ where: { teacherid: teacherid } });
+
     if (teacherSchedules.length !== 0) {
       await Schedule.destroy({ where: { teacherid } });
     }
 
- 
     for (const entry of schedule) {
       const { start_time, end_time, dayofweek } = entry;
-
-      let scheduleDate = moment().isoWeekday(dayofweek); 
-      
-
-      if (dayofweek < currentDayOfWeek) {
-        scheduleDate = scheduleDate.add(1, 'week');
-      }
-
-      scheduleDate.set({
-        hour: parseInt(start_time.split(':')[0], 10),
-        minute: parseInt(start_time.split(':')[1], 10),
-        second: 0,
-        millisecond: 0
-      });
-
       const newSchedule = await Schedule.create({
-        date: scheduleDate.toISOString(), 
-        teacherid: teacherid
+        start_time: start_time,
+        end_time: end_time,
+        teacherid: teacherid,
+        dayofweek: dayofweek
       });
 
       createdSchedules.push(newSchedule);
     }
-
     return res.status(201).json(createdSchedules);
   } catch (error) {
-    console.error('Error creating schedules:', error);
     return res.status(500).json({ message: 'Error creating schedules', error });
   }
 };
+
 
 const getAllSchedules = async (req, res) => {
     try {
