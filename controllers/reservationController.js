@@ -22,7 +22,7 @@ const createReservation = async (req, res) => {
         const subject_idBigint = BigInt(subject_id);
         const schedule_idBigint = BigInt(schedule_id);
         const reservationFormattedDate = moment(`${reservationDate.format('YYYY-MM-DD')} ${start_time}`, 'YYYY-MM-DD HH:mm:ss')
-            .subtract(6, 'hours') 
+            .subtract(3, 'hours') 
             .format('YYYY-MM-DD HH:mm:ss');
         
         const existingReservation = await Reservation.findOne({
