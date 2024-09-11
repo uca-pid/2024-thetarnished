@@ -57,7 +57,7 @@ const getScheduleByTeacher = async (req, res) => {
 
   try {
     const schedules = await Schedule.findAll({
-      where: { teacherid: teacherid },
+      where: { teacherid: teacherid, istaken: false },
       include: {
         model: Teacher,
         attributes: ['firstname', 'lastname', 'email']
