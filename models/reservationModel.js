@@ -1,11 +1,14 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
+const Student = require('./studentModel');
+const Subject = require('./subjectModel');
+const Teacher = require('./teacherModel');
 
 const Reservation = sequelize.define('Reservation', {
   id: {
     type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: true, // Use autoIncrement for identity columns
+    autoIncrement: true, 
   },
   student_id: {
     type: DataTypes.BIGINT,
@@ -51,5 +54,9 @@ const Reservation = sequelize.define('Reservation', {
   tableName: 'reservations',
   timestamps: false,
 });
+
+Reservation.belongsTo(Student, { foreignKey: 'student_id' });
+Reservation.belongsTo(Subject, { foreignKey: 'subject_id' });
+Reservation.belongsTo(Teacher, { foreignKey: 'teacher_id' });
 
 module.exports = Reservation;
