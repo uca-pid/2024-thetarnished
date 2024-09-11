@@ -2,6 +2,9 @@ const Reservation = require('../models/reservationModel');
 const moment = require('moment');
 const sequelize = require('../config/database');
 const Schedule = require('../models/scheduleModel');
+const { Op } = require('sequelize');
+const Student = require('../models/studentModel');
+const Subject = require('../models/subjectModel');
 
 const createReservation = async (req, res) => {
     try {
@@ -19,7 +22,7 @@ const createReservation = async (req, res) => {
         const subject_idBigint = BigInt(subject_id);
         const schedule_idBigint = BigInt(schedule_id);
         const reservationFormattedDate = moment(`${reservationDate.format('YYYY-MM-DD')} ${start_time}`, 'YYYY-MM-DD HH:mm:ss')
-            .subtract(6, 'hours') //Esto se hace para que la fecha se guarde en la base de datos en formato UTC, si no la base de datos no la entiende
+            .subtract(3, 'hours') 
             .format('YYYY-MM-DD HH:mm:ss');
         
         const existingReservation = await Reservation.findOne({
@@ -94,17 +97,43 @@ const deleteReservation = async (req, res) => {
 
 const getReservationsByTeacher = async (req, res) => {
     try {
-        const { teacher_id } = req.params; 
+        const { teacher_id } = req.params;
 
+        
+        const now = moment().toDate();
+        const twoDaysFromNow = moment().add(2, 'days').toDate(); 
         const reservations = await Reservation.findAll({
-            where: { teacher_id }
+            where: {
+                teacher_id,
+                datetime: {
+                    [Op.between]: [now, twoDaysFromNow]  
+                }
+            },
+            include: [
+                {
+                    model: Student,
+                    attributes: ['firstname', 'lastname'], 
+                },
+                {
+                    model: Subject,
+                    attributes: ['subjectname'], 
+                }
+            ],
+            attributes: ['id', 'datetime']
         });
 
         if (reservations.length === 0) {
-            return res.status(404).json({ message: 'No reservations found for this teacher.' });
+            return res.status(404).json({ message: 'No reservations found for this teacher in the next two days.' });
         }
 
-        return res.status(200).json(reservations);
+        const formattedReservations = reservations.map(reservation => ({
+            id: reservation.id,
+            student_name: `${reservation.Student.firstname} ${reservation.Student.lastname}`,
+            subject_name: reservation.Subject.subjectname,
+            datetime: reservation.datetime
+        }));
+
+        return res.status(200).json(formattedReservations);
     } catch (error) {
         return res.status(500).json({ message: 'Error fetching reservations for teacher', error });
     }
