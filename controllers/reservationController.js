@@ -5,6 +5,7 @@ const Schedule = require('../models/scheduleModel');
 const { Op } = require('sequelize');
 const Student = require('../models/studentModel');
 const Subject = require('../models/subjectModel');
+const Teacher = require('../models/teacherModel');
 
 const createReservation = async (req, res) => {
     try {
@@ -64,7 +65,18 @@ const getReservationsByStudentId = async (req, res) => {
     try {
         const { student_id } = req.params;
         const reservations = await Reservation.findAll({
-            where: { student_id }
+            where: { student_id },
+            include: [
+                {
+                    model: Teacher,
+                    attributes: ['firstname', 'lastname'],
+                },
+                {
+                    model: Subject,
+                    attributes: ['subjectname'],
+                }
+            ],
+            attributes: ['id', 'datetime'],
         });
 
         if (reservations.length === 0) {
@@ -101,7 +113,7 @@ const getReservationsByTeacher = async (req, res) => {
 
         
         const now = moment().toDate();
-        const twoDaysFromNow = moment().add(2, 'days').toDate(); 
+        const twoDaysFromNow = moment().add(5, 'days').toDate(); 
         const reservations = await Reservation.findAll({
             where: {
                 teacher_id,
@@ -123,7 +135,7 @@ const getReservationsByTeacher = async (req, res) => {
         });
 
         if (reservations.length === 0) {
-            return res.status(404).json({ message: 'No reservations found for this teacher in the next two days.' });
+            return res.status(404).json({ message: 'No reservations found for this teacher in the next five days.' });
         }
 
         const formattedReservations = reservations.map(reservation => ({
