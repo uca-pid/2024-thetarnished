@@ -257,4 +257,21 @@ const editProfile = async (req, res) => {
     }
 }
 
-module.exports = {loginUser, sendEmailToUser, createUser, changeUserPassword, editProfile};
+const deleteUserAccount = async (req, res) => {
+    try{
+        const {email} = req.body;
+        const student = await Student.findOne({where: {email}});
+        const teacher = await Teacher.findOne({where: {email}});
+        if(!student && !teacher){
+            return res.status(404).json({message: 'User not found'});
+        }
+        const foundUser = student ? student : teacher;
+        student ? await Student.destroy({ where: { email: email } }) : await Teacher.destroy({ where: { email: email } });
+        return res.status(200).json({message: 'User account deleted successfully'});
+    }catch(error){
+        /* istanbul ignore next */
+        return res.status(500).json({message: 'Internal server error'});
+    }
+}
+
+module.exports = {loginUser, sendEmailToUser, createUser, changeUserPassword, editProfile, deleteUserAccount};
