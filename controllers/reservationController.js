@@ -18,19 +18,15 @@ const createReservation = async (req, res) => {
             reservationDate.add(1, 'week');
         }
 
-        const student_idBigint = BigInt(student_id);
-        const teacher_idBigint = BigInt(teacher_id);
-        const subject_idBigint = BigInt(subject_id);
-        const schedule_idBigint = BigInt(schedule_id);
         const reservationFormattedDate = moment(`${reservationDate.format('YYYY-MM-DD')} ${start_time}`, 'YYYY-MM-DD HH:mm:ss')
             .subtract(3, 'hours') 
             .format('YYYY-MM-DD HH:mm:ss');
         
         const existingReservation = await Reservation.findOne({
             where: {
-                teacher_id: teacher_idBigint,
+                teacher_id: teacher_id,
                 datetime: reservationFormattedDate,
-                schedule_id: schedule_idBigint
+                schedule_id: schedule_id
             }
         });
 
@@ -41,17 +37,17 @@ const createReservation = async (req, res) => {
             });
         }
         const reservation = await Reservation.create({
-            student_id: student_idBigint,
-            teacher_id: teacher_idBigint,
-            subject_id: subject_idBigint,
-            schedule_id: schedule_idBigint,
+            student_id: student_id,
+            teacher_id: teacher_id,
+            subject_id: subject_id,
+            schedule_id: schedule_id,
             datetime: reservationFormattedDate
         });
-        console.log('Schedule ID being updated:', schedule_idBigint);
+
         await Schedule.update({
             istaken: true
         }, {
-            where: {scheduleid: schedule_idBigint}
+            where: {scheduleid: schedule_id}
         });
         return res.status(201).json(reservation);
     } catch (error) {
@@ -64,6 +60,13 @@ const createReservation = async (req, res) => {
 const getReservationsByStudentId = async (req, res) => {
     try {
         const { student_id } = req.params;
+
+        const studentFound = await Student.findByPk(student_id);
+
+        if (!studentFound) {
+            return res.status(404).json({ message: 'Student not found' });
+        }
+
         const reservations = await Reservation.findAll({
             where: { student_id },
             include: [
@@ -111,6 +114,10 @@ const getReservationsByTeacher = async (req, res) => {
     try {
         const { teacher_id } = req.params;
 
+        const foundTeacher = await Teacher.findByPk(teacher_id);
+        if (!foundTeacher) {
+            return res.status(404).json({ message: 'Teacher not found' });
+        }
         
         const now = moment().toDate();
         const twoDaysFromNow = moment().add(5, 'days').toDate(); 

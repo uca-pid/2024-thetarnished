@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest --watchAll --coverage",
+    "test:reservations": "jest ./tests/reservation.test.js --coverage",
     "start": "node ./start.js"
   },
   "keywords": [],
@@ -21,6 +22,7 @@
     "pg": "^8.12.0",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.3",
+    "sequelize-mock": "^0.10.2",
     "sqlite3": "^5.1.7",
     "validator": "^13.12.0"
   },
