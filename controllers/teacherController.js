@@ -110,30 +110,30 @@ const removeSubjectFromTeacher = async (req, res) => {
   }
 };
 
-const getAllTeachersDictatingASubjectById = async (req, res) => {
-  try {
-    const { subjectid } = req.params;
-    const [teachers] = await sequelize.query(`
+  const getAllTeachersDictatingASubjectById = async (req, res) => {
+    try {
+      const { subjectid } = req.params;
+      const [teachers] = await sequelize.query(`
 
-      SELECT DISTINCT teachers.teacherid, firstname, lastname, email, subjectid  from teachers 
-      JOIN subjectteacher
-      ON teachers.teacherid = subjectteacher.teacherid
-      JOIN schedule
-      ON teachers.teacherid = schedule.teacherid
-      WHERE subjectid = :subjectid
-      AND istaken = 'false'`
-    , {
+        SELECT DISTINCT teachers.teacherid, firstname, lastname, email, subjectid  from teachers 
+        JOIN subjectteacher
+        ON teachers.teacherid = subjectteacher.teacherid
+        JOIN schedule
+        ON teachers.teacherid = schedule.teacherid
+        WHERE subjectid = :subjectid
+        AND istaken = 'false'`
+      , {
 
-      replacements: { subjectid: subjectid },
-    });
+        replacements: { subjectid: subjectid },
+      });
 
-    return res.status(200).json(teachers);
-  
-  } catch (error) {
-    /* istanbul ignore next */
-    return res.status(500).json({ message: `Error getting teachers: ${error.message}` });
-  }
-};
+      return res.status(200).json(teachers);
+    
+    } catch (error) {
+      /* istanbul ignore next */
+      return res.status(500).json({ message: `Error getting teachers: ${error.message}` });
+    }
+  };
 
 module.exports = {
   getTeacherById,

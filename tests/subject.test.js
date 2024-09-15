@@ -3,19 +3,19 @@ const app = require('../app');
 const Subject = require('../models/subjectModel');
 const Teacher = require('../models/teacherModel');
 const SubjectTeacher = require('../models/subjectTeacherModel');
+const { cloudfunctions } = require('googleapis/build/src/apis/cloudfunctions');
 
 describe('Subject API', () => {
 
     let subject1;
     let subject2;
     let teacher;
-    const teacherEmail = "johndorito6@example.com";
-    const subject1name = "Philosophy and Discourse IV";
-    const subject2name = "Introduction to Computer Science V";
+    const teacherEmail = "johndoerito15@example.com";
+    const subject1name = "Philosophy and Discourse VII";
+    const subject2name = "Introduction to Computer Science VIII";
     beforeAll(async () => {
         subject1 = await Subject.create({ subjectname: subject1name });
         subject2 = await Subject.create({ subjectname: subject2name });
-        console.log(subject1.subjectname);
         teacher = await Teacher.create({
             firstname: "John",
             lastname: "Doe",
@@ -26,10 +26,9 @@ describe('Subject API', () => {
     });
     
     afterAll(async () => {
-        await Subject.destroy({ where: { subjectname: `${subject1name}` }});
-        await Subject.destroy({ where: { subjectname: `${subject2name}` }});
         await SubjectTeacher.destroy({ where: { teacherid: teacher.teacherid } });
-        console.log(teacher.teacherid);
+        await Subject.destroy({ where: { subjectname: subject1name }});
+        await Subject.destroy({ where: { subjectname: subject2name }});
         await Teacher.destroy({ where: { email: teacherEmail } });
     });
 
