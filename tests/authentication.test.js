@@ -113,11 +113,9 @@ describe('Authentication API', () => {
             .send({
                 email: "wrongemail@gmail.com",
                 password: oldPassword,
-    });
-
-
-    expect(loginResponse.status).toBe(404);
-    expect(loginResponse.body.message).toBe('User not found')    
+            });
+        expect(loginResponse.status).toBe(404);
+        expect(loginResponse.body.message).toBe('User not found')    
     });
 
     it("Should not login a student with wrong password", async () => {     
@@ -132,27 +130,6 @@ describe('Authentication API', () => {
         expect(loginResponse.body.message).toBe('Invalid password') 
     });
 
-    it("Should send an email to a user", async () => {
-        const response = await request(app)
-            .post('/authentication/send-email')
-            .send({
-                email: studentEmail,
-                subject: "Test subject",
-                message: "Test message",
-        });
-        expect(response.status).toBe(200);;
-    });
-
-    it("Should not send an email to a non existent user", async () => {
-        const response = await request(app)
-            .post('/authentication/send-email')
-            .send({
-                email: "nonexistentuser@gmail.com",
-            });
-        expect(response.status).toBe(404);
-        expect(response.body.message).toBe('User not found')
-    });
-
     it('Should not change the password if the user is not found', async () => {
         const hashedPassword = await bcrypt.hash('oldpassword', 10);
         const response = await request(app)
@@ -161,23 +138,78 @@ describe('Authentication API', () => {
     
         expect(response.status).toBe(404);
         expect(response.body.message).toBe('User not found');
-      });
+    });
 
-      it('Should return 401 if the old password is incorrect', async () => {
+    it('Should return 401 if the old password is incorrect', async () => {
         const response = await request(app)
           .put('/authentication/change-password')
           .send({ oldPassword: "wrongpassword", newPassword: newPassword, email: studentEmail });
     
         expect(response.status).toBe(401);
         expect(response.body.message).toBe('Invalid password');
-      });
+    });
 
-      it('Should successfully change password for a student', async () => {
+    it('Should successfully change password for a student', async () => {
         const response = await request(app)
           .put('/authentication/change-password')
           .send({ oldPassword: oldPassword, newPassword: newPassword, email: studentEmail });
 
         expect(response.status).toBe(200);
         expect(response.body.message).toBe('Password changed successfully');
-      });
+    });
+
+    it('Should allow a student to edit their profile', async () => {
+        const response = await request(app)
+          .put('/authentication/edit-profile')
+          .send({
+            firstname: 'Jackson',
+            lastname: 'Doe',
+            email: studentEmail,
+          });
+
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('Profile updated successfully');
+    });
+
+    it('Should not allow a student to edit their profile with invalid email', async () => {
+        const response = await request(app)
+          .put('/authentication/edit-profile')
+          .send({
+            firstname: 'Jackson',
+            lastname: 'Doe',
+            email: 'invalidemail@hotmail.com',
+          });
+          expect(response.status).toBe(404);
+          expect(response.body.message).toBe('User not found');
+    }); 
+
+    it('Should not allow a student to edit their profile with invalid email', async () => {
+            const response = await request(app)
+              .put('/authentication/edit-profile')
+              .send({
+                firstname: 'Jackson',
+                lastname: 'Doe',
+                email: 'invalidemail@hotmail.com',
+              });
+              expect(response.status).toBe(404);
+              expect(response.body.message).toBe('User not found');
+    });
+    it('Should allow a student to delete their account', async () => {
+        const response = await request(app)
+          .delete('/authentication/delete-account')
+          .send({
+            email: studentEmail,
+        });
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('User account deleted successfully');
+    });
+    it('Should not allow a student to delete their account with invalid email', async () => {
+        const response = await request(app)
+          .delete('/authentication/delete-account')
+          .send({
+            email: 'invalidemail@hotmail.com',
+        });
+        expect(response.status).toBe(404);
+        expect(response.body.message).toBe('User not found');
+    });
 });

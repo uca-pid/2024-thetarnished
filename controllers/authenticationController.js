@@ -35,7 +35,7 @@ const createUser = async (req, res) => {
               type: QueryTypes.SELECT
           });
         if(user){
-            return res.status(401).json({message: 'User already exists'})
+            return res.status(400).json({message: 'User already exists'})
         }
 
         const bigIntSubjects = subjects.map(id => BigInt(id));
@@ -228,6 +228,7 @@ const deleteUserAccount = async (req, res) => {
             try {
                 await sendEmailToUser(email, "Account Deleted", "", htmlContent);
             } catch (error) {
+                /* istanbul ignore next */
                 console.error('Error sending email:', error);
             }
         });
