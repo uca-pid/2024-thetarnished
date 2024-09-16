@@ -17,19 +17,19 @@ describe('Reservation Controller Tests', () => {
 
   beforeAll(async () => {
     const teacher = await Teacher.create(
-      { firstname: 'John', lastname: 'Doe', email: 'john.doe12@example.com', password: 'password' });
+      { firstname: 'John', lastname: 'Doe', email: 'john.doe5@example.com', password: 'password' });
     teacherId = teacher.teacherid;
 
     const newTeacher = await Teacher.create(
-      { firstname: 'John', lastname: 'Doe', email: 'john.doe13@example.com', password: 'password' });
+      { firstname: 'John', lastname: 'Doe', email: 'john.doe6@example.com', password: 'password' });
     newTeacherId = newTeacher.teacherid;
 
     const student = await Student.create(
-      { firstname: 'Jane', lastname: 'Doe', email: 'jane.doe14@example.com', password: 'password' });
+      { firstname: 'Jane', lastname: 'Doe', email: 'jane.doe7@example.com', password: 'password' });
     studentId = student.studentid;
 
     const newStudent = await Student.create(
-      { firstname: 'Jane', lastname: 'Doe', email: 'jane.doe15@example.com', password: 'password' });
+      { firstname: 'Jane', lastname: 'Doe', email: 'jane.doe8@example.com', password: 'password' });
     newStudentId = newStudent.studentid;
 
     const schedule = await Schedule.create(
@@ -42,11 +42,11 @@ describe('Reservation Controller Tests', () => {
   });
 
   afterAll(async () => {
+    await Schedule.destroy({ where: { scheduleid: scheduleId } });
     await Teacher.destroy({ where: { teacherid: teacherId } });
     await Teacher.destroy({ where: { teacherid: newTeacherId } });
     await Student.destroy({ where: { studentid: studentId } });
     await Student.destroy({ where: { studentid: newStudentId } });
-    await Schedule.destroy({ where: { scheduleid: scheduleId } });
     await Subject.destroy({ where: { subjectid: subjectId } });
   });
 

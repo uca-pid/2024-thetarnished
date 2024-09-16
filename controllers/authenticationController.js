@@ -35,7 +35,7 @@ const createUser = async (req, res) => {
               type: QueryTypes.SELECT
           });
         if(user){
-            return res.status(400).json({message: 'User already exists'})
+            return res.status(401).json({message: 'User already exists'})
         }
 
         const bigIntSubjects = subjects.map(id => BigInt(id));
@@ -66,7 +66,6 @@ const createUser = async (req, res) => {
             try {
                 await sendEmailToUser(email, "Welcome to Link And Learn!", "", htmlContent);
             } catch (error) {
-                console.error('Error sending email:', error);
             }
         });
         return res.status(201).json({message: 'User created successfully', user});
@@ -201,7 +200,6 @@ const editProfile = async (req, res) => {
         if(!student && !teacher){
             return res.status(404).json({message: 'User not found'});
         }
-        const foundUser = student ? student : teacher;
         student ? await Student.update({ firstname: newFirstname, lastname: newLastname }, { where: { email: email } }) : await Teacher.update({ firstname: newFirstname, lastname: newLastname }, { where: { email: email } });
         return res.status(200).json({message: 'Profile updated successfully'});
     }catch(error){
@@ -218,9 +216,7 @@ const deleteUserAccount = async (req, res) => {
         if(!student && !teacher){
             return res.status(404).json({message: 'User not found'});
         }
-        const foundUser = student ? student : teacher;
         student ? await Student.destroy({ where: { email: email } }) : await Teacher.destroy({ where: { email: email } });
-
         const filePath = path.join(__dirname, '../deleteNotificationTemplate.html');
         let htmlContent = fs.readFileSync(filePath, 'utf-8');
 
@@ -228,8 +224,6 @@ const deleteUserAccount = async (req, res) => {
             try {
                 await sendEmailToUser(email, "Account Deleted", "", htmlContent);
             } catch (error) {
-                /* istanbul ignore next */
-                console.error('Error sending email:', error);
             }
         });
         return res.status(200).json({message: 'User account deleted successfully'});

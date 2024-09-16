@@ -22,7 +22,7 @@ describe('Teacher API', () => {
             subjectname: 'authSubjectTest'
         });
         subjectTestID = subjectTest.subjectid;
-        teacher = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: teacherEmail, password: hashedOldPassword, subjects: []});
+        teacher = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: teacherEmail, password: hashedOldPassword});
         teacherID = teacher.teacherid;
     });
 
@@ -34,7 +34,7 @@ describe('Teacher API', () => {
     });
 
   it('Should get a teacher by id', async () => {
-    const createdTeacher = await Teacher.create({
+    await Teacher.create({
       firstname: 'Prof. Peñoñori',
       lastname: 'Peñoñori',
       email: 'peñoñori1234@asd.com',
@@ -99,7 +99,7 @@ describe('Teacher API', () => {
 
   it("Should assign a subject to a teacher", async () => {
 
-    const newTeacher = await Teacher.create({ firstname: 'John', lastname: 'Doe', email: 'testNewTeacher123@example.com', password: 'password', subjects: []});
+    const newTeacher = await Teacher.create({ firstname: 'John', lastname: 'Doe', email: 'testNewTeacher123@example.com', password: 'password'});
     const testSubject = await Subject.create({
       subjectname: 'newTestSubject1'
     });
@@ -263,7 +263,7 @@ describe('Teacher API', () => {
     });
 
     const response = await request(app).get(`/teachers/all-dictating/${commonTestSubject.subjectid}`);
-    console.log(response.body);
+
     expect(response.status).toBe(200);
     expect(response.body.length).toBeGreaterThanOrEqual(1);
     
@@ -277,8 +277,11 @@ describe('Teacher API', () => {
   });
 
   it("Should retrieve all teachers", async () => {
+    await Teacher.create({ firstname: 'John', lastname: 'Doe', email: 'testNewTeacher12345@example.com', password: 'password'});
     const response = await request(app).get('/teachers/all-teachers');
     expect(response.status).toBe(200);
     expect(response.body.length).toBeGreaterThanOrEqual(1);
+
+    await Teacher.destroy({ where: { email: 'testNewTeacher12345@example.com' } });
   });
 });

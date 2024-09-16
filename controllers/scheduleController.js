@@ -1,8 +1,6 @@
 const Schedule = require('../models/scheduleModel');
 const Teacher = require('../models/teacherModel');
 
-const { Op } = require('sequelize');
-
 
 const createSchedule = async (req, res) => {
   const { schedule } = req.body;
@@ -45,7 +43,6 @@ const getAllSchedules = async (req, res) => {
       });
       return res.status(200).json(schedules);
     } catch (error) {
-      console.error('Error fetching schedules:', error); 
       return res.status(500).json({ message: 'Error fetching schedules', error });
     }
   };

@@ -6,6 +6,7 @@
   "scripts": {
     "test": "jest --watchAll --coverage",
     "test:reservations": "jest ./tests/reservation.test.js --coverage",
+    "test:reset": "jest ./tests/reset.test.js --coverage",
     "start": "node ./start.js"
   },
   "keywords": [],
@@ -15,7 +16,7 @@
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2",
+    "express": "^4.19.3",
     "googleapis": "^144.0.0",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.15",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "jest": "^29.7.0",
+    "mockdate": "^3.0.5",
     "supertest": "^7.0.0"
   }
 }

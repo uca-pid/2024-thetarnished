@@ -3,7 +3,7 @@ const app = require('../app');
 const Subject = require('../models/subjectModel');
 const Teacher = require('../models/teacherModel');
 const SubjectTeacher = require('../models/subjectTeacherModel');
-const { cloudfunctions } = require('googleapis/build/src/apis/cloudfunctions');
+const Schedule = require('../models/scheduleModel');
 
 describe('Subject API', () => {
 
@@ -71,8 +71,17 @@ describe('Subject API', () => {
                 subjectid: subject1.subjectid,
             }
         )
+
+        await Schedule.create({
+            teacherid: teacher.teacherid,
+            start_time: "08:00",
+            end_time: "09:00",
+            dayofweek: 3,
+        })
+
         const response = await request(app)
             .get('/subject/all-subjects-dictated');
+
         expect(response.status).toBe(200);
         expect(response.body.message).toBe("Subjects retrieved successfully");
         expect(response.body.results.length).toBeGreaterThanOrEqual(1);

@@ -34,12 +34,11 @@ const postForgotPassword = async (req, res) => {
         const resetLink = `http://localhost:5173/reset-password/${payload.id}/${token}`;
         console.log(resetLink);
         const filePath = path.join(__dirname, '../resetPasswordTemplate.html');
-        console.log(filePath);
         let htmlContent = fs.readFileSync(filePath, 'utf-8');
         htmlContent = htmlContent.replace('${resetLink}', resetLink);
         setImmediate(() => {
             sendEmailToUser(email, 'Password reset link', '', htmlContent)
-       .catch(error => console.error('Error sending email:', error));
+       .catch(() => {});
         });
         res.status(200).json({ message: 'Password reset link has been sent to your email' });
 
@@ -94,7 +93,7 @@ const postResetPassword = async (req, res) => {
         const foundUser = student || teacher;
         const secret = process.env.JWT_SECRET + foundUser.password;
 
-        const payload = jwt.verify(token, secret);
+        jwt.verify(token, secret);
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
@@ -138,12 +137,11 @@ const sendEmailToUser = async (email, subject, message = null, html = null) => {
             mailOptions.html = html;
         }
         
-        if (message) {
+        /*if (message) {
             mailOptions.message = message;
-        }
+        } */
 
-        const result = await transport.sendMail(mailOptions);
-        return result;
+        await transport.sendMail(mailOptions);
     } catch (error) {
         throw error;
     }

@@ -13,7 +13,7 @@ const createReservation = async (req, res) => {
 
         const currentDayOfWeek = moment().isoWeekday();
         let reservationDate = moment().isoWeekday(dayofweek);
-
+        
         if (dayofweek < currentDayOfWeek || (dayofweek === currentDayOfWeek && moment().isAfter(moment(start_time, 'HH:mm:ss')))) {
             reservationDate.add(1, 'week');
         }
@@ -31,7 +31,6 @@ const createReservation = async (req, res) => {
         });
 
         if (existingReservation) {
-            
             return res.status(409).json({
                 message: 'A reservation already exists for this teacher at the same time and date.'
             });
@@ -120,7 +119,7 @@ const getReservationsByTeacher = async (req, res) => {
         }
         
         const now = moment().toDate();
-        const twoDaysFromNow = moment().add(5, 'days').toDate(); 
+        const twoDaysFromNow = moment().add(7, 'days').toDate(); 
         const reservations = await Reservation.findAll({
             where: {
                 teacher_id,
