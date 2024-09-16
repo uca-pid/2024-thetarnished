@@ -43,7 +43,6 @@ const postForgotPassword = async (req, res) => {
         res.status(200).json({ message: 'Password reset link has been sent to your email' });
 
     }catch(error){
-        /*istanbul ignore next*/
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -111,7 +110,7 @@ const postResetPassword = async (req, res) => {
     }
 };
 
-const sendEmailToUser = async (email, subject, message = null, html = null) => {
+const sendEmailToUser = async (email, subject, html) => {
     try {
         const accessToken = await oAuth2Client.getAccessToken();
         
@@ -131,15 +130,8 @@ const sendEmailToUser = async (email, subject, message = null, html = null) => {
             from: 'Link and Learn <linkandlearnonline@gmail.com>',
             to: email,
             subject: subject,
+            html: html
         };
-
-        if (html) {
-            mailOptions.html = html;
-        }
-        
-        /*if (message) {
-            mailOptions.message = message;
-        } */
 
         await transport.sendMail(mailOptions);
     } catch (error) {

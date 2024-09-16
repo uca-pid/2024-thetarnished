@@ -231,6 +231,15 @@ describe('Authentication API', () => {
         expect(response.body.message).toBe('Password changed successfully');
     });
 
+    it('Should successfully change password for a teacher', async () => {
+        const response = await request(app)
+          .put('/authentication/change-password')
+          .send({ oldPassword: oldPassword, newPassword: newPassword, email: teacherEmail });
+
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('Password changed successfully');
+    });
+
     it('Should allow a student to edit their profile', async () => {
         const response = await request(app)
           .put('/authentication/edit-profile')
@@ -238,6 +247,19 @@ describe('Authentication API', () => {
             firstname: 'Jackson',
             lastname: 'Doe',
             email: studentEmail,
+          });
+
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('Profile updated successfully');
+    });
+
+    it('Should allow a teacher to edit their profile', async () => {
+        const response = await request(app)
+          .put('/authentication/edit-profile')
+          .send({
+            firstname: 'Jackson',
+            lastname: 'Doe',
+            email: teacherEmail,
           });
 
         expect(response.status).toBe(200);
@@ -276,6 +298,7 @@ describe('Authentication API', () => {
         expect(response.status).toBe(200);
         expect(response.body.message).toBe('User account deleted successfully');
     });
+
     it('Should not allow a student to delete their account with invalid email', async () => {
         const response = await request(app)
           .delete('/authentication/delete-account')
@@ -284,5 +307,15 @@ describe('Authentication API', () => {
         });
         expect(response.status).toBe(404);
         expect(response.body.message).toBe('User not found');
+    });
+
+    it('Should allow a teacher to delete their account', async () => {
+        const response = await request(app)
+          .delete('/authentication/delete-account')
+          .send({
+            email: teacherEmail,
+        });
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('User account deleted successfully');
     });
 });

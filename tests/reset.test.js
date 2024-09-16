@@ -37,13 +37,25 @@ describe('Password Reset Controller Tests', () => {
   });
 
   describe('POST /forgot-password', () => {
-    it('should send a password reset email if user exists', async () => {
+    it('should send a password reset email if student exists', async () => {
       jest.spyOn(fs, 'readFileSync').mockReturnValue('<a href="${resetLink}">Reset Password</a>');
       jest.spyOn(jwt, 'sign').mockReturnValue('mock-token');
 
       const res = await request(app)
         .post('/reset/forgot-password')
         .send({ email: studentEmail });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('message', 'Password reset link has been sent to your email');
+    });
+
+    it('should send a password reset email if teacher exists', async () => {
+      jest.spyOn(fs, 'readFileSync').mockReturnValue('<a href="${resetLink}">Reset Password</a>');
+      jest.spyOn(jwt, 'sign').mockReturnValue('mock-token');
+
+      const res = await request(app)
+        .post('/reset/forgot-password')
+        .send({ email: teacherEmail });
 
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty('message', 'Password reset link has been sent to your email');
@@ -77,7 +89,7 @@ describe('Password Reset Controller Tests', () => {
       jest.spyOn(jwt, 'verify').mockImplementation(() => ({ email: studentEmail, id: studentId }));
     });
 
-    it('should return user details if token is valid', async () => {
+    it('should return student details if token is valid', async () => {
       const res = await request(app)
         .get(`/reset/reset-password/${studentId}/${token}`);
 
@@ -85,6 +97,16 @@ describe('Password Reset Controller Tests', () => {
       expect(res.body).toHaveProperty('message', 'Valid Credentials');
       expect(res.body).toHaveProperty('email', studentEmail);
       expect(res.body).toHaveProperty('id', studentId);
+    });
+
+    it('should return teacher details if token is valid', async () => {
+      const res = await request(app)
+        .get(`/reset/reset-password/${teacherId}/${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('message', 'Valid Credentials');
+      expect(res.body).toHaveProperty('email', teacherEmail);
+      expect(res.body).toHaveProperty('id', teacherId);
     });
 
     it('should return 404 if user is not found', async () => {
