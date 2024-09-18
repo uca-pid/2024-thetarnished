@@ -10,7 +10,6 @@ const Teacher = require('../models/teacherModel');
 const createReservation = async (req, res) => {
     try {
         const { student_id, subject_id, teacher_id, dayofweek, start_time, schedule_id } = req.body;
-
         const currentDayOfWeek = moment().isoWeekday();
         let reservationDate = moment().isoWeekday(dayofweek);
         

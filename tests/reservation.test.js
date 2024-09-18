@@ -5,6 +5,7 @@ const Subject = require('../models/subjectModel');
 const Schedule = require('../models/scheduleModel');
 const Student = require('../models/studentModel');
 const Reservation = require('../models/reservationModel');
+const moment = require('moment');
 
 describe('Reservation Controller Tests', () => {
   let teacherId;
@@ -36,6 +37,15 @@ describe('Reservation Controller Tests', () => {
       { start_time: '09:00:00', end_time: '10:00:00', teacherid: teacherId, dayofweek: 1 });
     scheduleId = schedule.scheduleid;
     
+    const secondSchedule = await Schedule.create(
+      { start_time: '00:00:00', end_time: '01:00:00', teacherid: teacherId, dayofweek: moment().isoWeekday() });
+    secondScheduleId = secondSchedule.scheduleid;
+
+    const thirdSchedule = await Schedule.create(
+      { start_time: '23:59:59', end_time: '01:00:00', teacherid: teacherId, dayofweek: moment().isoWeekday() });
+    thirdScheduleId = thirdSchedule.scheduleid;
+    
+
     const subject = await Subject.create(
       { subjectname: 'Mathematics' });
     subjectId = subject.subjectid;
@@ -43,6 +53,7 @@ describe('Reservation Controller Tests', () => {
 
   afterAll(async () => {
     await Schedule.destroy({ where: { scheduleid: scheduleId } });
+    await Schedule.destroy({ where: { scheduleid: secondScheduleId } });
     await Teacher.destroy({ where: { teacherid: teacherId } });
     await Teacher.destroy({ where: { teacherid: newTeacherId } });
     await Student.destroy({ where: { studentid: studentId } });
@@ -65,6 +76,38 @@ describe('Reservation Controller Tests', () => {
     expect(res.status).toBe(201);
     reservationId = res.body.id;
   });
+
+  it('should create a new reservation the same day as today', async () => {
+    const res = await request(app)
+      .post('/reservation/create')
+      .send({
+        student_id: studentId,
+        subject_id: subjectId,
+        teacher_id: teacherId,
+        dayofweek: moment().isoWeekday(),
+        start_time: '00:00:00',
+        schedule_id: secondScheduleId,
+      });
+
+    expect(res.status).toBe(201);
+    
+  });
+  it('should create a new reservation today in the future', async () => {
+    const res = await request(app)
+      .post('/reservation/create')
+      .send({
+        student_id: studentId,
+        subject_id: subjectId,
+        teacher_id: teacherId,
+        dayofweek: moment().isoWeekday(),
+        start_time: '23:59:59',
+        schedule_id: thirdScheduleId,
+      });
+
+    expect(res.status).toBe(201);
+    
+  });
+  
 
   it('should not create a reservation if one already exists', async () => {
     const res = await request(app)
