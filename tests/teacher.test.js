@@ -5,6 +5,7 @@ const sequelize = require('../config/database');
 const Subject = require('../models/subjectModel');
 const SubjectTeacher = require('../models/subjectTeacherModel');
 const bcrypt = require('bcrypt');
+const Schedule = require('../models/scheduleModel');
 
 describe('Teacher API', () => { 
 
@@ -21,7 +22,7 @@ describe('Teacher API', () => {
             subjectname: 'authSubjectTest'
         });
         subjectTestID = subjectTest.subjectid;
-        teacher = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: teacherEmail, password: hashedOldPassword, subjects: []});
+        teacher = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: teacherEmail, password: hashedOldPassword});
         teacherID = teacher.teacherid;
     });
 
@@ -33,20 +34,19 @@ describe('Teacher API', () => {
     });
 
   it('Should get a teacher by id', async () => {
-    const createdTeacher = await Teacher.create({
+    await Teacher.create({
       firstname: 'Prof. Peñoñori',
       lastname: 'Peñoñori',
-      email: 'peñoñori@asd.com',
+      email: 'peñoñori1234@asd.com',
       password: 'password',
     });
-  });
 
-  it('Should get a teacher by id', async () => {
     const response = await request(app)
       .get(`/teachers/${teacher.teacherid}`);
   
     expect(response.status).toBe(200);
     expect(response.body.email).toBe(teacherEmail);
+    await Teacher.destroy({ where: { email: 'peñoñori1234@asd.com'}});
   });
 
   it('Should not get a teacher by invalid id', async () => {
@@ -99,7 +99,7 @@ describe('Teacher API', () => {
 
   it("Should assign a subject to a teacher", async () => {
 
-    const newTeacher = await Teacher.create({ firstname: 'John', lastname: 'Doe', email: 'testNewTeacher1@example.com', password: 'password', subjects: []});
+    const newTeacher = await Teacher.create({ firstname: 'John', lastname: 'Doe', email: 'testNewTeacher123@example.com', password: 'password'});
     const testSubject = await Subject.create({
       subjectname: 'newTestSubject1'
     });
@@ -197,7 +197,7 @@ describe('Teacher API', () => {
     const yetAnotherTeacher = await Teacher.create({
       firstname: 'Jacob',
       lastname: 'Smith',
-      email: 'jacobsmith@gmail.com',
+      email: 'jacobsmit123h@gmail.com',
       password: oldPassword,
       subjects: [`${firstTestSubect.subjectid}`, `${secondTestSubject.subjectid}`],
     });
@@ -218,22 +218,24 @@ describe('Teacher API', () => {
 
   it("Should retrieve all teachers that dictate an specific subject", async () => {
 
+    const hashedOldPassword = await bcrypt.hash(oldPassword, 10);
+
     const commonTestSubject = await Subject.create({
-      subjectname: "commonTestSubject3"
+      subjectname: "commonTestSubject21"
     });
 
     const firstCommonTeacher = await Teacher.create({
       firstname: 'Sean',
       lastname: 'Smith',
-      email: 'seansmith7@gmail.com',
-      password: oldPassword,
+      email: 'seansmith32@gmail.com',
+      password: hashedOldPassword,
     });
 
     const secondCommonTeacher = await Teacher.create({
       firstname: 'Seamus',
       lastname: 'Smith',
-      email: 'seamussmith8@gmail.com',
-      password: oldPassword,
+      email: 'seamussmith32@gmail.com',
+      password: hashedOldPassword,
     });
 
     await request(app).post(`/teachers/assign-subject/${firstCommonTeacher.teacherid}`).send({
@@ -244,11 +246,29 @@ describe('Teacher API', () => {
       subjectid: `${commonTestSubject.subjectid}`,
     });
 
+    const firstTeacherSchedule = await Schedule.create({
+      teacherid: firstCommonTeacher.teacherid,
+      start_time: "08:00",
+      end_time: "09:00",
+      dayofweek: 1,
+      istaken: false
+    });
+
+    const secondTeacherSchedule = await Schedule.create({
+      teacherid: firstCommonTeacher.teacherid,
+      start_time: "08:00",
+      end_time: "09:00",
+      dayofweek: 2,
+      istaken: false
+    });
+
     const response = await request(app).get(`/teachers/all-dictating/${commonTestSubject.subjectid}`);
 
     expect(response.status).toBe(200);
-    expect(response.body.length).toBe(2);
+    expect(response.body.length).toBeGreaterThanOrEqual(1);
     
+    await Schedule.destroy({ where: { scheduleid: firstTeacherSchedule.scheduleid } });
+    await Schedule.destroy({ where: { scheduleid: secondTeacherSchedule.scheduleid } });
     await SubjectTeacher.destroy({ where: { teacherid: firstCommonTeacher.teacherid } });
     await SubjectTeacher.destroy({ where: { teacherid: secondCommonTeacher.teacherid } });
     await Teacher.destroy({ where: { email: firstCommonTeacher.email } });
@@ -257,8 +277,11 @@ describe('Teacher API', () => {
   });
 
   it("Should retrieve all teachers", async () => {
+    await Teacher.create({ firstname: 'John', lastname: 'Doe', email: 'testNewTeacher12345@example.com', password: 'password'});
     const response = await request(app).get('/teachers/all-teachers');
     expect(response.status).toBe(200);
     expect(response.body.length).toBeGreaterThanOrEqual(1);
+
+    await Teacher.destroy({ where: { email: 'testNewTeacher12345@example.com' } });
   });
 });

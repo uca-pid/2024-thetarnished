@@ -4,9 +4,9 @@ const Teacher = require('../models/teacherModel');
 const jwt = require('jsonwebtoken');
 require('dotenv').config()
 const nodemailer = require('nodemailer')
-const sequelize = require('../config/database');
-const { QueryTypes } = require('sequelize');
 const { google } = require('googleapis');
+const fs = require('fs');
+const path = require('path');
 
 const CLIENT_ID = process.env.CLIENT_ID
 const CLIENT_SECRET = process.env.CLIENT_SECRET
@@ -33,11 +33,16 @@ const postForgotPassword = async (req, res) => {
         const token = jwt.sign(payload, secret, { expiresIn: '15m' });
         const resetLink = `http://localhost:5173/reset-password/${payload.id}/${token}`;
         console.log(resetLink);
-        await sendEmailToUser(email, 'Password reset link', `Click on the following link to reset your password: ${resetLink}`);
+        const filePath = path.join(__dirname, '../resetPasswordTemplate.html');
+        let htmlContent = fs.readFileSync(filePath, 'utf-8');
+        htmlContent = htmlContent.replace('${resetLink}', resetLink);
+        setImmediate(() => {
+            sendEmailToUser(email, 'Password reset link', '', htmlContent)
+       .catch(() => {});
+        });
         res.status(200).json({ message: 'Password reset link has been sent to your email' });
 
     }catch(error){
-        /*istanbul ignore next*/
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -56,7 +61,7 @@ const getResetPassword = async (req, res) => {
 
         const secret = process.env.JWT_SECRET + foundUser.password;
 
-        const payload = jwt.verify(token, secret);
+        jwt.verify(token, secret);
 
         return res.status(200).json({
             message: 'Valid Credentials',
@@ -87,7 +92,7 @@ const postResetPassword = async (req, res) => {
         const foundUser = student || teacher;
         const secret = process.env.JWT_SECRET + foundUser.password;
 
-        const payload = jwt.verify(token, secret);
+        jwt.verify(token, secret);
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
@@ -105,27 +110,8 @@ const postResetPassword = async (req, res) => {
     }
 };
 
-const sendEmailToUser = async (email, subject, message) => {
-
+const sendEmailToUser = async (email, subject, html) => {
     try {
-        const query = `
-            SELECT * FROM (
-            SELECT studentid, firstname, lastname, email, 'STUDENT' as role FROM students
-            UNION ALL
-            SELECT teacherid, firstname, lastname, email, 'TEACHER' as role FROM teachers
-            ) as users
-            WHERE email = ? LIMIT 1;
-        `;
-          
-        const [user] = await sequelize.query(query, {
-            replacements: [email],
-            type: QueryTypes.SELECT
-        });
-
-        if (!user) {
-            throw new Error('User not found');
-        }
-        
         const accessToken = await oAuth2Client.getAccessToken();
         
         const transport = nodemailer.createTransport({
@@ -144,14 +130,13 @@ const sendEmailToUser = async (email, subject, message) => {
             from: 'Link and Learn <linkandlearnonline@gmail.com>',
             to: email,
             subject: subject,
-            text: message,
+            html: html
         };
 
-        const result = await transport.sendMail(mailOptions);
-        return result;
+        await transport.sendMail(mailOptions);
     } catch (error) {
         throw error;
     }
 };
 
-module.exports = { postForgotPassword, getResetPassword, postResetPassword}
+module.exports = { postForgotPassword, getResetPassword, postResetPassword, sendEmailToUser };

@@ -34,7 +34,7 @@ const createSubject = async (req, res) =>{
 
 const getAllSubjectsDictatedByTeachers = async (req, res) => {
     try {
-      const [results, metadata] = await sequelize.query(`
+      const [results] = await sequelize.query(`
         SELECT DISTINCT s.subjectid, s.subjectname
         FROM subjects s
         INNER JOIN subjectteacher st ON s.subjectid = st.subjectid

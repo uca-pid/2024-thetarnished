@@ -9,7 +9,8 @@ const SubjectTeacher = sequelize.define('SubjectTeacher', {
       model: 'teachers',
       key: 'teacherid'
     },
-    primaryKey: true
+    primaryKey: true,
+    onDelete: 'CASCADE'
   },
   subjectid: {
     type: DataTypes.INTEGER,
@@ -18,7 +19,8 @@ const SubjectTeacher = sequelize.define('SubjectTeacher', {
       model: 'subjects',
       key: 'subjectid'
     },
-    primaryKey: true 
+    primaryKey: true,
+    onDelete: 'CASCADE'
   }
 }, {
   tableName: 'subjectteacher',
