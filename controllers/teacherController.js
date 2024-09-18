@@ -135,6 +135,8 @@ const removeSubjectFromTeacher = async (req, res) => {
     }
   };
 
+  
+      
 module.exports = {
   getTeacherById,
   updateTeacher,

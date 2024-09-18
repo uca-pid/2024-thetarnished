@@ -1,5 +1,5 @@
 const Student = require('../models/studentModel');
-
+const sequelize = require('../config/database');
 const getStudentById = async (req, res) => {
     try{
         const { id } = req.params;
@@ -48,8 +48,36 @@ const updateStudent = async (req, res) => {
     }
   };
 
+  const getPreviousTeachers = async (req, res) => {
+    try {
+      const { id } = req.params;
+  
+      if (!id) {
+        return res.status(400).json({ message: "Student ID is required." });
+      }
+  
+      const [teachers] = await sequelize.query(`
+        SELECT DISTINCT teachers.teacherid, firstname, lastname, email
+        FROM teachers
+        JOIN reservations
+        ON teachers.teacherid = reservations.teacher_id
+        WHERE reservations.student_id = :studentid
+      `, {
+        replacements: { studentid: id }, 
+      });
+  
+      return res.status(200).json(teachers);
+  
+    } catch (error) {
+      /* istanbul ignore next */
+      return res.status(500).json({ message: `Error getting previous teachers: ${error.message}` });
+    }
+  };
+  
+
 module.exports = {
     getStudentById,
     updateStudent,
-    deleteStudent
+    deleteStudent,
+    getPreviousTeachers
 }
