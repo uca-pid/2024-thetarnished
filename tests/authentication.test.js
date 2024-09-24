@@ -5,7 +5,7 @@ const Student = require('../models/studentModel');
 const Teacher = require('../models/teacherModel');
 const bcrypt = require('bcrypt');
 const SubjectTeacher = require('../models/subjectTeacherModel');
-const Schedule = require('../models/scheduleModel');
+const schedule = require('../models/weeklyScheduleModel');
 
 
 describe('Authentication API', () => {

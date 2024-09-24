@@ -1,7 +1,7 @@
 const Reservation = require('../models/reservationModel');
 const moment = require('moment');
 const sequelize = require('../config/database');
-const Schedule = require('../models/scheduleModel');
+const schedule = require('../models/weeklyScheduleModel');
 const { Op } = require('sequelize');
 const Student = require('../models/studentModel');
 const Subject = require('../models/subjectModel');
@@ -21,19 +21,29 @@ const createReservation = async (req, res) => {
             .subtract(3, 'hours') 
             .format('YYYY-MM-DD HH:mm:ss');
         
-        const existingReservation = await Reservation.findOne({
-            where: {
-                teacher_id: teacher_id,
-                datetime: reservationFormattedDate,
-                schedule_id: schedule_id
-            }
-        });
+        // const existingReservation = await Reservation.findOne({
+        //     where: {
+        //         teacher_id: teacher_id,
+        //         datetime: reservationFormattedDate,
+        //         schedule_id: schedule_id
+        //     }
+        // });
 
-        if (existingReservation) {
+        // if (existingReservation) {
+        //     return res.status(409).json({
+        //         message: 'A reservation already exists for this teacher at the same time and date.'
+        //     });
+        // }
+        const schedule = await Schedule.findByPk(schedule_id);
+
+        if(schedule.currentstudents >= schedule.maxstudents){
             return res.status(409).json({
-                message: 'A reservation already exists for this teacher at the same time and date.'
+                message: 'This schedule is full'
             });
         }
+
+        const newcurrentstudents = parseInt(schedule.currentstudents) + 1;
+        
         const reservation = await Reservation.create({
             student_id: student_id,
             teacher_id: teacher_id,
@@ -41,9 +51,10 @@ const createReservation = async (req, res) => {
             schedule_id: schedule_id,
             datetime: reservationFormattedDate
         });
-
+        const isClassFull = newcurrentstudents === parseInt(schedule.maxstudents) ? true : false;
         await Schedule.update({
-            istaken: true
+            istaken: isClassFull,
+            currentstudents: newcurrentstudents
         }, {
             where: {scheduleid: schedule_id}
         });
@@ -99,7 +110,15 @@ const deleteReservation = async (req, res) => {
         if (!reservation) {
             return res.status(404).json({ message: 'Reservation not found' });
         }
-
+        scheduleid = reservation.schedule_id;
+        const schedule = await Schedule.findByPk(scheduleid);
+        const newcurrentstudents = parseInt(schedule.currentstudents) - 1;
+        await Schedule.update({
+            istaken: false, //siempre va false porque va a quedar siempre un lugar (ya sea grupal o individual)
+            currentstudents: newcurrentstudents
+        }, {
+            where: {scheduleid: scheduleid}
+        });
         await reservation.destroy();
 
         return res.status(200).json({ message: 'Reservation deleted successfully' });

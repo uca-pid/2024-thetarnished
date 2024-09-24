@@ -5,7 +5,7 @@ const sequelize = require('../config/database');
 const Subject = require('../models/subjectModel');
 const SubjectTeacher = require('../models/subjectTeacherModel');
 const bcrypt = require('bcrypt');
-const Schedule = require('../models/scheduleModel');
+const schedule = require('../models/weeklyScheduleModel');
 
 describe('Teacher API', () => { 
 

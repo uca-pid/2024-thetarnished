@@ -1,0 +1,15 @@
+const express = require('express');
+const app = express();
+app.use(express.json()); 
+
+// const {
+
+// } = require('../controllers/weeklyScheduleController');
+
+// const router = express.Router();
+
+// router.post('/create/:teacherid', createSchedule);
+// router.get('/all', getAllSchedules);
+// //router.get('/teacher/:teacherid', getScheduleByTeacher);
+
+// module.exports = router;

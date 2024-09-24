@@ -1,7 +1,7 @@
 const request = require('supertest');
 const app = require('../app');
 const Teacher = require('../models/teacherModel');
-const Schedule = require('../models/scheduleModel');
+const schedule = require('../models/weeklyScheduleModel');
 
 describe('Schedule Controller Tests', () => {
     let teacherId;

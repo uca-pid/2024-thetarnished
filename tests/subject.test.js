@@ -3,7 +3,7 @@ const app = require('../app');
 const Subject = require('../models/subjectModel');
 const Teacher = require('../models/teacherModel');
 const SubjectTeacher = require('../models/subjectTeacherModel');
-const Schedule = require('../models/scheduleModel');
+const schedule = require('../models/weeklyScheduleModel');
 
 describe('Subject API', () => {
 
