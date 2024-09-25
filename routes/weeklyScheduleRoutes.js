@@ -5,13 +5,13 @@ app.use(express.json());
 const {
   createSchedule,
   getAllSchedules,
- // getScheduleByTeacher,
+  getScheduleByTeacher,
 } = require('../controllers/weeklyScheduleController');
 
 const router = express.Router();
 
 router.post('/create/:teacherid', createSchedule);
 router.get('/all', getAllSchedules);
-//router.get('/teacher/:teacherid', getScheduleByTeacher);
+router.get('/teacher/:teacherid', getScheduleByTeacher);
 
 module.exports = router;

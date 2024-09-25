@@ -5,7 +5,7 @@ const sequelize = require('../config/database');
 const Subject = require('../models/subjectModel');
 const SubjectTeacher = require('../models/subjectTeacherModel');
 const bcrypt = require('bcrypt');
-const schedule = require('../models/weeklyScheduleModel');
+const Schedule = require('../models/weeklyScheduleModel');
 
 describe('Teacher API', () => { 
 
@@ -251,7 +251,7 @@ describe('Teacher API', () => {
       start_time: "08:00",
       end_time: "09:00",
       dayofweek: 1,
-      istaken: false
+      maxstudents: 1
     });
 
     const secondTeacherSchedule = await Schedule.create({
@@ -259,7 +259,7 @@ describe('Teacher API', () => {
       start_time: "08:00",
       end_time: "09:00",
       dayofweek: 2,
-      istaken: false
+      maxstudents: 1
     });
 
     const response = await request(app).get(`/teachers/all-dictating/${commonTestSubject.subjectid}`);

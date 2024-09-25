@@ -5,7 +5,7 @@ const Student = require('../models/studentModel');
 const Teacher = require('../models/teacherModel');
 const bcrypt = require('bcrypt');
 const SubjectTeacher = require('../models/subjectTeacherModel');
-const schedule = require('../models/weeklyScheduleModel');
+const Schedule = require('../models/weeklyScheduleModel');
 
 
 describe('Authentication API', () => {
@@ -168,8 +168,7 @@ describe('Authentication API', () => {
     });
 
     it('should login a teacher who already has a existing schedule', async () => {
-        await Schedule.create(
-            { start_time: '09:00:00', end_time: '10:00:00', teacherid: teacher.teacherid, dayofweek: 1 });
+        const schedule = await Schedule.create({ start_time: '19:00:00', end_time: '10:00:00', teacherid: teacher.teacherid, dayofweek: 1, maxstudents: 1});
 
         const loginResponse = await request(app)
             .post('/authentication/login')
@@ -179,6 +178,7 @@ describe('Authentication API', () => {
         });
         expect(loginResponse.status).toBe(200);
         expect(loginResponse.body.user.role).toBe('TEACHER');
+        await Schedule.destroy({ where: { weeklyscheduleid: schedule.weeklyscheduleid } });
     });
 
     it("Should not login a student with wrong email", async () => {

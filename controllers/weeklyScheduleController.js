@@ -59,7 +59,7 @@ const getAllSchedules = async (req, res) => {
     }
   };
   
-  function createDate(start_time, dayofweek) {
+function createDate(start_time, dayofweek) {
     
     const baseDate = moment().startOf('week').add(dayofweek, 'days');
 
@@ -73,31 +73,32 @@ const getAllSchedules = async (req, res) => {
     return date.format('YYYY-MM-DD HH:mm:ss');
 }
 
-// const getScheduleByTeacher = async (req, res) => {
-//   const { teacherid } = req.params;
+const getScheduleByTeacher = async (req, res) => {
+  const { teacherid } = req.params;
 
-//   try {
-//     const schedules = await Schedule.findAll({
-//       where: { teacherid: teacherid, istaken: false },
-//       include: {
-//         model: Teacher,
-//         attributes: ['firstname', 'lastname', 'email']
-//       }
-//     });
+  try {
+    const schedules = await Schedule.findAll({
+      // where: { teacherid: teacherid, istaken: false }, istaken no esta mas en en el modelo de Weekly Schedule
+      where: { teacherid: teacherid },
+      include: {
+        model: Teacher,
+        attributes: ['firstname', 'lastname', 'email']
+      }
+    });
 
-//     if (!schedules.length) {
-//       return res.status(404).json({ message: 'No schedules found for this teacher.' });
-//     }
+    if (!schedules.length) {
+      return res.status(404).json({ message: 'No schedules found for this teacher.' });
+    }
 
-//     return res.status(200).json(schedules);
-//   } catch (error) {
-//     return res.status(500).json({ message: 'Error retrieving schedules', error });
-//   }
-// };
+    return res.status(200).json(schedules);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error retrieving schedules', error });
+  }
+};
 
 
 module.exports = {
   createSchedule,
   getAllSchedules,
-  // getScheduleByTeacher,
+  getScheduleByTeacher,
 };

@@ -6,7 +6,7 @@ const { QueryTypes } = require('sequelize');
 const SubjectTeacher = require('../models/subjectTeacherModel');
 require('dotenv').config()
 const validator = require('validator');
-const schedule = require('../models/weeklyScheduleModel');
+const Schedule = require('../models/weeklyScheduleModel');
 const Subject = require('../models/subjectModel');
 const { sendEmailToUser } = require('./resetController');
 const fs = require('fs');

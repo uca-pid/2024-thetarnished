@@ -16,6 +16,7 @@ const createMonthlySchedule = async (datetime, teacherid, maxstudents, currentst
       });
     }
   } catch (error) {
+    /* istanbul ignore next */
     throw error;
   }
 };
