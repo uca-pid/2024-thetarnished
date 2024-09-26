@@ -118,8 +118,8 @@ const removeSubjectFromTeacher = async (req, res) => {
         SELECT DISTINCT teachers.teacherid, firstname, lastname, email, subjectid  from teachers 
         JOIN subjectteacher
         ON teachers.teacherid = subjectteacher.teacherid
-        JOIN schedule
-        ON teachers.teacherid = schedule.teacherid
+        JOIN monthlyschedule
+        ON teachers.teacherid = monthlyschedule.teacherid
         WHERE subjectid = :subjectid
         AND istaken = 'false'`
       , {

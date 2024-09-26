@@ -1,7 +1,7 @@
 const Reservation = require('../models/reservationModel');
 const moment = require('moment');
 const sequelize = require('../config/database');
-const schedule = require('../models/weeklyScheduleModel');
+const Schedule = require('../models/monthlyScheduleModel');
 const { Op } = require('sequelize');
 const Student = require('../models/studentModel');
 const Subject = require('../models/subjectModel');
@@ -56,7 +56,7 @@ const createReservation = async (req, res) => {
             istaken: isClassFull,
             currentstudents: newcurrentstudents
         }, {
-            where: {scheduleid: schedule_id}
+            where: {monthlyscheduleid: schedule_id}
         });
         return res.status(201).json(reservation);
     } catch (error) {
@@ -117,7 +117,7 @@ const deleteReservation = async (req, res) => {
             istaken: false, //siempre va false porque va a quedar siempre un lugar (ya sea grupal o individual)
             currentstudents: newcurrentstudents
         }, {
-            where: {scheduleid: scheduleid}
+            where: {monthlyscheduleid: scheduleid}
         });
         await reservation.destroy();
 

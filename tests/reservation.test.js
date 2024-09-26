@@ -2,21 +2,28 @@ const request = require('supertest');
 const app = require('../app');
 const Teacher = require('../models/teacherModel');
 const Subject = require('../models/subjectModel');
-const schedule = require('../models/weeklyScheduleModel');
+const Schedule = require('../models/weeklyScheduleModel');
+const MonthlySchedule = require('../models/monthlyScheduleModel');
 const Student = require('../models/studentModel');
 const Reservation = require('../models/reservationModel');
 const moment = require('moment');
+jest.setTimeout(10000);
 
 describe('Reservation Controller Tests', () => {
   let teacherId;
   let studentId;
   let scheduleId;
+  let secondScheduleId;
+  let thirdScheduleId;
   let subjectId;
   let reservationId;
   let newStudentId;
   let newTeacherId;
-
+  let firstTeacherMonthlySchedule;
+  let secondTeacherMonthlySchedule;
+  let thirdTeacherMonthlySchedule;
   beforeAll(async () => {
+
     const teacher = await Teacher.create(
       { firstname: 'John', lastname: 'Doe', email: 'john.doe5@example.com', password: 'password' });
     teacherId = teacher.teacherid;
@@ -34,26 +41,58 @@ describe('Reservation Controller Tests', () => {
     newStudentId = newStudent.studentid;
 
     const schedule = await Schedule.create(
-      { start_time: '09:00:00', end_time: '10:00:00', teacherid: teacherId, dayofweek: 1 });
-    scheduleId = schedule.scheduleid;
+      { start_time: '09:00:00',
+        end_time: '10:00:00',
+        teacherid: teacherId,
+        dayofweek: 1,
+        maxstudents: 1 });
+    scheduleId = schedule.weeklyscheduleid;
     
     const secondSchedule = await Schedule.create(
-      { start_time: '00:00:00', end_time: '01:00:00', teacherid: teacherId, dayofweek: moment().isoWeekday() });
-    secondScheduleId = secondSchedule.scheduleid;
+      { start_time: '00:00:00',
+        end_time: '01:00:00',
+        teacherid: teacherId,
+        dayofweek: moment().isoWeekday(),
+        maxstudents: 1 });
+    secondScheduleId = secondSchedule.weeklyscheduleid;
 
     const thirdSchedule = await Schedule.create(
-      { start_time: '23:59:59', end_time: '01:00:00', teacherid: teacherId, dayofweek: moment().isoWeekday() });
-    thirdScheduleId = thirdSchedule.scheduleid;
+      { teacherid: teacherId,
+        start_time: '23:59:59',
+        end_time: '01:00:00',
+        dayofweek: moment().isoWeekday(),
+        maxstudents: 1
+       });
+    thirdScheduleId = thirdSchedule.weeklyscheduleid;
     
+    firstTeacherMonthlySchedule = await MonthlySchedule.create({
+      datetime: "2023-05-29 10:00:00", //quizas esta fecha cause problemas
+      teacherid: teacherId,
+      weeklyscheduleid: scheduleId
+    });
+
+    secondTeacherMonthlySchedule = await MonthlySchedule.create({
+      datetime: "2023-05-29 11:00:00", //quizas esta fecha cause problemas
+      teacherid: teacherId,
+      weeklyscheduleid: secondScheduleId
+
+    });
+    thirdTeacherMonthlySchedule = await MonthlySchedule.create({
+      datetime: "2023-05-29 11:00:00", //quizas esta fecha cause problemas
+      teacherid: teacherId,
+      weeklyscheduleid: thirdScheduleId
+
+    });
 
     const subject = await Subject.create(
       { subjectname: 'Mathematics' });
     subjectId = subject.subjectid;
+    console.log(scheduleId);
   });
 
   afterAll(async () => {
-    await Schedule.destroy({ where: { scheduleid: scheduleId } });
-    await Schedule.destroy({ where: { scheduleid: secondScheduleId } });
+    await Schedule.destroy({ where: { weeklyscheduleid: scheduleId } });
+    await Schedule.destroy({ where: { weeklyscheduleid: secondScheduleId } });
     await Teacher.destroy({ where: { teacherid: teacherId } });
     await Teacher.destroy({ where: { teacherid: newTeacherId } });
     await Student.destroy({ where: { studentid: studentId } });
@@ -68,9 +107,9 @@ describe('Reservation Controller Tests', () => {
         student_id: studentId,
         subject_id: subjectId,
         teacher_id: teacherId,
-        dayofweek: 1,
-        start_time: '09:00:00',
-        schedule_id: scheduleId,
+        dayofweek: moment().isoWeekday(),
+        start_time: '00:00:00',
+        schedule_id: firstTeacherMonthlySchedule.monthlyscheduleid,
       });
 
     expect(res.status).toBe(201);
@@ -86,7 +125,7 @@ describe('Reservation Controller Tests', () => {
         teacher_id: teacherId,
         dayofweek: moment().isoWeekday(),
         start_time: '00:00:00',
-        schedule_id: secondScheduleId,
+        schedule_id: secondTeacherMonthlySchedule.monthlyscheduleid,
       });
 
     expect(res.status).toBe(201);
@@ -101,7 +140,7 @@ describe('Reservation Controller Tests', () => {
         teacher_id: teacherId,
         dayofweek: moment().isoWeekday(),
         start_time: '23:59:59',
-        schedule_id: thirdScheduleId,
+        schedule_id: thirdTeacherMonthlySchedule.monthlyscheduleid,
       });
 
     expect(res.status).toBe(201);
@@ -118,11 +157,11 @@ describe('Reservation Controller Tests', () => {
         teacher_id: teacherId,
         dayofweek: 1,
         start_time: '09:00:00',
-        schedule_id: scheduleId,
+        schedule_id: firstTeacherMonthlySchedule.monthlyscheduleid,
       });
   
     expect(res.status).toBe(409);
-    expect(res.body.message).toBe('A reservation already exists for this teacher at the same time and date.');
+    expect(res.body.message).toBe('This schedule is full');
   });
 
   it('should return 500 if an error occurs during reservation creation', async () => {

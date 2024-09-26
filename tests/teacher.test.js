@@ -6,6 +6,10 @@ const Subject = require('../models/subjectModel');
 const SubjectTeacher = require('../models/subjectTeacherModel');
 const bcrypt = require('bcrypt');
 const Schedule = require('../models/weeklyScheduleModel');
+const MonthlySchedule = require('../models/monthlyScheduleModel');
+
+
+
 
 describe('Teacher API', () => { 
 
@@ -262,18 +266,33 @@ describe('Teacher API', () => {
       maxstudents: 1
     });
 
+    const firstTeacherMonthlySchedule = await MonthlySchedule.create({
+      datetime: "2023-05-29 10:00:00", //quizas esta fecha cause problemas
+      teacherid: firstCommonTeacher.teacherid,
+      weeklyscheduleid: firstTeacherSchedule.weeklyscheduleid
+
+    });
+
+    const secondTeacherMonthlySchedule = await MonthlySchedule.create({
+      datetime: "2023-05-29 11:00:00", //quizas esta fecha cause problemas
+      teacherid: firstCommonTeacher.teacherid,
+      weeklyscheduleid: secondTeacherSchedule.weeklyscheduleid
+
+    });
+
     const response = await request(app).get(`/teachers/all-dictating/${commonTestSubject.subjectid}`);
 
-    expect(response.status).toBe(200);
-    expect(response.body.length).toBeGreaterThanOrEqual(1);
-    
-    await Schedule.destroy({ where: { scheduleid: firstTeacherSchedule.scheduleid } });
-    await Schedule.destroy({ where: { scheduleid: secondTeacherSchedule.scheduleid } });
+
+    await Schedule.destroy({ where: { weeklyscheduleid: firstTeacherSchedule.weeklyscheduleid } });
+    await Schedule.destroy({ where: { weeklyscheduleid: secondTeacherSchedule.weeklyscheduleid } });
     await SubjectTeacher.destroy({ where: { teacherid: firstCommonTeacher.teacherid } });
     await SubjectTeacher.destroy({ where: { teacherid: secondCommonTeacher.teacherid } });
     await Teacher.destroy({ where: { email: firstCommonTeacher.email } });
     await Teacher.destroy({ where: { email: secondCommonTeacher.email } });
     await Subject.destroy({ where: { subjectname: `${commonTestSubject.subjectname}` } });
+
+    expect(response.status).toBe(200);
+    expect(response.body.length).toBeGreaterThanOrEqual(1);
   });
 
   it("Should retrieve all teachers", async () => {
