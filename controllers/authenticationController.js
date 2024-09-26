@@ -64,7 +64,7 @@ const createUser = async (req, res) => {
         htmlContent = htmlContent.replace(/{{firstname}}/g, firstname);
         setImmediate(async () => {
             try {
-                await sendEmailToUser(email, "Welcome to Link And Learn!", "", htmlContent);
+                await sendEmailToUser(email, "Welcome to Link And Learn!", htmlContent);
             } catch (error) {
             }
         });
@@ -222,7 +222,7 @@ const deleteUserAccount = async (req, res) => {
 
         setImmediate(async () => {
             try {
-                await sendEmailToUser(email, "Account Deleted", "", htmlContent);
+                await sendEmailToUser(email, "Account Deleted", htmlContent);
             } catch (error) {
             }
         });

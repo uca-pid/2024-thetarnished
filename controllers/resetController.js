@@ -37,7 +37,7 @@ const postForgotPassword = async (req, res) => {
         let htmlContent = fs.readFileSync(filePath, 'utf-8');
         htmlContent = htmlContent.replace('${resetLink}', resetLink);
         setImmediate(() => {
-            sendEmailToUser(email, 'Password reset link', '', htmlContent)
+            sendEmailToUser(email, 'Password reset link', htmlContent)
        .catch(() => {});
         });
         res.status(200).json({ message: 'Password reset link has been sent to your email' });
