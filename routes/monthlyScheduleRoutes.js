@@ -1,15 +1,14 @@
 const express = require('express');
+const {
+    getIndividualClasses,
+    getGroupClasses,
+} = require('../controllers/monthlyScheduleController');
 const app = express();
-app.use(express.json()); 
+app.use(express.json());
 
-// const {
+const router = express.Router();
 
-// } = require('../controllers/weeklyScheduleController');
+router.get('/group-classes', getGroupClasses);
+router.get('/individual-classes', getIndividualClasses);
 
-// const router = express.Router();
-
-// router.post('/create/:teacherid', createSchedule);
-// router.get('/all', getAllSchedules);
-// //router.get('/teacher/:teacherid', getScheduleByTeacher);
-
-// module.exports = router;
+module.exports = router;

@@ -6,6 +6,7 @@ const autenthicationRoutes = require('./routes/authenticationRoutes');
 const scheduleRoutes = require('./routes/weeklyScheduleRoutes');
 const resetRoutes = require('./routes/resetRoutes');
 const reservationRoutes = require('./routes/reservationRoutes');
+const monthlyScheduleRoutes = require('./routes/monthlyScheduleRoutes');
 const defineAssociations = require('./models/associations');
 const cors = require('cors');
 
@@ -26,6 +27,7 @@ app.use('/authentication', autenthicationRoutes);
 app.use('/subject', subjectRoutes);
 app.use('/schedule', scheduleRoutes);
 app.use('/reservation', reservationRoutes);
+app.use('/classes', monthlyScheduleRoutes)
 //app.use('/admins', adminRoutes);
 
 module.exports = app;
