@@ -132,4 +132,82 @@ describe('Test the /group-classes endpoint with real database', () => {
         expect(res.statusCode).toBe(500);
         expect(res.text).toBe('Server error');
     });
+
+    it('Should successfully assign vacation and mark schedules as taken', async () => {
+        const vacationData = {
+            teacherid: teacherID.toString(),
+            startdate: '2024-10-01',
+            enddate: '2024-10-10'
+        };
+
+        await Monthlyschedule.create({
+            datetime: '2024-10-08 09:00:00',
+            teacherid: teacherID,
+            maxstudents: 5,
+            currentstudents: 0,
+            weeklyscheduleid: weeklyGroupScheduleID
+        });
+        
+        await Monthlyschedule.create({
+            datetime: '2024-10-07 09:00:00',
+            teacherid: teacherID,
+            maxstudents: 5,
+            currentstudents: 0,
+            weeklyscheduleid: weeklyGroupScheduleID
+        });
+
+        const res = await request(app).post('/classes/assign-vacation').send(vacationData);
+        console.log("resbody",res.body);
+        expect(res.statusCode).toBe(200);
+        expect(res.body.length).toBe(2); // Two schedules should be updated
+        expect(res.body[0]).toHaveProperty('istaken', true);
+        expect(res.body[1]).toHaveProperty('istaken', true);
+    });
+
+    it('Should return 404 if no schedules found in the date range', async () => {
+        const vacationData = {
+            teacherid: teacherID.toString(),
+            startdate: '2024-11-01',
+            enddate: '2024-11-10'
+        };
+
+        const res = await request(app).post('/classes/assign-vacation').send(vacationData);
+
+        expect(res.statusCode).toBe(404);
+        expect(res.text).toBe('Schedules not found');
+    });
+
+
+    it('Should handle a valid request but with no schedules to update', async () => {
+        jest.spyOn(Monthlyschedule, 'findAll').mockResolvedValue([]);
+
+        const vacationData = {
+            teacherid: teacherID.toString(),
+            startdate: '2024-10-01',
+            enddate: '2024-10-10'
+        };
+
+        const res = await request(app).post('/classes/assign-vacation').send(vacationData);
+
+        expect(res.statusCode).toBe(404);
+        expect(res.text).toBe('Schedules not found');
+    });
+
+
+    //FALTA HACER EL MOCK PARA TESTEAR ERROR 500 PERO NO SE COMO HACERLO
+
+    // it('Should return 500 if there is a server error', async () => {
+    //     jest.spyOn(Monthlyschedule, 'findAll').mockRejectedValue(new Error('Database error'));
+
+    //     const vacationData = {
+    //         teacherid: teacherID.toString(),
+    //         startdate: '2024-10-01',
+    //         enddate: '2024-10-10'
+    //     };
+
+    //     const res = await request(app).post('/classes/assign-vacation').send(vacationData);
+
+    //     expect(res.statusCode).toBe(500);
+    //     expect(res.text).toBe('Server error');
+    // });
 });
