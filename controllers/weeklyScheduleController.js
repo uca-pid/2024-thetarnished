@@ -54,7 +54,6 @@ const getAllSchedules = async (req, res) => {
       });
       return res.status(200).json(schedules);
     } catch (error) {
-      console.error('Error fetching schedules:', error); 
       return res.status(500).json({ message: 'Error fetching schedules', error });
     }
   };

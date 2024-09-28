@@ -40,7 +40,6 @@ const getIndividualClasses = async (req, res) => {
 
       res.status(200).json(filteredClasses);
   } catch (err) {
-      console.error(err.message);
       res.status(500).send('Server error');
   }
 };
@@ -68,7 +67,6 @@ const getGroupClasses = async (req, res) => {
       res.status(200).json(refilteredClasses);
       
   } catch (err) {
-      console.error(err.message);
       res.status(500).send('Server error');
   }
 
@@ -108,10 +106,8 @@ const assignVacation = async (req, res) => {
         ...schedule.toJSON(),
         istaken: true
       }));
-      console.log(`Assigned vacation to teacher ${teacherid} for the period from ${startdate} to ${enddate}.`);
       res.status(200).json(updatedSchedules);
     } else {
-      console.log(`No available schedules found for teacher ${teacherid} in the specified date range.`);
       res.status(404).send('Schedules not found');
     }
   } catch (error) {

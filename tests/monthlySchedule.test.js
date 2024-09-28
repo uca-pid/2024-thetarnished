@@ -27,7 +27,6 @@ describe('Test the /group-classes endpoint with real database', () => {
             password: 'password'
         });
         teacherID = teacher.teacherid;
-        console.log("TeacherID:", teacherID);
         weeklyIndividualSchedule = await Schedule.create({
             start_time: '09:00:00',
             end_time: '10:00:00',
@@ -36,7 +35,6 @@ describe('Test the /group-classes endpoint with real database', () => {
             maxstudents: 1
         });
         weeklyIndividualScheduleID = weeklyIndividualSchedule.weeklyscheduleid;
-        console.log("weeklyIndividualScheduleId:", weeklyIndividualScheduleID);
         monthlyIndividualSchedule = await Monthlyschedule.create({
             datetime: '2023-04-01 09:00:00',
             teacherid: teacherID,
@@ -45,7 +43,6 @@ describe('Test the /group-classes endpoint with real database', () => {
             weeklyscheduleid: weeklyIndividualScheduleID
         });
         monthlyIndividualScheduleID = monthlyIndividualSchedule.monthlyscheduleid;
-        console.log("monthlyIndividualScheduleId:", monthlyIndividualScheduleID);
         weeklyGroupSchedule = await Schedule.create({
             start_time: '09:00:00',
             end_time: '10:00:00',
@@ -54,7 +51,6 @@ describe('Test the /group-classes endpoint with real database', () => {
             maxstudents: 5
         });
         weeklyGroupScheduleID = weeklyGroupSchedule.weeklyscheduleid;
-        console.log("weeklyGroupScheduleId:", weeklyGroupScheduleID);
         monthlyGroupSchedule = await Monthlyschedule.create({
             datetime: '2023-04-02 09:00:00',
             teacherid: teacherID,
@@ -63,7 +59,6 @@ describe('Test the /group-classes endpoint with real database', () => {
             weeklyscheduleid: weeklyGroupScheduleID
         });
         monthlyGroupScheduleID = monthlyGroupSchedule.monthlyscheduleid;
-        console.log("monthlyIndividualScheduleId:", monthlyGroupScheduleID);
     });    
 
     afterAll(async () => {
@@ -81,7 +76,6 @@ describe('Test the /group-classes endpoint with real database', () => {
     it('Should return group classes when they are available for booking', async () => {
         const res = await request(app).get('/classes/group-classes');
 
-        console.log(res.body);
         expect(res.statusCode).toBe(200);
         if (res.body.length > 0) {
             expect(res.body[0]).toHaveProperty('maxstudents', "5");
@@ -157,7 +151,6 @@ describe('Test the /group-classes endpoint with real database', () => {
         });
 
         const res = await request(app).post('/classes/assign-vacation').send(vacationData);
-        console.log("resbody",res.body);
         expect(res.statusCode).toBe(200);
         expect(res.body.length).toBe(2); // Two schedules should be updated
         expect(res.body[0]).toHaveProperty('istaken', true);
@@ -193,21 +186,18 @@ describe('Test the /group-classes endpoint with real database', () => {
         expect(res.text).toBe('Schedules not found');
     });
 
+    it('Should return 500 if there is a server error', async () => {
+        jest.spyOn(Monthlyschedule, 'findAll').mockRejectedValue(new Error('Database error'));
 
-    //FALTA HACER EL MOCK PARA TESTEAR ERROR 500 PERO NO SE COMO HACERLO
+        const vacationData = {
+            teacherid: teacherID.toString(),
+            startdate: '2024-10-01',
+            enddate: '2024-10-10'
+        };
 
-    // it('Should return 500 if there is a server error', async () => {
-    //     jest.spyOn(Monthlyschedule, 'findAll').mockRejectedValue(new Error('Database error'));
+        const res = await request(app).post('/classes/assign-vacation').send(vacationData);
 
-    //     const vacationData = {
-    //         teacherid: teacherID.toString(),
-    //         startdate: '2024-10-01',
-    //         enddate: '2024-10-10'
-    //     };
-
-    //     const res = await request(app).post('/classes/assign-vacation').send(vacationData);
-
-    //     expect(res.statusCode).toBe(500);
-    //     expect(res.text).toBe('Server error');
-    // });
+        expect(res.statusCode).toBe(500);
+        expect(res.text).toBe('Server error');
+    });
 });
