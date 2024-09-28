@@ -175,9 +175,44 @@ const getReservationsByTeacher = async (req, res) => {
     }
 };
 
+const cancelReservation = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const reservation = await Reservation.findByPk(id);
+
+        if (!reservation) {
+            return res.status(404).json({ message: 'Reservation not found' });
+        }
+
+        if (reservation.reservation_status === 'canceled' || reservation.reservation_status === 'finished') {
+            return res.status(400).json({ message: `Cannot cancel a reservation with status '${reservation.reservation_status}'` });
+        }
+
+        reservation.reservation_status = 'canceled';
+        await reservation.save();
+
+        const scheduleid = reservation.schedule_id;
+        const schedule = await Schedule.findByPk(scheduleid);
+
+        const newcurrentstudents = parseInt(schedule.currentstudents) - 1;
+        await Schedule.update({
+            istaken: false,
+            currentstudents: newcurrentstudents
+        }, {
+            where: { monthlyscheduleid: scheduleid }
+        });
+
+        return res.status(200).json({ message: 'Reservation canceled successfully' });
+    } catch (error) {
+        return res.status(500).json({ message: 'Error canceling reservation', error });
+    }
+};
+
 module.exports = {
     createReservation,
     getReservationsByTeacher,
     getReservationsByStudentId,
-    deleteReservation
+    deleteReservation,
+    cancelReservation
 };

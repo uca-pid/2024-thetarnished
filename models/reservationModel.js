@@ -50,6 +50,11 @@ const Reservation = sequelize.define('Reservation', {
     },
     onDelete: 'CASCADE',
   },
+  reservation_status: {
+    type: DataTypes.STRING,
+    defaultValue: 'booked', // Default value for the reservation status
+    allowNull: false,
+  }
 }, {
   tableName: 'reservations',
   timestamps: false,
