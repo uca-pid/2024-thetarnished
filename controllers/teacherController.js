@@ -84,6 +84,8 @@ const assignSubjectToTeacher = async (req, res) => {
     return res.status(201).json({ message: 'Subject assigned to teacher successfully' });
   } catch (error) {
     /* istanbul ignore next */
+    console.error('Error assigning subject to teacher:', error);
+    /* istanbul ignore next */
     return res.status(400).json({ message: `Error assigning subject to teacher: ${error.message}` });
   }
 };

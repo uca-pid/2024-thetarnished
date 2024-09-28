@@ -87,6 +87,7 @@ describe('Reservation Controller Tests', () => {
     const subject = await Subject.create(
       { subjectname: 'Mathematics' });
     subjectId = subject.subjectid;
+    console.log(scheduleId);
   });
 
   afterAll(async () => {
