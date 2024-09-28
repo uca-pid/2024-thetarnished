@@ -106,13 +106,14 @@ const getScheduleForTeacher = async (teacherId) => {
             attributes: ['firstname', 'lastname', 'email']
         }
     });
-
+    
     if (schedule.length) {
         return schedule.map(sch => ({
             start_time: sch.start_time,
             end_time: sch.end_time,
             teacherid: sch.teacherid,
-            dayofweek: sch.dayofweek
+            dayofweek: sch.dayofweek,
+            maxstudents: sch.maxstudents,
         }));
     }
     return [];
