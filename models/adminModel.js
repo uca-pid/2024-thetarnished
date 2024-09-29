@@ -1,39 +1,35 @@
-// const { DataTypes } = require('sequelize');
-// const sequelize = require('../config/database');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-// const Admin = sequelize.define('Admin', {
-//   adminid: {
-//     type: DataTypes.BIGINT,
-//     primaryKey: true,
-//     autoIncrement: false,
-//     defaultValue: sequelize.literal('unique_rowid()')
-//   },
-//   firstname: {
-//     type: DataTypes.STRING(255),
-//     allowNull: false
-//   },
-//   lastname: {
-//     type: DataTypes.STRING(255),
-//     allowNull: false
-//   },
-//   email: {
-//     type: DataTypes.STRING(255),
-//     allowNull: false,
-//     unique: true
-//   },
-//   password: {
-//     type: DataTypes.STRING(255),
-//     allowNull: false
-//   }
-// }, {
-//   tableName: 'admins',
-//   timestamps: false,
-//   indexes: [
-//     {
-//       unique: true,
-//       fields: ['email']
-//     }
-//   ]
-// });
+const Admin = sequelize.define('Admin', {
+  adminid: {
+    type: DataTypes.BIGINT,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  firstname: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  lastname: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+    validate: {
+      isEmail: true
+    }
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false
+  }
+}, {
+  tableName: 'admins',
+  timestamps: false
+});
 
-// module.exports = Admin;
+module.exports = Admin;

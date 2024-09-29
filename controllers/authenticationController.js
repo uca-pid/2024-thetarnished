@@ -8,9 +8,11 @@ require('dotenv').config()
 const validator = require('validator');
 const Schedule = require('../models/weeklyScheduleModel');
 const Subject = require('../models/subjectModel');
+const Admin = require('../models/adminModel');
 const { sendEmailToUser } = require('./resetController');
 const fs = require('fs');
 const path = require('path');
+const e = require('express');
 
 
 
@@ -76,11 +78,21 @@ const createUser = async (req, res) => {
 };
 
 const findUser = async (email) => {
-    let user = await Student.findOne({ where: { email } });
-    if (!user) {
-        user = await Teacher.findOne({ where: { email } });
+    // let user = await Student.findOne({ where: { email } });
+    // if (!user) {
+    //     user = await Teacher.findOne({ where: { email } });
+    // }
+    // return user;
+    const models = [Student, Teacher, Admin];
+    
+    for (const model of models) {
+        const user = await model.findOne({ where: { email } });
+        if (user) {
+            return user;
+        }
     }
-    return user;
+    
+    return null;
 };
 
 const getSubjectsForTeacher = async (teacherId) => {
@@ -138,9 +150,13 @@ const loginUser = async (req, res) => {
             userid = user.teacherid;
             subjects = await getSubjectsForTeacher(userid);
             formattedSchedule = await getScheduleForTeacher(userid);
-        } else {
+        } else if (user instanceof Student) {
             role = 'STUDENT';
             userid = user.studentid;
+            formattedSchedule = [];
+        } else {
+            role = 'ADMIN';
+            userid = user.adminid;
             formattedSchedule = [];
         }
 

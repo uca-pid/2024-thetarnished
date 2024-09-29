@@ -27,7 +27,7 @@ const Teacher = sequelize.define('Teacher', {
     type: DataTypes.STRING,
     allowNull: false
   },
-  isactive: { 
+  is_active: { 
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: false  

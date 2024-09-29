@@ -14,6 +14,10 @@ const createSchedule = async (req, res) => {
   try {
     const createdSchedules = [];
     
+    const teacher = await Teacher.findByPk(teacherid);
+    if(!teacher.is_active) {
+      return res.status(400).json({ message: 'Teacher is not active' });
+    }
 
     const teacherSchedules = await Schedule.findAll({ where: { teacherid: teacherid } });
 

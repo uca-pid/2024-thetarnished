@@ -1,7 +1,14 @@
-// const express = require('express');
-// const {
-// } = require('../controllers/adminController');
+const express = require('express');
+const {
+    activateTeacher,
+    disableTeacher,
+    getInactiveTeachers
+} = require('../controllers/adminController');
 
-// const router = express.Router();
+const router = express.Router();
 
-// module.exports = router;
+router.post('/activate-teacher/:id', activateTeacher)
+router.post('/disable-teacher/:id', disableTeacher)
+router.get('/inactive-teachers', getInactiveTeachers)
+
+module.exports = router;

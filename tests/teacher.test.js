@@ -354,4 +354,5 @@ describe('Teacher API', () => {
   const response = await request(app).delete(`/teachers/delete/${secondTeacherID}`);
   expect(response.status).toBe(400)
   })
+  
 });
