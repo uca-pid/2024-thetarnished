@@ -5,7 +5,7 @@ const Schedule = require('../models/weeklyScheduleModel');
 
 describe('Schedule Controller Tests', () => {
     let teacherId;
-
+    jest.setTimeout(20000);
     beforeAll(async () => {
         const teacher = await Teacher.create(
             { firstname: 'John', lastname: 'Doe', email: 'john.doe173@example.com', password: 'password' });

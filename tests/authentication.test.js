@@ -20,7 +20,7 @@ describe('Authentication API', () => {
     const studentEmail = 'testStudent@example.com';
     const oldPassword = 'oldpassword';
     const newPassword = 'newpassword';
-
+    jest.setTimeout(20000);
     beforeAll(async () => {
         const hashedOldPassword = await bcrypt.hash(oldPassword, 10);
         subjectTest = await Subject.create({

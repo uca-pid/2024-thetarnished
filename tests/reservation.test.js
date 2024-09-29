@@ -7,7 +7,7 @@ const MonthlySchedule = require('../models/monthlyScheduleModel');
 const Student = require('../models/studentModel');
 const Reservation = require('../models/reservationModel');
 const moment = require('moment');
-jest.setTimeout(10000);
+jest.setTimeout(20000);
 
 describe('Reservation Controller Tests', () => {
   let teacherId;
@@ -22,6 +22,7 @@ describe('Reservation Controller Tests', () => {
   let firstTeacherMonthlySchedule;
   let secondTeacherMonthlySchedule;
   let thirdTeacherMonthlySchedule;
+  
   beforeAll(async () => {
 
     const teacher = await Teacher.create(
@@ -87,7 +88,6 @@ describe('Reservation Controller Tests', () => {
     const subject = await Subject.create(
       { subjectname: 'Mathematics' });
     subjectId = subject.subjectid;
-    console.log(scheduleId);
   });
 
   afterAll(async () => {

@@ -1,7 +1,13 @@
 const Teacher = require('../models/teacherModel');
 const SubjectTeacher = require('../models/subjectTeacherModel');
 const Subject = require('../models/subjectModel');
+const Reservation = require('../models/reservationModel');
 const sequelize = require('../config/database');
+const { Op } = require('sequelize');
+const moment = require('moment');
+
+
+
 
 
 const getAllTeachers = async (req, res) => {
@@ -50,10 +56,28 @@ const updateTeacher = async (req, res) => {
 const deleteTeacher = async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Find the teacher by ID
     const teacher = await Teacher.findByPk(id);
     if (!teacher) {
       return res.status(404).json({ message: 'Teacher not found' });
     }
+
+    // Check if the teacher has any reservations
+    const reservationsCount = await Reservation.count({
+      where: {
+        teacher_id: id,
+        datetime: {
+          [Op.gt]: moment().toDate() 
+        }
+      }
+    });
+
+    if (reservationsCount > 0) {
+      return res.status(400).json({ message: 'Cannot delete teacher with existing reservations' });
+    }
+
+    // If no reservations, delete the teacher
     await teacher.destroy();
     return res.status(200).json({ message: 'Teacher deleted successfully' });
   } catch (error) {
@@ -83,8 +107,7 @@ const assignSubjectToTeacher = async (req, res) => {
 
     return res.status(201).json({ message: 'Subject assigned to teacher successfully' });
   } catch (error) {
-    /* istanbul ignore next */
-    console.error('Error assigning subject to teacher:', error);
+   
     /* istanbul ignore next */
     return res.status(400).json({ message: `Error assigning subject to teacher: ${error.message}` });
   }

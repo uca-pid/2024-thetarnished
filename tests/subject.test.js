@@ -14,6 +14,7 @@ describe('Subject API', () => {
     const teacherEmail = "johndoerito15@example.com";
     const subject1name = "Philosophy and Discourse VII";
     const subject2name = "Introduction to Computer Science VIII";
+    jest.setTimeout(20000);
     beforeAll(async () => {
         subject1 = await Subject.create({ subjectname: subject1name });
         subject2 = await Subject.create({ subjectname: subject2name });

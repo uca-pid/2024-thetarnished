@@ -1,5 +1,8 @@
 const Student = require('../models/studentModel');
 const sequelize = require('../config/database');
+const Reservation = require('../models/reservationModel');
+const MonthlySchedule = require('../models/monthlyScheduleModel');
+
 const getStudentById = async (req, res) => {
     try{
         const { id } = req.params;
@@ -36,12 +39,36 @@ const updateStudent = async (req, res) => {
   const deleteStudent = async (req, res) => {
     try {
       const { id } = req.params;
+      
+
       const student = await Student.findByPk(id);
       if (!student) {
         return res.status(404).json({ message: 'Student not found' });
       }
+  
+
+      const reservations = await Reservation.findAll({ where: { student_id: id } });
+  
+
+      for (const reservation of reservations) {
+        await MonthlySchedule.update(
+          {
+            istaken: false,
+            currentstudents: sequelize.literal('currentstudents - 1')
+          },
+          {
+            where: { monthlyscheduleid: reservation.schedule_id }
+          }
+        );
+      }
+  
+
+      await Reservation.destroy({ where: { student_id: id } });
+  
+
       await student.destroy();
-      return res.status(200).json({ message: 'Student deleted successfully' });
+  
+      return res.status(200).json({ message: 'Student and associated reservations deleted successfully' });
     } catch (error) {
       /* istanbul ignore next */
       return res.status(400).json({ message: `Error deleting student: ${error.message}` });

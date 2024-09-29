@@ -19,7 +19,11 @@ const createSchedule = async (req, res) => {
 
     if (teacherSchedules.length !== 0) {
       await Schedule.destroy({ where: { teacherid } });
-      await MonthlySchedule.destroy({ where: { teacherid } });
+      
+      await MonthlySchedule.destroy({ where: {
+        teacherid: teacherid,
+        currentstudents: 0
+      } });
     }
 
     for (const entry of schedule) {
@@ -54,7 +58,6 @@ const getAllSchedules = async (req, res) => {
       });
       return res.status(200).json(schedules);
     } catch (error) {
-      console.error('Error fetching schedules:', error); 
       return res.status(500).json({ message: 'Error fetching schedules', error });
     }
   };

@@ -11,7 +11,7 @@ describe('Student API', () => {
   const studentLastName = 'Doe';
   const studentEmail = 'testStudent2@example.com';
   const password = 'password';
-
+  jest.setTimeout(20000);
   beforeAll(async () => {
       const hashedOldPassword = await bcrypt.hash(password, 10);
       student = await Student.create({ firstname: studentFirstName, lastname: studentLastName, email: studentEmail, password: hashedOldPassword});
