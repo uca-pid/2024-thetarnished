@@ -6,10 +6,6 @@ const sequelize = require('../config/database');
 const { Op } = require('sequelize');
 const moment = require('moment');
 
-
-
-
-
 const getAllTeachers = async (req, res) => {
   try {
     const teachers = await Teacher.findAll();
@@ -158,8 +154,56 @@ const removeSubjectFromTeacher = async (req, res) => {
     }
   };
 
-  
-      
+  const updateTeacherSubjects = async (req, res) => {
+    try {
+        const { teacherId } = req.params;
+        const { subjects: newSubjectIds } = req.body;
+        if (!newSubjectIds || !Array.isArray(newSubjectIds) || newSubjectIds.length === 0) {
+            return res.status(400).json({ message: 'Invalid or missing subjects array' });
+        }
+
+        const teacher = await Teacher.findByPk(teacherId);
+        if (!teacher) {
+            return res.status(404).json({ message: 'Teacher not found' });
+        }
+
+        const currentSubjectRelations = await SubjectTeacher.findAll({
+            where: { teacherid: teacherId },
+            attributes: ['subjectid']
+        });
+        const currentSubjectIds = currentSubjectRelations.map(rel => rel.subjectid);
+
+        const subjectsToAdd = newSubjectIds.filter(id => !currentSubjectIds.includes(id));
+        const subjectsToRemove = currentSubjectIds.filter(id => !newSubjectIds.includes(id));
+
+        if (subjectsToAdd.length > 0) {
+            const newRelations = subjectsToAdd.map(subjectId => ({
+                teacherid: teacherId,
+                subjectid: subjectId
+            }));
+            await TeacherSubject.bulkCreate(newRelations);
+        }
+
+        if (subjectsToRemove.length > 0) {
+            await TeacherSubject.destroy({
+                where: {
+                    teacherid: teacherId,
+                    subjectid: {
+                        [Op.in]: subjectsToRemove
+                    }
+                }
+            });
+        }
+
+        res.status(200).json({ message: 'Teacher subjects updated successfully' });
+
+    } catch (error) {
+        console.error('Error updating teacher subjects:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+module.exports = { updateTeacherSubjects };
 module.exports = {
   getTeacherById,
   updateTeacher,
@@ -167,5 +211,6 @@ module.exports = {
   assignSubjectToTeacher,
   removeSubjectFromTeacher,
   getAllTeachers,
-  getAllTeachersDictatingASubjectById
+  getAllTeachersDictatingASubjectById,
+  updateTeacherSubjects
 };
