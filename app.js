@@ -14,7 +14,7 @@ const cors = require('cors');
 const app = express();
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://192.168.0.105:5173'],
+  origin: ['http://localhost:5173', 'http://192.168.0.105:5173', 'https://linknlearn.fpenonori.com'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 }));

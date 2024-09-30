@@ -116,9 +116,31 @@ const assignVacation = async (req, res) => {
     res.status(500).send('Server error');
   }
 };
+
+const getMonthlyScheduleByTeacherId  = async (req, res) => {
+  try {
+    const { teacherid } = req.params;
+    const monthlySchedule = await MonthlySchedule.findAll({
+      where: {
+        teacherid: teacherid,
+        istaken: false,
+      },
+    });
+    if (monthlySchedule.length > 0) {
+      res.status(200).json(monthlySchedule);
+    } else {
+      res.status(404).send('Monthly schedule not found');
+    }
+    }catch (error) {
+      /*istanbul ignore next*/
+      res.status(500).send('Server error');
+    }
+  }
+
 module.exports = {
   getIndividualClasses,
   getGroupClasses,
   createMonthlySchedule,
   assignVacation,
+  getMonthlyScheduleByTeacherId
 };
