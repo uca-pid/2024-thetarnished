@@ -56,7 +56,7 @@ describe('Teacher API', () => {
         firstTeacherMonthlySchedule = await MonthlySchedule.create({
           datetime: "2023-05-29 10:00:00", //quizas esta fecha cause problemas
           teacherid: secondTeacherID,
-          weeklyscheduleid: scheduleId
+
         });
         firstTeacherMonthlyScheduleId = firstTeacherMonthlySchedule.monthlyscheduleid
         const subject = await Subject.create(
@@ -306,14 +306,14 @@ describe('Teacher API', () => {
     await MonthlySchedule.create({
       datetime: "2023-05-29 10:00:00", //quizas esta fecha cause problemas
       teacherid: firstCommonTeacher.teacherid,
-      weeklyscheduleid: firstTeacherSchedule.weeklyscheduleid
+
 
     });
 
     await MonthlySchedule.create({
       datetime: "2023-05-29 11:00:00", //quizas esta fecha cause problemas
       teacherid: firstCommonTeacher.teacherid,
-      weeklyscheduleid: secondTeacherSchedule.weeklyscheduleid
+
 
     });
 

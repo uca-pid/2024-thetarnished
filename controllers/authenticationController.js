@@ -79,11 +79,7 @@ const createUser = async (req, res) => {
 };
 
 const findUser = async (email) => {
-    // let user = await Student.findOne({ where: { email } });
-    // if (!user) {
-    //     user = await Teacher.findOne({ where: { email } });
-    // }
-    // return user;
+
     const models = [Student, Teacher, Admin];
     
     for (const model of models) {

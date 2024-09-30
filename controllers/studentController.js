@@ -79,17 +79,13 @@ const updateStudent = async (req, res) => {
     try {
       const { id } = req.params;
   
-      if (!id) {
-        return res.status(400).json({ message: "Student ID is required." });
-      }
-  
       const [teachers] = await sequelize.query(`
-        SELECT DISTINCT teachers.teacherid, teachers.firstname, teachers.lastname, teachers.email
+        SELECT DISTINCT teachers.teacherid, teachers.firstname, teachers.lastname, teachers.email, reservations.id
         FROM teachers
         JOIN reservations
         ON teachers.teacherid = reservations.teacher_id
         WHERE reservations.student_id = :studentid
-        ORDER BY reservations.reservation_id DESC
+        ORDER BY reservations.id DESC
         LIMIT 3;
       `, {
         replacements: { studentid: id }, 

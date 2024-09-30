@@ -1,24 +1,63 @@
 const request = require('supertest');
 const app = require('../app');
 const Student = require('../models/studentModel');
-const sequelize = require('../config/database');
 const bcrypt = require('bcrypt');
+const Teacher = require('../models/teacherModel');
+const MonthlySchedule = require('../models/monthlyScheduleModel');
+const Reservation = require('../models/reservationModel');
+const Subject = require('../models/subjectModel');
+
 
 describe('Student API', () => {
 
   let student;
+  let newstudent;
+  let newstudentId;
+  let teacherId;
+  let studentId;
+  let subjectId;
+  let monthlyscheduleid;
+  let firstMonthlySchedule;
   const studentFirstName = 'Jane';
   const studentLastName = 'Doe';
   const studentEmail = 'testStudent2@example.com';
   const password = 'password';
   jest.setTimeout(20000);
+
   beforeAll(async () => {
       const hashedOldPassword = await bcrypt.hash(password, 10);
       student = await Student.create({ firstname: studentFirstName, lastname: studentLastName, email: studentEmail, password: hashedOldPassword});
-  });
+      studentId = student.studentid;
+      newstudent = await Student.create({ firstname: studentFirstName, lastname: studentLastName, email: 'testStudent3@example.com', password: hashedOldPassword});
+      newstudentId = newstudent.studentid;
+
+      const teacher = await Teacher.create(
+        { firstname: 'John', lastname: 'Doe', email: 'john.doe123@example.com', password: 'password' });
+      teacherId = teacher.teacherid;
+
+      firstMonthlySchedule = await MonthlySchedule.create({
+        datetime: "2023-05-29 10:00:00", //quizas esta fecha cause problemas
+        teacherid: teacherId,
+      });
+      monthlyscheduleid = firstMonthlySchedule.monthlyscheduleid;
+
+      const subject = await Subject.create(
+        { subjectname: 'Mathematics' });
+      subjectId = subject.subjectid;
+      
+      await Reservation.create({
+        student_id: studentId,
+        teacher_id: teacherId,
+        subject_id: subjectId,
+        schedule_id: monthlyscheduleid,
+        datetime: "2023-05-29 10:00:00"
+    });
+    });
   
   afterAll(async () => {
       await Student.destroy({ where: { email: studentEmail } });
+      await Student.destroy({ where: { email: 'testStudent3@example.com' } });
+      await Teacher.destroy({ where: { teacherid: teacherId } });
   });
 
   it('Should get a student by id', async () => {
@@ -50,10 +89,19 @@ describe('Student API', () => {
     expect(response.body.lastname).toBe('Wojcicki');
   });
 
-  it("Should delete a student", async () => {
-    const response = await request(app).delete(`/students/delete/${student.studentid}`);
+  it("Should get a previous teacher", async () => {
+    const response = await request(app)
+      .get(`/students/get-previous/${studentId}`);
     expect(response.status).toBe(200);
-    const studentFound = await Student.findByPk(student.studentid);
+    console.log(response.body);
+    expect(response.body[0].firstname).toBe('John');
+    expect(response.body[0].lastname).toBe('Doe');
+  });
+
+  it("Should delete a student", async () => {
+    const response = await request(app).delete(`/students/delete/${studentId}`);
+    expect(response.status).toBe(200);
+    const studentFound = await Student.findByPk(studentId);
     expect(studentFound).toBeNull();
   });
 
@@ -72,4 +120,8 @@ describe('Student API', () => {
       .delete('/students/delete/112358');
       expect(response.status).toBe(404);
   });
+
+  
+
+
 });

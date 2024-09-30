@@ -85,7 +85,7 @@ describe('Subject API', () => {
         await MonthlySchedule.create({
             datetime: "2023-05-29 10:00:00", //quizas esta fecha cause problemas
             teacherid: teacher.teacherid,
-            weeklyscheduleid: schedule.weeklyscheduleid
+
           });
 
         const response = await request(app)

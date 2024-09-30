@@ -21,19 +21,6 @@ const createReservation = async (req, res) => {
             .subtract(3, 'hours') 
             .format('YYYY-MM-DD HH:mm:ss');
         
-        // const existingReservation = await Reservation.findOne({
-        //     where: {
-        //         teacher_id: teacher_id,
-        //         datetime: reservationFormattedDate,
-        //         schedule_id: schedule_id
-        //     }
-        // });
-
-        // if (existingReservation) {
-        //     return res.status(409).json({
-        //         message: 'A reservation already exists for this teacher at the same time and date.'
-        //     });
-        // }
         const schedule = await Schedule.findByPk(schedule_id);
 
         if(schedule.currentstudents >= schedule.maxstudents){
@@ -51,7 +38,7 @@ const createReservation = async (req, res) => {
             schedule_id: schedule_id,
             datetime: reservationFormattedDate
         });
-        const isClassFull = newcurrentstudents === parseInt(schedule.maxstudents) ? true : false;
+        const isClassFull = newcurrentstudents === parseInt(schedule.maxstudents) ? true : false; //siempre pasa en true
         await Schedule.update({
             istaken: isClassFull,
             currentstudents: newcurrentstudents
