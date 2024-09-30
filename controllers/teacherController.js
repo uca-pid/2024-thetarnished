@@ -154,34 +154,27 @@ const removeSubjectFromTeacher = async (req, res) => {
     }
   };
 
-  const updateTeacherSubjects = async (req, res) => {
+  const updateTeacherSubjects = async (email, subjects) => {
       try {
-          const { id } = req.params;
-          const { subjects: newSubjectIds } = req.body;
-
-          if (!newSubjectIds || !Array.isArray(newSubjectIds) || newSubjectIds.length === 0) {
-              return res.status(400).json({ message: 'Invalid or missing subjects array' });
+          if (!subjects || !Array.isArray(subjects) || subjects.length === 0) {
+              throw new Error('Invalid subjects data');
           }
 
-          const teacher = await Teacher.findByPk(id);
-          console.log(teacher);
+          const teacher = await Teacher.findOne({where: {email: email}});
           if (!teacher) {
-              return res.status(404).json({ message: 'Teacher not found' });
+              throw new Error('Teacher not found');
           }
 
-          await SubjectTeacher.destroy({ where: { teacherid: id } });
+          await SubjectTeacher.destroy({ where: { teacherid: teacher.teacherid } });
 
-          const newRelations = newSubjectIds.map(subjectId => ({
-              teacherid: id,
+          const newRelations = subjects.map(subjectId => ({
+              teacherid: teacher.teacherid,
               subjectid: subjectId
           }));
           await SubjectTeacher.bulkCreate(newRelations);
-
-          res.status(200).json({ message: 'Teacher subjects updated successfully' });
-
       } catch (error) {
         /* istanbul ignore next */
-          res.status(500).json({ message: 'Server error' });
+          throw error;
       }
   };
 

@@ -13,6 +13,7 @@ const { sendEmailToUser } = require('./resetController');
 const fs = require('fs');
 const path = require('path');
 const e = require('express');
+const { updateTeacherSubjects } = require('./teacherController');
 
 
 
@@ -144,6 +145,7 @@ const loginUser = async (req, res) => {
         let userid;
         let formattedSchedule = [];
         let subjects = [];
+        let isActive;
         
         if (user instanceof Teacher) {
             role = 'TEACHER';
@@ -165,17 +167,23 @@ const loginUser = async (req, res) => {
             return res.status(401).json({ message: 'Invalid password' });
         }
 
+        const userData = {
+            id: userid,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            email: user.email,
+            role: role,
+            schedule: formattedSchedule,
+            subjects: subjects
+        };
+
+        if (role === 'TEACHER') {
+            userData.isActive = user.is_active;
+        }
+
         return res.status(200).json({
             message: 'Login successful',
-            user: {
-                id: userid,
-                firstname: user.firstname,
-                lastname: user.lastname,
-                email: user.email,
-                role: role,
-                schedule: formattedSchedule,
-                subjects: subjects
-            }
+            user: userData
         });
     } catch (error) {
         /* istanbul ignore next */
@@ -211,13 +219,18 @@ const changeUserPassword = async (req, res) => {
 
 const editProfile = async (req, res) => {
     try{
-        const {newFirstname, newLastname, email} = req.body;
+        const {newFirstName, newLastName, email, subjects} = req.body;
         const student = await Student.findOne({where: {email}});
         const teacher = await Teacher.findOne({where: {email}});
         if(!student && !teacher){
             return res.status(404).json({message: 'User not found'});
         }
-        student ? await Student.update({ firstname: newFirstname, lastname: newLastname }, { where: { email: email } }) : await Teacher.update({ firstname: newFirstname, lastname: newLastname }, { where: { email: email } });
+        if (student) {
+            await Student.update({ firstname: newFirstName, lastname: newLastName }, { where: { email: email } });
+        } else {
+            await Teacher.update({ firstname: newFirstName, lastname: newLastName }, { where: { email: email } });
+            await updateTeacherSubjects(email, subjects);
+        }
         return res.status(200).json({message: 'Profile updated successfully'});
     }catch(error){
         /* istanbul ignore next */

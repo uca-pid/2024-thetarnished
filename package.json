@@ -9,7 +9,6 @@
     "test:reset": "jest ./tests/reset.test.js --coverage",
     "start": "node ./start.js",
     "test:schedule": "jest ./tests/schedule.test.js --coverage"
-
   },
   "keywords": [],
   "author": "",
