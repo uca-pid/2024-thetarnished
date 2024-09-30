@@ -130,7 +130,8 @@ const getReservationsByTeacher = async (req, res) => {
                 teacher_id,
                 datetime: {
                     [Op.between]: [now, twoDaysFromNow]  
-                }
+                },
+                reservation_status: 'booked'
             },
             include: [
                 {

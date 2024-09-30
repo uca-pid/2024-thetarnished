@@ -13,7 +13,7 @@ router.post('/create', createReservation);
 router.delete('/delete/:id', deleteReservation);
 router.get('/student/:student_id', getReservationsByStudentId);
 router.get('/teacher/:teacher_id', getReservationsByTeacher);
-router.patch('/cancel/:id', cancelReservation);
+router.delete('/cancel/:id', cancelReservation);
 
 module.exports = router;
 
