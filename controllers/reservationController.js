@@ -20,7 +20,7 @@ const createReservation = async (req, res) => {
         const reservationFormattedDate = moment(`${reservationDate.format('YYYY-MM-DD')} ${start_time}`, 'YYYY-MM-DD HH:mm:ss')
             .subtract(3, 'hours') 
             .format('YYYY-MM-DD HH:mm:ss');
-
+        
         const schedule = await Schedule.findByPk(schedule_id);
 
         if(schedule.currentstudents >= schedule.maxstudents){
@@ -38,7 +38,7 @@ const createReservation = async (req, res) => {
             schedule_id: schedule_id,
             datetime: reservationFormattedDate
         });
-        const isClassFull = newcurrentstudents === parseInt(schedule.maxstudents) ? true : false;
+        const isClassFull = newcurrentstudents === parseInt(schedule.maxstudents) ? true : false; //siempre pasa en true
         await Schedule.update({
             istaken: isClassFull,
             currentstudents: newcurrentstudents

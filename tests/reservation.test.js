@@ -14,7 +14,6 @@ describe('Reservation Controller Tests', () => {
   let studentId;
   let scheduleId;
   let secondScheduleId;
-  let thirdScheduleId;
   let subjectId;
   let reservationId;
   let newStudentId;
@@ -75,12 +74,14 @@ describe('Reservation Controller Tests', () => {
     secondTeacherMonthlySchedule = await MonthlySchedule.create({
       datetime: "2023-05-29 11:00:00", //quizas esta fecha cause problemas
       teacherid: teacherId,
+      maxstudents: 2,
 
 
     });
     thirdTeacherMonthlySchedule = await MonthlySchedule.create({
       datetime: "2023-05-29 11:00:00", //quizas esta fecha cause problemas
       teacherid: teacherId,
+      
 
 
     });
