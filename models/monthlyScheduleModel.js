@@ -36,15 +36,6 @@ const MonthlySchedule = sequelize.define('MonthlySchedule', {
     allowNull: false,
     defaultValue: false
   },
-  weeklyscheduleid: {
-    type: DataTypes.BIGINT,
-    allowNull: false,
-    references: {
-      model: 'weeklySchedule',
-      key: 'weeklyscheduleid'
-    },
-    onDelete: 'CASCADE'
-  }
 }, {
   tableName: 'monthlyschedule',
   timestamps: false

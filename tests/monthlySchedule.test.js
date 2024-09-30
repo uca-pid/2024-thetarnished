@@ -42,7 +42,7 @@ describe('Test the /group-classes endpoint with real database', () => {
             teacherid: teacherID,
             maxstudents: 1,
             currentstudents: 0,
-            weeklyscheduleid: weeklyIndividualScheduleID
+            
         });
         monthlyIndividualScheduleID = monthlyIndividualSchedule.monthlyscheduleid;
         
@@ -60,7 +60,7 @@ describe('Test the /group-classes endpoint with real database', () => {
             teacherid: teacherID,
             maxstudents: 5,
             currentstudents: 0,
-            weeklyscheduleid: weeklyGroupScheduleID
+            
         });
         monthlyGroupScheduleID = monthlyGroupSchedule.monthlyscheduleid;
         
@@ -145,7 +145,7 @@ describe('Test the /group-classes endpoint with real database', () => {
             teacherid: teacherID,
             maxstudents: 5,
             currentstudents: 0,
-            weeklyscheduleid: weeklyGroupScheduleID
+
         });
         
         await Monthlyschedule.create({
@@ -153,7 +153,7 @@ describe('Test the /group-classes endpoint with real database', () => {
             teacherid: teacherID,
             maxstudents: 5,
             currentstudents: 0,
-            weeklyscheduleid: weeklyGroupScheduleID
+
         });
 
         const res = await request(app).post('/classes/assign-vacation').send(vacationData);

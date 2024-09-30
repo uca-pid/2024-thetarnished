@@ -69,19 +69,19 @@ describe('Reservation Controller Tests', () => {
     firstTeacherMonthlySchedule = await MonthlySchedule.create({
       datetime: "2023-05-29 10:00:00", //quizas esta fecha cause problemas
       teacherid: teacherId,
-      weeklyscheduleid: scheduleId
+
     });
 
     secondTeacherMonthlySchedule = await MonthlySchedule.create({
       datetime: "2023-05-29 11:00:00", //quizas esta fecha cause problemas
       teacherid: teacherId,
-      weeklyscheduleid: secondScheduleId
+
 
     });
     thirdTeacherMonthlySchedule = await MonthlySchedule.create({
       datetime: "2023-05-29 11:00:00", //quizas esta fecha cause problemas
       teacherid: teacherId,
-      weeklyscheduleid: thirdScheduleId
+
 
     });
 
@@ -311,7 +311,6 @@ describe('Reservation Controller Tests', () => {
     const monthly_schedule = await MonthlySchedule.create({
       datetime: "2023-05-29 10:00:00", //quizas esta fecha cause problemas
       teacherid: teacherId,
-      weeklyscheduleid: weeklyScheduleId,
       currentstudents: 1,
       maxstudents: 1,
       istaken: true

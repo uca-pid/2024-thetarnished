@@ -20,20 +20,7 @@ const createReservation = async (req, res) => {
         const reservationFormattedDate = moment(`${reservationDate.format('YYYY-MM-DD')} ${start_time}`, 'YYYY-MM-DD HH:mm:ss')
             .subtract(3, 'hours') 
             .format('YYYY-MM-DD HH:mm:ss');
-        
-        // const existingReservation = await Reservation.findOne({
-        //     where: {
-        //         teacher_id: teacher_id,
-        //         datetime: reservationFormattedDate,
-        //         schedule_id: schedule_id
-        //     }
-        // });
 
-        // if (existingReservation) {
-        //     return res.status(409).json({
-        //         message: 'A reservation already exists for this teacher at the same time and date.'
-        //     });
-        // }
         const schedule = await Schedule.findByPk(schedule_id);
 
         if(schedule.currentstudents >= schedule.maxstudents){

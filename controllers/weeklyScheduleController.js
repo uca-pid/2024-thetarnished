@@ -42,7 +42,7 @@ const createSchedule = async (req, res) => {
       const datecreada = createDate(start_time, dayofweek);
 
       createdSchedules.push(newSchedule);
-      await createMonthlySchedule(datecreada, teacherid, maxstudents, 0, newSchedule.weeklyscheduleid);
+      await createMonthlySchedule(datecreada, teacherid, maxstudents, 0);
 
     }
     return res.status(201).json(createdSchedules);
