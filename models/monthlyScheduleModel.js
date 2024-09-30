@@ -9,7 +9,7 @@ const MonthlySchedule = sequelize.define('MonthlySchedule', {
     defaultValue: sequelize.literal('unique_rowid()')
   },
   datetime: {
-    type: DataTypes.DATEONLY,
+    type: DataTypes.DATE,
     allowNull: false
   },
   teacherid: {

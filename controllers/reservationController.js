@@ -113,7 +113,6 @@ const deleteReservation = async (req, res) => {
         return res.status(500).json({ message: 'Error deleting reservation', error });
     }
 };
-
 const getReservationsByTeacher = async (req, res) => {
     try {
         const { teacher_id } = req.params;
@@ -122,14 +121,15 @@ const getReservationsByTeacher = async (req, res) => {
         if (!foundTeacher) {
             return res.status(404).json({ message: 'Teacher not found' });
         }
-        
+
         const now = moment().toDate();
         const twoDaysFromNow = moment().add(7, 'days').toDate(); 
+
         const reservations = await Reservation.findAll({
             where: {
                 teacher_id,
                 datetime: {
-                    [Op.between]: [now, twoDaysFromNow]  
+                    [Op.between]: [now, twoDaysFromNow]
                 },
                 reservation_status: 'booked'
             },
@@ -143,25 +143,62 @@ const getReservationsByTeacher = async (req, res) => {
                     attributes: ['subjectname'], 
                 }
             ],
-            attributes: ['id', 'datetime']
+            attributes: ['id', 'datetime', 'schedule_id'], // Include schedule_id
         });
 
         if (reservations.length === 0) {
             return res.status(404).json({ message: 'No reservations found for this teacher in the next five days.' });
         }
 
-        const formattedReservations = reservations.map(reservation => ({
-            id: reservation.id,
-            student_name: `${reservation.Student.firstname} ${reservation.Student.lastname}`,
-            subject_name: reservation.Subject.subjectname,
-            datetime: reservation.datetime
-        }));
+        // Find all schedule_ids from reservations
+        const scheduleIds = reservations.map(reservation => reservation.schedule_id);
+
+        // Count reservations grouped by schedule_id
+        const scheduleReservationCounts = await Reservation.findAll({
+            where: {
+                schedule_id: {
+                    [Op.in]: scheduleIds
+                },
+                reservation_status: 'booked'
+            },
+            attributes: ['schedule_id', [sequelize.fn('COUNT', sequelize.col('id')), 'reservation_count']],
+            group: ['schedule_id']
+        });
+
+        // Convert schedule counts into a map { schedule_id: reservation_count }
+        const scheduleCountsMap = {};
+        scheduleReservationCounts.forEach(schedule => {
+            scheduleCountsMap[schedule.schedule_id] = schedule.get('reservation_count');
+        });
+
+        // Create a map to store unique reservations by schedule_id
+        const uniqueReservationsMap = new Map();
+
+        // Format reservations and only keep one reservation per schedule_id
+        reservations.forEach(reservation => {
+            const isGroupClass = scheduleCountsMap[reservation.schedule_id] > 1;
+
+            // If the reservation is already in the map, we skip unless it's a group class
+            if (!uniqueReservationsMap.has(reservation.schedule_id)) {
+                uniqueReservationsMap.set(reservation.schedule_id, {
+                    id: reservation.id,
+                    student_name: isGroupClass ? 'group class' : `${reservation.Student.firstname} ${reservation.Student.lastname}`,
+                    subject_name: reservation.Subject.subjectname,
+                    datetime: reservation.datetime,
+                    group: isGroupClass
+                });
+            }
+        });
+
+        // Convert the map of unique reservations to an array
+        const formattedReservations = Array.from(uniqueReservationsMap.values());
 
         return res.status(200).json(formattedReservations);
     } catch (error) {
         return res.status(500).json({ message: 'Error fetching reservations for teacher', error });
     }
 };
+
 
 const cancelReservation = async (req, res) => {
     try {

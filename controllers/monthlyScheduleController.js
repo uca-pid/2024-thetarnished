@@ -5,7 +5,10 @@ const moment = require('moment');
 const createMonthlySchedule = async (datetime, teacherid, maxstudents, currentstudents) => {
   try {
     for (let i = 0; i < 4; i++) {
-      const scheduleDate = moment(datetime).add(i * 7, 'days').format('YYYY-MM-DD HH:mm:ss');
+      const scheduleDate = moment(datetime)  
+      .add(i * 7, 'days')  
+      .subtract(3, 'hours')  
+      .format('YYYY-MM-DD HH:mm:ss');  
 
       await MonthlySchedule.create({
         datetime: scheduleDate,
