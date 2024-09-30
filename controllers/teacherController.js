@@ -155,55 +155,36 @@ const removeSubjectFromTeacher = async (req, res) => {
   };
 
   const updateTeacherSubjects = async (req, res) => {
-    try {
-        const { teacherId } = req.params;
-        const { subjects: newSubjectIds } = req.body;
-        if (!newSubjectIds || !Array.isArray(newSubjectIds) || newSubjectIds.length === 0) {
-            return res.status(400).json({ message: 'Invalid or missing subjects array' });
-        }
+      try {
+          const { id } = req.params;
+          const { subjects: newSubjectIds } = req.body;
 
-        const teacher = await Teacher.findByPk(teacherId);
-        if (!teacher) {
-            return res.status(404).json({ message: 'Teacher not found' });
-        }
+          if (!newSubjectIds || !Array.isArray(newSubjectIds) || newSubjectIds.length === 0) {
+              return res.status(400).json({ message: 'Invalid or missing subjects array' });
+          }
 
-        const currentSubjectRelations = await SubjectTeacher.findAll({
-            where: { teacherid: teacherId },
-            attributes: ['subjectid']
-        });
-        const currentSubjectIds = currentSubjectRelations.map(rel => rel.subjectid);
+          const teacher = await Teacher.findByPk(id);
+          console.log(teacher);
+          if (!teacher) {
+              return res.status(404).json({ message: 'Teacher not found' });
+          }
 
-        const subjectsToAdd = newSubjectIds.filter(id => !currentSubjectIds.includes(id));
-        const subjectsToRemove = currentSubjectIds.filter(id => !newSubjectIds.includes(id));
+          await SubjectTeacher.destroy({ where: { teacherid: id } });
 
-        if (subjectsToAdd.length > 0) {
-            const newRelations = subjectsToAdd.map(subjectId => ({
-                teacherid: teacherId,
-                subjectid: subjectId
-            }));
-            await TeacherSubject.bulkCreate(newRelations);
-        }
+          const newRelations = newSubjectIds.map(subjectId => ({
+              teacherid: id,
+              subjectid: subjectId
+          }));
+          await SubjectTeacher.bulkCreate(newRelations);
 
-        if (subjectsToRemove.length > 0) {
-            await TeacherSubject.destroy({
-                where: {
-                    teacherid: teacherId,
-                    subjectid: {
-                        [Op.in]: subjectsToRemove
-                    }
-                }
-            });
-        }
+          res.status(200).json({ message: 'Teacher subjects updated successfully' });
 
-        res.status(200).json({ message: 'Teacher subjects updated successfully' });
+      } catch (error) {
+        /* istanbul ignore next */
+          res.status(500).json({ message: 'Server error' });
+      }
+  };
 
-    } catch (error) {
-        console.error('Error updating teacher subjects:', error);
-        res.status(500).json({ message: 'Server error' });
-    }
-};
-
-module.exports = { updateTeacherSubjects };
 module.exports = {
   getTeacherById,
   updateTeacher,

@@ -18,6 +18,6 @@ router.put('/update/:id', updateTeacher);
 router.delete('/delete/:id', deleteTeacher);
 router.post('/assign-subject/:teacherid', assignSubjectToTeacher);
 router.delete('/remove-subject/:teacherid/', removeSubjectFromTeacher);
-router.put('/update-subjects/:teacherid', updateTeacherSubjects);
+router.put('/update-subjects/:id', updateTeacherSubjects);
 
 module.exports = router;

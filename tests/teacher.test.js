@@ -353,6 +353,44 @@ describe('Teacher API', () => {
 
   const response = await request(app).delete(`/teachers/delete/${secondTeacherID}`);
   expect(response.status).toBe(400)
-  })
+  });
+
+  it('should update subjects for a teacher successfully', async () => {
+
+    jest.spyOn(Teacher, 'findByPk').mockResolvedValue({ teacherid: 1 });
+
+    jest.spyOn(SubjectTeacher, 'destroy').mockResolvedValue(true);
+
+    jest.spyOn(SubjectTeacher, 'bulkCreate').mockResolvedValue(true);
+
+    const response = await request(app)
+        .put('/teachers/update-subjects/1')
+        .send({ subjects: ['2', '3'] });
+
+    expect(response.status).toBe(200);
+    expect(response.body.message).toBe('Teacher subjects updated successfully');
+
+  });
   
+  it('should return 404 if teacher not found', async () => {
+
+    jest.spyOn(Teacher, 'findByPk').mockResolvedValue(null);
+
+    const response = await request(app)
+        .put('/teachers/update-subjects/999')
+        .send({ subjects: ['1', '2'] });
+
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe('Teacher not found');
+  });
+
+  it('should return 400 if no subjects array is provided', async () => {
+    const response = await request(app)
+        .put('/teachers/update-subjects/1')
+        .send({});  // No subjects provided
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe('Invalid or missing subjects array');
+  });
+
 });
