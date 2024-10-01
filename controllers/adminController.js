@@ -34,7 +34,7 @@ const disableTeacher = async (req, res) => {
 const getInactiveTeachers = async (req, res) => {
     try {
         const inactiveTeachers = await Teacher.findAll({
-            attributes: ['teacherid', 'firstname', 'lastname', 'email', 'signup_date'],
+            attributes: ['teacherid', 'firstname', 'lastname', 'email', 'signup_date', 'is_active'],
             where: { is_active: false },
             order: [['signup_date', 'ASC']],
         });

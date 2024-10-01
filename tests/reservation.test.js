@@ -306,8 +306,8 @@ describe('Reservation Controller Tests', () => {
         dayofweek: 1,
         maxstudents: 1
       });
-    
-    const weeklyScheduleId = weekly_schedule.weeklyscheduleid;
+      
+      const weeklyscheduleId = weekly_schedule.weeklyscheduleid;
 
     const monthly_schedule = await MonthlySchedule.create({
       datetime: "2023-05-29 10:00:00", //quizas esta fecha cause problemas
@@ -329,7 +329,9 @@ describe('Reservation Controller Tests', () => {
 
     const reservationId = reservation.id;
 
-    const res = await request(app).patch(`/reservation/cancel/${reservationId}`);
+    const res = await request(app).delete(`/reservation/cancel/${reservationId}`);
+
+    console.log(res.body); 
 
     const monthlySchedule2 = await MonthlySchedule.findByPk(monthlyId);
     expect(monthlySchedule2.currentstudents).toBe("0");
@@ -343,14 +345,14 @@ describe('Reservation Controller Tests', () => {
 
     await Reservation.destroy({ where: { id: reservationId } });
     await MonthlySchedule.destroy({ where: { monthlyscheduleid: monthlyId } });
-    await Schedule.destroy({ where: { weeklyscheduleid: weeklyScheduleId } });
+    await Schedule.destroy({ where: { weeklyscheduleid: weeklyscheduleId } });
   });
 
     it('Should return 404 when reservation is not found', async () => {
 
     jest.spyOn(Reservation, 'findByPk').mockResolvedValue(null);
 
-    const res = await request(app).patch('/reservation/cancel/999');
+    const res = await request(app).delete('/reservation/cancel/999');
 
     expect(res.statusCode).toBe(404);
     expect(res.body.message).toBe('Reservation not found');
@@ -365,7 +367,7 @@ describe('Reservation Controller Tests', () => {
         schedule_id: 1,
     });
 
-    const res = await request(app).patch('/reservation/cancel/1');
+    const res = await request(app).delete('/reservation/cancel/1');
 
     expect(res.statusCode).toBe(400);
     expect(res.body.message).toBe("Cannot cancel a reservation with status 'canceled'");
@@ -380,7 +382,7 @@ describe('Reservation Controller Tests', () => {
         schedule_id: 1,
     });
 
-    const res = await request(app).patch('/reservation/cancel/1');
+    const res = await request(app).delete('/reservation/cancel/1');
 
     expect(res.statusCode).toBe(400);
     expect(res.body.message).toBe("Cannot cancel a reservation with status 'finished'");
@@ -391,7 +393,7 @@ describe('Reservation Controller Tests', () => {
 
     jest.spyOn(Reservation, 'findByPk').mockRejectedValue(new Error('Database error'));
 
-    const res = await request(app).patch('/reservation/cancel/1');
+    const res = await request(app).delete('/reservation/cancel/1');
 
     expect(res.statusCode).toBe(500);
     expect(res.body.message).toBe('Error canceling reservation');

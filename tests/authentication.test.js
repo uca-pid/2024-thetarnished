@@ -260,6 +260,7 @@ describe('Authentication API', () => {
             firstname: 'Jackson',
             lastname: 'Doe',
             email: teacherEmail,
+            subjects: [`${subjectTestID}`]
           });
 
         expect(response.status).toBe(200);

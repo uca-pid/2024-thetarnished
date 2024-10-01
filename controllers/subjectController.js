@@ -2,7 +2,11 @@ const sequelize = require('../config/database');
 const Subject = require('../models/subjectModel');
 
 const getAllSubjects = async (req, res) =>{
-    const response = await Subject.findAll();
+    const response = await Subject.findAll({
+        order: [
+            ['subjectname', 'ASC']
+        ]
+    });
     return res.status(200).json(response);
 }
 

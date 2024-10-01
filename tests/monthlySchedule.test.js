@@ -83,9 +83,7 @@ describe('Test the /group-classes endpoint with real database', () => {
 
    
         expect(res.statusCode).toBe(200);
-        if (res.body.length > 0) {
-            expect(res.body[0]).toHaveProperty('maxstudents', "5");
-        }
+        expect(res.body.length).toBeGreaterThan(0);
     });
 
     it('Should return individual classes when they are available for booking', async () => {

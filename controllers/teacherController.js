@@ -5,6 +5,8 @@ const Reservation = require('../models/reservationModel');
 const sequelize = require('../config/database');
 const { Op } = require('sequelize');
 const moment = require('moment');
+const { Sequelize } = require('sequelize');
+
 
 const getAllTeachers = async (req, res) => {
   try {
@@ -133,14 +135,15 @@ const removeSubjectFromTeacher = async (req, res) => {
     try {
       const { subjectid } = req.params;
       const [teachers] = await sequelize.query(`
-
-        SELECT DISTINCT teachers.teacherid, firstname, lastname, email, subjectid  from teachers 
-        JOIN subjectteacher
-        ON teachers.teacherid = subjectteacher.teacherid
-        JOIN monthlyschedule
-        ON teachers.teacherid = monthlyschedule.teacherid
-        WHERE subjectid = :subjectid
-        AND istaken = 'false'`
+        SELECT DISTINCT teachers.teacherid, firstname, lastname, email, subjectid  
+        FROM teachers 
+        JOIN subjectteacher 
+        ON teachers.teacherid = subjectteacher.teacherid 
+        JOIN monthlyschedule 
+        ON teachers.teacherid = monthlyschedule.teacherid 
+        WHERE subjectid = :subjectid 
+        AND istaken = 'false' 
+        ORDER BY firstname ASC, lastname ASC`
       , {
 
         replacements: { subjectid: subjectid },
@@ -173,7 +176,6 @@ const removeSubjectFromTeacher = async (req, res) => {
           }));
           await SubjectTeacher.bulkCreate(newRelations);
       } catch (error) {
-        /* istanbul ignore next */
           throw error;
       }
   };

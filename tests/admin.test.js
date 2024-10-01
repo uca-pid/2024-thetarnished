@@ -144,7 +144,6 @@ describe('Admin API', () => {
         const secondInactiveTeacherID = secondInactiveTeacher.teacherid;
         const response = await request(app).get('/admins/inactive-teachers');
         
-        
         expect(response.status).toBe(200);
         expect(response.body.length).toBeGreaterThan(0);
         expect(response.body[0].is_active).toBe(false);

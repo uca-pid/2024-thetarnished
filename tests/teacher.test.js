@@ -7,8 +7,9 @@ const bcrypt = require('bcrypt');
 const Schedule = require('../models/weeklyScheduleModel');
 const MonthlySchedule = require('../models/monthlyScheduleModel');
 const Student = require('../models/studentModel')
-const Reservation = require('../models/reservationModel')
-
+const Reservation = require('../models/reservationModel');
+const { updateTeacherSubjects } = require('../controllers/teacherController');
+const { Sequelize } = require('sequelize');
 
 
 
@@ -23,6 +24,8 @@ describe('Teacher API', () => {
     const oldPassword = 'oldpassword';
     let secondTeacherID;
     let studentId;
+    const secondTeacherEmail ='john.doeUnicoMail@example.com';
+    const studentEmail = 'jane.doeUnicoMail@example.com';
     let scheduleId;
     let subjectId;
     let firstTeacherMonthlySchedule;
@@ -69,8 +72,8 @@ describe('Teacher API', () => {
     afterAll(async () => {
       await SubjectTeacher.destroy({ where: { teacherid: teacherID } });
       await Teacher.destroy({ where: { email: teacherEmail } });
-      await Teacher.destroy({ where: { email: 'john.doeUnicoMail@example.com' } });
-      await Student.destroy({ where: { email: 'jane.doeUnicoMail@example.com' } });
+      await Teacher.destroy({ where: { email: secondTeacherEmail } });
+      await Student.destroy({ where: { email: studentEmail} });
       await Subject.destroy({ where: { subjectname: 'authSubjectTest' } });
     });
 
@@ -355,42 +358,59 @@ describe('Teacher API', () => {
   expect(response.status).toBe(400)
   });
 
-  // it('should update subjects for a teacher successfully', async () => {
 
-  //   jest.spyOn(Teacher, 'findByPk').mockResolvedValue({ teacherid: 1 });
+  it('should throw an error if subjects are invalid', async () => {
+    await expect(updateTeacherSubjects('teacher@example.com', null))
+        .rejects.toThrow('Invalid subjects data');
 
-  //   jest.spyOn(SubjectTeacher, 'destroy').mockResolvedValue(true);
+    await expect(updateTeacherSubjects('teacher@example.com', []))
+        .rejects.toThrow('Invalid subjects data');
+  });
 
-  //   jest.spyOn(SubjectTeacher, 'bulkCreate').mockResolvedValue(true);
+it('should throw an error if the teacher is not found', async () => {
+    // Spy on Teacher.findOne and return null (simulate teacher not found)
+    jest.spyOn(Teacher, 'findOne').mockResolvedValue(null);
 
-  //   const response = await request(app)
-  //       .put('/teachers/update-subjects/1')
-  //       .send({ subjects: ['2', '3'] });
+    await expect(updateTeacherSubjects('teacher@example.com', ['1', '2']))
+        .rejects.toThrow('Teacher not found');
 
-  //   expect(response.status).toBe(200);
-  //   expect(response.body.message).toBe('Teacher subjects updated successfully');
+    // Check that Teacher.findOne was called with the correct email
+    expect(Teacher.findOne).toHaveBeenCalledWith({ where: { email: 'teacher@example.com' } });
+});
 
-  // });
-  
-  // it('should return 404 if teacher not found', async () => {
+it('should call destroy and bulkCreate when valid teacher and subjects are provided', async () => {
+    // Spy on Teacher.findOne and return a fake teacher
+    jest.spyOn(Teacher, 'findOne').mockResolvedValue({ teacherid: 1 });
 
-  //   jest.spyOn(Teacher, 'findByPk').mockResolvedValue(null);
+    // Spy on SubjectTeacher.destroy to simulate successful deletion
+    const destroySpy = jest.spyOn(SubjectTeacher, 'destroy').mockResolvedValue(true);
 
-  //   const response = await request(app)
-  //       .put('/teachers/update-subjects/999')
-  //       .send({ subjects: ['1', '2'] });
+    // Spy on SubjectTeacher.bulkCreate to simulate successful bulk insert
+    const bulkCreateSpy = jest.spyOn(SubjectTeacher, 'bulkCreate').mockResolvedValue(true);
 
-  //   expect(response.status).toBe(404);
-  //   expect(response.body.message).toBe('Teacher not found');
-  // });
+    // Call the helper function
+    await expect(updateTeacherSubjects('teacher@example.com', ['1', '2']))
+        .resolves.not.toThrow();
 
-  // it('should return 400 if no subjects array is provided', async () => {
-  //   const response = await request(app)
-  //       .put('/teachers/update-subjects/1')
-  //       .send({});  // No subjects provided
+    // Ensure the destroy method was called with the correct teacher ID
+    expect(destroySpy).toHaveBeenCalledWith({ where: { teacherid: 1 } });
 
-  //   expect(response.status).toBe(400);
-  //   expect(response.body.message).toBe('Invalid or missing subjects array');
-  // });
+    // Ensure bulkCreate was called with the correct new relations
+    expect(bulkCreateSpy).toHaveBeenCalledWith([
+        { teacherid: 1, subjectid: '1' },
+        { teacherid: 1, subjectid: '2' }
+    ]);
+});
+
+it('should throw an error if the teacher is not found', async () => {
+  // Spy on Teacher.findOne and return null (simulate teacher not found)
+  jest.spyOn(Teacher, 'findOne').mockResolvedValue(null);
+
+  await expect(updateTeacherSubjects('teacher@example.com', ['1', '2']))
+      .rejects.toThrow('Teacher not found');
+
+  // Check that Teacher.findOne was called with the correct email
+  expect(Teacher.findOne).toHaveBeenCalledWith({ where: { email: 'teacher@example.com' } });
+  });
 
 });
