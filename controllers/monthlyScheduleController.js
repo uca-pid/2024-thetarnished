@@ -120,7 +120,7 @@ const assignVacation = async (req, res) => {
   }
 };
 
-const getMonthlyScheduleByTeacherId  = async (req, res) => {
+const getMonthlyScheduleByTeacherId = async (req, res) => {
   try {
     const { teacherid } = req.params;
     const monthlySchedule = await MonthlySchedule.findAll({
@@ -129,16 +129,33 @@ const getMonthlyScheduleByTeacherId  = async (req, res) => {
         istaken: false,
       },
     });
+
     if (monthlySchedule.length > 0) {
-      res.status(200).json(monthlySchedule);
+      const formattedSchedule = monthlySchedule.map((schedule) => {
+        const startTime = new Date(schedule.datetime).toTimeString().split(' ')[0]; 
+        const endTime = new Date(new Date(schedule.datetime).getTime() + 60 * 60 * 1000).toTimeString().split(' ')[0]; 
+        const dayOfMonth = new Date(schedule.datetime).getDate(); 
+        let jsDayOfWeek = new Date(schedule.datetime).getDay(); // 0 (Sunday) to 6 (Saturday)
+        const dayOfWeek = jsDayOfWeek === 0 ? 7 : jsDayOfWeek;
+        return {
+          scheduleid: schedule.monthlyscheduleid.toString(),
+          start_time: startTime,
+          end_time: endTime,
+          teacherid: schedule.teacherid ? schedule.teacherid.toString() : null,
+          dayofmonth: dayOfMonth,
+          dayofweek: dayOfWeek,
+        };
+      });
+
+      res.status(200).json(formattedSchedule);
     } else {
       res.status(404).send('Monthly schedule not found');
     }
-    }catch (error) {
-      /*istanbul ignore next*/
-      res.status(500).send('Server error');
-    }
+  } catch (error) {
+    /*istanbul ignore next*/
+    res.status(500).send('Server error');
   }
+};
 
 module.exports = {
   getIndividualClasses,

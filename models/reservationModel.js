@@ -52,7 +52,12 @@ const Reservation = sequelize.define('Reservation', {
   },
   reservation_status: {
     type: DataTypes.STRING,
-    defaultValue: 'booked', // Default value for the reservation status
+    defaultValue: 'booked', 
+    allowNull: false,
+  },
+  payment_method: {
+    type: DataTypes.STRING,
+    defaultValue: 'cash', 
     allowNull: false,
   }
 }, {

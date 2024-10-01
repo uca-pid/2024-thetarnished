@@ -6,10 +6,11 @@ const { Op } = require('sequelize');
 const Student = require('../models/studentModel');
 const Subject = require('../models/subjectModel');
 const Teacher = require('../models/teacherModel');
+const MonthlySchedule = require('../models/monthlyScheduleModel');  
 
 const createReservation = async (req, res) => {
     try {
-        const { student_id, subject_id, teacher_id, dayofweek, start_time, schedule_id } = req.body;
+        const { student_id, subject_id, teacher_id, dayofweek, start_time, schedule_id, payment_method } = req.body;
         const currentDayOfWeek = moment().isoWeekday();
         let reservationDate = moment().isoWeekday(dayofweek);
         
@@ -28,7 +29,18 @@ const createReservation = async (req, res) => {
                 message: 'This schedule is full'
             });
         }
-
+        if(payment_method === 'CASHFLOW'){
+            const student = await Student.findByPk(student_id);
+            const studentEmail = student.email;
+            const data = await fetch(`https://two024-qwerty-back-2.onrender.com/api/public/exists/${studentEmail}`);
+            const isSignedUp = await data.json();
+            if(!isSignedUp){
+                return res.status(401).json({
+                    message: 'Student is not signed up'
+                    
+                });
+            }
+        }
         const newcurrentstudents = parseInt(schedule.currentstudents) + 1;
         
         const reservation = await Reservation.create({
@@ -36,9 +48,10 @@ const createReservation = async (req, res) => {
             teacher_id: teacher_id,
             subject_id: subject_id,
             schedule_id: schedule_id,
-            datetime: reservationFormattedDate
+            datetime: reservationFormattedDate,
+            payment_method: payment_method,
         });
-        const isClassFull = newcurrentstudents === parseInt(schedule.maxstudents) ? true : false; //siempre pasa en true
+        const isClassFull = newcurrentstudents === parseInt(schedule.maxstudents) ? true : false; 
         await Schedule.update({
             istaken: isClassFull,
             currentstudents: newcurrentstudents
@@ -143,17 +156,17 @@ const getReservationsByTeacher = async (req, res) => {
                     attributes: ['subjectname'], 
                 }
             ],
-            attributes: ['id', 'datetime', 'schedule_id'], // Include schedule_id
+            attributes: ['id', 'datetime', 'schedule_id'], 
         });
 
         if (reservations.length === 0) {
             return res.status(404).json({ message: 'No reservations found for this teacher in the next five days.' });
         }
 
-        // Find all schedule_ids from reservations
+
         const scheduleIds = reservations.map(reservation => reservation.schedule_id);
 
-        // Count reservations grouped by schedule_id
+
         const scheduleReservationCounts = await Reservation.findAll({
             where: {
                 schedule_id: {
@@ -165,32 +178,32 @@ const getReservationsByTeacher = async (req, res) => {
             group: ['schedule_id']
         });
 
-        // Convert schedule counts into a map { schedule_id: reservation_count }
+
         const scheduleCountsMap = {};
         scheduleReservationCounts.forEach(schedule => {
             scheduleCountsMap[schedule.schedule_id] = schedule.get('reservation_count');
         });
 
-        // Create a map to store unique reservations by schedule_id
+
         const uniqueReservationsMap = new Map();
 
-        // Format reservations and only keep one reservation per schedule_id
+
         reservations.forEach(reservation => {
             const isGroupClass = scheduleCountsMap[reservation.schedule_id] > 1;
 
-            // If the reservation is already in the map, we skip unless it's a group class
             if (!uniqueReservationsMap.has(reservation.schedule_id)) {
                 uniqueReservationsMap.set(reservation.schedule_id, {
                     id: reservation.id,
                     student_name: isGroupClass ? 'group class' : `${reservation.Student.firstname} ${reservation.Student.lastname}`,
                     subject_name: reservation.Subject.subjectname,
                     datetime: reservation.datetime,
-                    group: isGroupClass
+                    group: isGroupClass,
+                    MonthlyID: reservation.schedule_id 
                 });
             }
         });
 
-        // Convert the map of unique reservations to an array
+
         const formattedReservations = Array.from(uniqueReservationsMap.values());
 
         return res.status(200).json(formattedReservations);
@@ -198,6 +211,7 @@ const getReservationsByTeacher = async (req, res) => {
         return res.status(500).json({ message: 'Error fetching reservations for teacher', error });
     }
 };
+
 
 
 const cancelReservation = async (req, res) => {
@@ -234,10 +248,110 @@ const cancelReservation = async (req, res) => {
     }
 };
 
+const cancelGroupClass = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const reserva = await Reservation.findByPk(id);
+        if (!reserva) {
+            return res.status(404).json({ message: 'Reservation not found' });
+        }
+
+        const monthlyscheduleid = reserva.schedule_id;
+        const reservations = await Reservation.findAll({
+            where: {
+                schedule_id: monthlyscheduleid,
+                reservation_status: 'booked'
+            }
+            
+        });
+        for (const reservation of reservations) {
+            await reservation.update({ reservation_status: 'canceled' });
+            await MonthlySchedule.update(
+              {
+                istaken: false,
+                currentstudents: sequelize.literal('currentstudents - 1')
+              },
+              {
+                where: { monthlyscheduleid: reservation.schedule_id }
+              }
+            );
+          }
+          return res.status(200).json({ message: 'Reservation canceled successfully' });
+    } catch (error) {
+        return res.status(500).json({ message: 'Error canceling reservation', error });
+    }
+};
+
+const terminateClass = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { valor } = req.body;
+        const reservation = await Reservation.findByPk(id);
+        if (!reservation) {
+            return res.status(404).json({ message: 'Reservation not found' });
+        }
+        const studentId = reservation.student_id;
+        const student = await Student.findByPk(studentId);
+        const studentEmail = student.email;
+        const subjectId = reservation.subject_id;
+        const subject = await Subject.findByPk(subjectId);
+        const subjectName = subject.subjectname;
+        const payment_method = reservation.payment_method;
+
+        if(payment_method === 'CASHFLOW'){
+            const data = await fetch(`https://two024-qwerty-back-2.onrender.com/api/public/sendTransaccion`, {
+                method: 'POST', 
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    "valor": valor,
+                    "email": studentEmail,
+                    "motivo": `Clase de ${subjectName}`,
+                    "id_reserva": id
+                 })
+              });
+              const dataJson = await data.text();
+              if(dataJson === 'Usuario no registrado.'){
+                return res.status(401).json({ message: 'No se completo la transaccion' });
+              } 
+        }
+        reservation.reservation_status = 'terminated';
+        await reservation.save();
+        return res.status(200).json({ message: 'Class ended successfully' });
+
+    }
+        catch (error) {
+        return res.status(500).json({ message: 'Error ending class', error });
+    }
+};
+
+const confirmPayment = async(req, res) => {
+    try {
+        const {id_reserva, email, reservationStatus}  = req.body;
+        const reservation = await Reservation.findByPk(id_reserva);
+        if (!reservation) {
+            return res.status(404).json({ message: 'Reservation not found' });
+        }
+        if(reservationStatus === 'aceptada'){
+            reservation.reservation_status = 'paid';
+        }else{
+            reservation.reservation_status = 'in debt';
+            return res.status(401).json({ message: 'Payment not confirmed' });
+        }
+        return res.status(200).json({ message: 'Payment confirmed successfully' });
+    } catch (error) {
+        return res.status(500).json({ message: 'Error confirming payment', error });
+    }
+};
+       
 module.exports = {
     createReservation,
     getReservationsByTeacher,
     getReservationsByStudentId,
     deleteReservation,
-    cancelReservation
+    cancelReservation,
+    terminateClass,
+    confirmPayment,
+    cancelGroupClass
 };
