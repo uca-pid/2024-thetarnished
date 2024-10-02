@@ -245,38 +245,47 @@ const deleteUserAccount = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-      
+       
         let reservationBlockExists = false;
 
         if (user instanceof Student) {
+            
             reservationBlockExists = await Reservation.findOne({
                 where: {
                     student_id: user.studentid,
                     [Op.or]: [
-                        { datetime: { [Op.gt]: new Date() } }, 
-                        { reservation_status: 'in debt' }
+                        {
+                            datetime: { [Op.gt]: new Date() }, 
+                            reservation_status: { [Op.not]: 'canceled' } 
+                        },
+                        { reservation_status: 'in debt' } 
                     ]
                 }
             });
         } else if (user instanceof Teacher) {
+
             reservationBlockExists = await Reservation.findOne({
                 where: {
                     teacher_id: user.teacherid,
-                    datetime: { [Op.gt]: new Date() }
+                    datetime: { [Op.gt]: new Date() }, 
+                    reservation_status: { [Op.not]: 'canceled' }
                 }
             });
         }
 
+        // If a blocking reservation exists (future reservation not canceled or in debt), prevent deletion
         if (reservationBlockExists) {
-            return res.status(400).json({ message: 'Cannot delete user with future or in debt reservations' });
+            return res.status(400).json({ message: 'Cannot delete user with active or in debt reservations' });
         }
 
+        // Delete the user if no blocking reservations exist
         if (user instanceof Student) {
             await Student.destroy({ where: { email: email } });
         } else if (user instanceof Teacher) {
             await Teacher.destroy({ where: { email: email } });
         }
 
+        // Send account deletion notification
         const filePath = path.join(__dirname, '../deleteNotificationTemplate.html');
         let htmlContent = fs.readFileSync(filePath, 'utf-8');
 
@@ -294,6 +303,7 @@ const deleteUserAccount = async (req, res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
+
 
 
 const verifyUserPassword = async (req, res) => {

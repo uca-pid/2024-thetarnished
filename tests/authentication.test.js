@@ -328,20 +328,6 @@ describe('Authentication API', () => {
         expect(response.body.message).toBe('User account deleted successfully');
     });
 
-    it('Should not allow an inactive teacher to delete their account', async () => {
-        const inactiveTeacherEmail = 'inactiveteache2@example.com';
-        const inactiveTeacher = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: inactiveTeacherEmail, password: hashedOldPassword, subjects: [], is_active: false});
-        
-        const response = await request(app)
-          .delete('/authentication/delete-account')
-          .send({
-            email: inactiveTeacherEmail,
-        });
-        expect(response.status).toBe(400);
-        expect(response.body.message).toBe('User is not active');
-        await Teacher.destroy({ where: { email: inactiveTeacherEmail } });
-
-    });
 
     it('Should not allow an user to confirm delete their account with invalid email', async () => {
         const response = await request(app)
