@@ -129,6 +129,7 @@ const deleteReservation = async (req, res) => {
         return res.status(500).json({ message: 'Error deleting reservation', error });
     }
 };
+
 const getReservationsByTeacher = async (req, res) => {
     try {
         const { teacher_id } = req.params;
@@ -138,15 +139,9 @@ const getReservationsByTeacher = async (req, res) => {
             return res.status(404).json({ message: 'Teacher not found' });
         }
 
-        const now = moment().toDate();
-        const twoDaysFromNow = moment().add(7, 'days').toDate(); 
-
         const reservations = await Reservation.findAll({
             where: {
               teacher_id,
-              datetime: {
-                [Op.between]: [now, twoDaysFromNow],
-              },
               reservation_status: 'booked',
             },
             include: [
