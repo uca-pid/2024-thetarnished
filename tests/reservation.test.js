@@ -540,7 +540,6 @@ const res = await request(app)
 
     const res = await request(app).delete(`/reservation/cancel/${reservationId}`);
 
-    console.log(res.body); 
 
     const monthlySchedule2 = await MonthlySchedule.findByPk(monthlyId);
     expect(monthlySchedule2.currentstudents).toBe("0");

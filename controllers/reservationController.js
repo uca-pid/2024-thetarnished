@@ -334,7 +334,6 @@ const terminateClass = async (req, res) => {
 };
 
 const confirmPayment = async (req, res) => {
-    console.log(req.body);
     try {
         const { id_reserva, email, reservationStatus } = req.body;
         const reservation = await Reservation.findByPk(id_reserva);

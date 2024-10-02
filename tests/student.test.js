@@ -92,8 +92,7 @@ describe('Student API', () => {
   it("Should get a previous teacher", async () => {
     const response = await request(app)
       .get(`/students/get-previous/${studentId}`);
-    expect(response.status).toBe(200);
-    console.log(response.body);
+    expect(response.status).toBe(200);  
     expect(response.body[0].firstname).toBe('John');
     expect(response.body[0].lastname).toBe('Doe');
   });
