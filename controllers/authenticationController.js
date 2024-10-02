@@ -266,4 +266,25 @@ const deleteUserAccount = async (req, res) => {
     }
 }
 
-module.exports = {loginUser, sendEmailToUser, createUser, changeUserPassword, editProfile, deleteUserAccount};
+const verifyUserPassword = async (req, res) => {
+    try{
+        const {email} = req.params;
+        const {password} = req.body;
+        const student = await Student.findOne({where: {email}});
+        const teacher = await Teacher.findOne({where: {email}});
+        if(!student && !teacher){
+            return res.status(404).json({message: 'User not found'});
+        }
+        const foundUser = student ? student : teacher;
+        const isPasswordValid = await bcrypt.compare(password, foundUser.password);
+        if(!isPasswordValid){
+            return res.status(401).json({message: 'Invalid password'});
+        }
+        return res.status(200).json({message: 'Password is correct'});
+    }catch(error){
+        /* istanbul ignore next */
+        return res.status(500).json({message: 'Internal server error'});
+    }
+}
+
+module.exports = {loginUser, sendEmailToUser, createUser, changeUserPassword, editProfile, deleteUserAccount, verifyUserPassword};

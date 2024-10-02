@@ -21,6 +21,9 @@ describe('Authentication API', () => {
     const studentEmail = 'testStudent@example.com';
     const oldPassword = 'oldpassword';
     const newPassword = 'newpassword';
+    let teacherToDelete;
+    let studentToDelete;
+
     jest.setTimeout(20000);
     beforeAll(async () => {
         hashedOldPassword = await bcrypt.hash(oldPassword, 10);
@@ -29,12 +32,16 @@ describe('Authentication API', () => {
         });
         subjectTestID = subjectTest.subjectid;
         student = await Student.create({ firstname: studentFirstName, lastname: studentLastName, email: studentEmail, password: hashedOldPassword});
-        teacher = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: teacherEmail, password: hashedOldPassword, subjects: [], is_active: true});
+        teacher = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: teacherEmail, password: hashedOldPassword, subjects: [], is_active: true}); 
+        teacherToDelete = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: "testTeacher35@example.com", password: hashedOldPassword, subjects: []});
+        studentToDelete = await Student.create({ firstname: studentFirstName, lastname: studentLastName, email: "testStudent192@example.com", password: hashedOldPassword});
     });
     
     afterAll(async () => {
         await Student.destroy({ where: { email: studentEmail } });
+        await Student.destroy({ where: { email: "testStudent192@example.com" } });
         await Teacher.destroy({ where: { email: teacherEmail } });
+        await Teacher.destroy({ where: { email: "testTeacher35@example.com" } });
     });
 
     it("Should register a teacher", async () => {
@@ -333,5 +340,56 @@ describe('Authentication API', () => {
         expect(response.status).toBe(400);
         expect(response.body.message).toBe('User is not active');
         await Teacher.destroy({ where: { email: inactiveTeacherEmail } });
+
+    });
+
+    it('Should not allow an user to confirm delete their account with invalid email', async () => {
+        const response = await request(app)
+          .post(`/authentication/delete-account/xd@asd.com`)
+          .send({
+            password: 'xd',
+        });
+        expect(response.status).toBe(404);
+        expect(response.body.message).toBe('User not found');
+    });
+
+    it('Should not allow a teacher to confirm delete their account with invalid password', async () => {
+        const response = await request(app)
+          .post(`/authentication/delete-account/${teacherToDelete.email}`)
+          .send({
+            password: 'invalidpassword',
+        });
+        expect(response.status).toBe(401);
+        expect(response.body.message).toBe('Invalid password');
+    });
+
+    it('Should not allow a student to confirm delete their account with invalid password', async () => {
+        const response = await request(app)
+        .post(`/authentication/delete-account/${studentToDelete.email}`)
+          .send({
+            password: 'invalidpassword',
+        });
+        expect(response.status).toBe(401);
+        expect(response.body.message).toBe('Invalid password');
+    });
+
+    it('Should allow a teacher to confirm delete their account', async () => {
+        const response = await request(app)
+          .post(`/authentication/delete-account/${teacherToDelete.email}`)
+          .send({
+            password: oldPassword,
+        });
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe("Password is correct");
+    });
+
+    it('Should allow a student to confirm delete their account', async () => {
+        const response = await request(app)
+          .post(`/authentication/delete-account/${studentToDelete.email}`)
+          .send({
+            password: oldPassword,
+        });
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe("Password is correct");
     });
 });
