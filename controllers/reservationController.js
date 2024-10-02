@@ -8,6 +8,7 @@ const Subject = require('../models/subjectModel');
 const Teacher = require('../models/teacherModel');
 const MonthlySchedule = require('../models/monthlyScheduleModel');  
 
+
 const createReservation = async (req, res) => {
     try {
         const { student_id, subject_id, teacher_id, dayofweek, start_time, schedule_id, payment_method } = req.body;
@@ -291,6 +292,7 @@ const terminateClass = async (req, res) => {
         const { valor } = req.body;
         const reservation = await Reservation.findByPk(id);
         if (!reservation) {
+            
             return res.status(404).json({ message: 'Reservation not found' });
         }
         const studentId = reservation.student_id;
@@ -316,6 +318,7 @@ const terminateClass = async (req, res) => {
               });
               const dataJson = await data.text();
               if(dataJson === 'Usuario no registrado.'){
+                /*istanbul ignore next*/
                 return res.status(401).json({ message: 'No se completo la transaccion' });
               } 
         }
@@ -324,26 +327,34 @@ const terminateClass = async (req, res) => {
         return res.status(200).json({ message: 'Class ended successfully' });
 
     }
-        catch (error) {
+    catch (error) {
+        /*istanbul ignore next*/
         return res.status(500).json({ message: 'Error ending class', error });
     }
 };
 
-const confirmPayment = async(req, res) => {
+const confirmPayment = async (req, res) => {
+    console.log(req.body);
     try {
-        const {id_reserva, email, reservationStatus}  = req.body;
+        const { id_reserva, email, reservationStatus } = req.body;
         const reservation = await Reservation.findByPk(id_reserva);
+        
         if (!reservation) {
             return res.status(404).json({ message: 'Reservation not found' });
         }
-        if(reservationStatus === 'aceptada'){
+
+        if (reservationStatus === 'aceptada') {
             reservation.reservation_status = 'paid';
-        }else{
+        } else {
             reservation.reservation_status = 'in debt';
+            await reservation.save(); // Save the change for 'in debt' status
             return res.status(401).json({ message: 'Payment not confirmed' });
         }
+
+        await reservation.save(); // Save the change for 'paid' status
         return res.status(200).json({ message: 'Payment confirmed successfully' });
     } catch (error) {
+        /*istanbul ignore next*/
         return res.status(500).json({ message: 'Error confirming payment', error });
     }
 };

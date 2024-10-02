@@ -213,7 +213,7 @@ describe('Test the /group-classes endpoint with real database', () => {
           {
             monthlyscheduleid: 1,
             teacherid: 1,
-            datetime: new Date('2024-10-01T10:00:00Z'),
+            datetime: new Date('2024-10-01T07:00:00'),
             istaken: false,
           },
         ];
@@ -261,7 +261,7 @@ describe('Test the /group-classes endpoint with real database', () => {
           {
             monthlyscheduleid: 1,
             teacherid: 1,
-            datetime: new Date('2024-10-06T10:00:00Z'),
+            datetime: new Date('2024-10-06T07:00:00'),
             istaken: false,
           },
         ];
