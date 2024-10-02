@@ -141,7 +141,7 @@ const getMonthlyScheduleByTeacherId = async (req, res) => {
           scheduleid: schedule.monthlyscheduleid.toString(),
           start_time: startTime,
           end_time: endTime,
-          teacherid: schedule.teacherid ? schedule.teacherid.toString() : null,
+          teacherid: schedule.teacherid.toString(),
           dayofmonth: dayOfMonth,
           dayofweek: dayOfWeek,
         };

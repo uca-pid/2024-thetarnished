@@ -206,4 +206,80 @@ describe('Test the /group-classes endpoint with real database', () => {
         expect(res.statusCode).toBe(500);
         expect(res.text).toBe('Server error');
     });
+
+    it('Should return the formatted schedule when found', async () => {
+
+        const mockSchedule = [
+          {
+            monthlyscheduleid: 1,
+            teacherid: 1,
+            datetime: new Date('2024-10-01T10:00:00Z'),
+            istaken: false,
+          },
+        ];
+        
+        jest.spyOn(Monthlyschedule, 'findAll').mockResolvedValue(mockSchedule);
+    
+        const res = await request(app).get('/classes/get-monthly-schedule-by/1');
+    
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toEqual([
+          {
+            scheduleid: '1',
+            start_time: '07:00:00',
+            end_time: '08:00:00',
+            teacherid: '1',
+            dayofmonth: 1,
+            dayofweek: 2,
+          },
+        ]);
+      });
+
+      it('Should return 404 if no schedule is found', async () => {
+
+        jest.spyOn(Monthlyschedule, 'findAll').mockResolvedValue([]);
+    
+        const res = await request(app).get('/classes/get-monthly-schedule-by/1');
+    
+        expect(res.statusCode).toBe(404);
+        expect(res.text).toBe('Monthly schedule not found');
+      });
+
+      it('Should return 500 on server error', async () => {
+
+        jest.spyOn(Monthlyschedule, 'findAll').mockRejectedValue(new Error('Database error'));
+    
+        // Make a request to the endpoint using supertest
+        const res = await request(app).get('/classes/get-monthly-schedule-by/1');
+    
+        expect(res.statusCode).toBe(500);
+        expect(res.text).toBe('Server error');
+      });
+
+      it('should return the formatted schedule with Sunday as day 7', async () => {
+        const mockSchedule = [
+          {
+            monthlyscheduleid: 1,
+            teacherid: 1,
+            datetime: new Date('2024-10-06T10:00:00Z'),
+            istaken: false,
+          },
+        ];
+    
+        jest.spyOn(Monthlyschedule, 'findAll').mockResolvedValue(mockSchedule);
+    
+        const res = await request(app).get('/classes/get-monthly-schedule-by/1');
+    
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toEqual([
+          {
+            scheduleid: '1',
+            start_time: '07:00:00',
+            end_time: '08:00:00',
+            teacherid: '1',
+            dayofmonth: 6,
+            dayofweek: 7,
+          },
+        ]);
+      });
 });

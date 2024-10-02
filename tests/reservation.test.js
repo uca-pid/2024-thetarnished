@@ -373,7 +373,7 @@ describe('Reservation Controller Tests', () => {
     expect(res.body.message).toBe("Cannot cancel a reservation with status 'canceled'");
   });
 
-  it('should return 400 when reservation is already finished', async () => {
+  it('Should return 400 when reservation is already finished', async () => {
 
     jest.spyOn(Reservation, 'findByPk').mockResolvedValue({
         id: 1,
@@ -389,7 +389,7 @@ describe('Reservation Controller Tests', () => {
   });
 
 
-  it('should return 500 when a server error occurs', async () => {
+  it('Should return 500 when a server error occurs', async () => {
 
     jest.spyOn(Reservation, 'findByPk').mockRejectedValue(new Error('Database error'));
 
@@ -398,5 +398,50 @@ describe('Reservation Controller Tests', () => {
     expect(res.statusCode).toBe(500);
     expect(res.body.message).toBe('Error canceling reservation');
   });
-  
+
+
+  it('Should cancel the reservation and update the schedule successfully', async () => {
+
+    const mockReservation = {
+      id: 1,
+      schedule_id: 100,
+      reservation_status: 'booked',
+      update: jest.fn().mockResolvedValue(true)
+    };
+    jest.spyOn(Reservation, 'findByPk').mockResolvedValue(mockReservation);
+
+    const mockReservations = [
+      { id: 1, schedule_id: 100, update: jest.fn().mockResolvedValue(true) },
+      { id: 2, schedule_id: 100, update: jest.fn().mockResolvedValue(true) },
+    ];
+    jest.spyOn(Reservation, 'findAll').mockResolvedValue(mockReservations);
+
+    jest.spyOn(MonthlySchedule, 'update').mockResolvedValue([1]);
+
+    const res = await request(app).delete('/reservation/cancel-group/1');
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({ message: 'Reservation canceled successfully' });
+  });
+
+  it('Should return 404 if reservation is not found', async () => {
+
+    jest.spyOn(Reservation, 'findByPk').mockResolvedValue(null);
+
+    const res = await request(app).delete('/reservation/cancel-group/1');
+
+    expect(res.statusCode).toBe(404);
+    expect(res.body).toEqual({ message: 'Reservation not found' });
+  });
+
+  it('Should return 500 if there is a server error during cancellation', async () => {
+
+    jest.spyOn(Reservation, 'findByPk').mockRejectedValue(new Error('Database error'));
+
+    const res = await request(app).delete('/reservation/cancel-group/1');
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body).toEqual({ message: 'Error canceling reservation', error: expect.anything() });
+  });
+
 });
