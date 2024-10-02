@@ -128,6 +128,7 @@ const getMonthlyScheduleByTeacherId = async (req, res) => {
         teacherid: teacherid,
         istaken: false,
       },
+      order: [['datetime', 'ASC']],
     });
 
     if (monthlySchedule.length > 0) {
