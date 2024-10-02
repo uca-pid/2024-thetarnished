@@ -79,17 +79,19 @@ const getReservationsByStudentId = async (req, res) => {
         const reservations = await Reservation.findAll({
             where: { student_id },
             include: [
-                {
-                    model: Teacher,
-                    attributes: ['firstname', 'lastname'],
-                },
-                {
-                    model: Subject,
-                    attributes: ['subjectname'],
-                }
+              {
+                model: Teacher,
+                attributes: ['firstname', 'lastname'],
+              },
+              {
+                model: Subject,
+                attributes: ['subjectname'],
+              },
             ],
             attributes: ['id', 'datetime'],
-        });
+            order: [['datetime', 'ASC']], 
+          });
+          
 
         if (reservations.length === 0) {
             return res.status(404).json({ message: 'No reservations found for this student.' });
@@ -140,24 +142,25 @@ const getReservationsByTeacher = async (req, res) => {
 
         const reservations = await Reservation.findAll({
             where: {
-                teacher_id,
-                datetime: {
-                    [Op.between]: [now, twoDaysFromNow]
-                },
-                reservation_status: 'booked'
+              teacher_id,
+              datetime: {
+                [Op.between]: [now, twoDaysFromNow],
+              },
+              reservation_status: 'booked',
             },
             include: [
-                {
-                    model: Student,
-                    attributes: ['firstname', 'lastname'], 
-                },
-                {
-                    model: Subject,
-                    attributes: ['subjectname'], 
-                }
+              {
+                model: Student,
+                attributes: ['firstname', 'lastname'],
+              },
+              {
+                model: Subject,
+                attributes: ['subjectname'],
+              },
             ],
-            attributes: ['id', 'datetime', 'schedule_id'], 
-        });
+            attributes: ['id', 'datetime', 'schedule_id'],
+            order: [['datetime', 'ASC']],
+          });
 
         if (reservations.length === 0) {
             return res.status(404).json({ message: 'No reservations found for this teacher in the next five days.' });
