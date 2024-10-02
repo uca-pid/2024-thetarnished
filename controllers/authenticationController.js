@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const Reservation = require('../models/reservationModel')
 const Student = require('../models/studentModel');
 const Teacher = require('../models/teacherModel');
 const sequelize = require('../config/database');
@@ -12,6 +13,7 @@ const Admin = require('../models/adminModel');
 const { sendEmailToUser } = require('./resetController');
 const fs = require('fs');
 const path = require('path');
+const { Op } = require('sequelize');
 const e = require('express');
 const { updateTeacherSubjects } = require('./teacherController');
 
@@ -235,36 +237,64 @@ const editProfile = async (req, res) => {
 }
 
 const deleteUserAccount = async (req, res) => {
-    try{
-        const {email} = req.body;
+    try {
+        const { email } = req.body;
         const user = await findUser(email);
-        if(!user){
-            return res.status(404).json({message: 'User not found'});
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
         }
-        if(user instanceof Teacher && !user.is_active) {
-            return res.status(400).json({ message: 'User is not active' });
+
+      
+        let reservationBlockExists = false;
+
+        if (user instanceof Student) {
+            reservationBlockExists = await Reservation.findOne({
+                where: {
+                    student_id: user.studentid,
+                    [Op.or]: [
+                        { datetime: { [Op.gt]: new Date() } }, 
+                        { reservation_status: 'in debt' }
+                    ]
+                }
+            });
+        } else if (user instanceof Teacher) {
+            reservationBlockExists = await Reservation.findOne({
+                where: {
+                    teacher_id: user.teacherid,
+                    datetime: { [Op.gt]: new Date() }
+                }
+            });
         }
-        if(user instanceof Student){
+
+        if (reservationBlockExists) {
+            return res.status(400).json({ message: 'Cannot delete user with future or in debt reservations' });
+        }
+
+        if (user instanceof Student) {
             await Student.destroy({ where: { email: email } });
-        }
-        else if(user instanceof Teacher){
+        } else if (user instanceof Teacher) {
             await Teacher.destroy({ where: { email: email } });
         }
+
         const filePath = path.join(__dirname, '../deleteNotificationTemplate.html');
         let htmlContent = fs.readFileSync(filePath, 'utf-8');
 
         setImmediate(async () => {
             try {
-                await sendEmailToUser(email, "Account Deleted", htmlContent);
+                await sendEmailToUser(email, 'Account Deleted', htmlContent);
             } catch (error) {
+                console.error('Error sending email:', error);
             }
         });
-        return res.status(200).json({message: 'User account deleted successfully'});
-    }catch(error){
+
+        return res.status(200).json({ message: 'User account deleted successfully' });
+    } catch (error) {
         /* istanbul ignore next */
-        return res.status(500).json({message: 'Internal server error'});
+        return res.status(500).json({ message: 'Internal server error' });
     }
-}
+};
+
 
 const verifyUserPassword = async (req, res) => {
     try{
