@@ -237,12 +237,19 @@ const editProfile = async (req, res) => {
 const deleteUserAccount = async (req, res) => {
     try{
         const {email} = req.body;
-        const student = await Student.findOne({where: {email}});
-        const teacher = await Teacher.findOne({where: {email}});
-        if(!student && !teacher){
+        const user = await findUser(email);
+        if(!user){
             return res.status(404).json({message: 'User not found'});
         }
-        student ? await Student.destroy({ where: { email: email } }) : await Teacher.destroy({ where: { email: email } });
+        if(user instanceof Teacher && !user.is_active) {
+            return res.status(400).json({ message: 'User is not active' });
+        }
+        if(user instanceof Student){
+            await Student.destroy({ where: { email: email } });
+        }
+        else if(user instanceof Teacher){
+            await Teacher.destroy({ where: { email: email } });
+        }
         const filePath = path.join(__dirname, '../deleteNotificationTemplate.html');
         let htmlContent = fs.readFileSync(filePath, 'utf-8');
 

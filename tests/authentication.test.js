@@ -12,6 +12,7 @@ describe('Authentication API', () => {
     
     let student;
     let teacher;
+    let hashedOldPassword;
     const teacherFirstName = 'John';
     const teacherLastName = 'Doe';
     const teacherEmail = 'testTeacher@example.com';
@@ -22,13 +23,13 @@ describe('Authentication API', () => {
     const newPassword = 'newpassword';
     jest.setTimeout(20000);
     beforeAll(async () => {
-        const hashedOldPassword = await bcrypt.hash(oldPassword, 10);
+        hashedOldPassword = await bcrypt.hash(oldPassword, 10);
         subjectTest = await Subject.create({
             subjectname: 'authSubjectTest'
         });
         subjectTestID = subjectTest.subjectid;
         student = await Student.create({ firstname: studentFirstName, lastname: studentLastName, email: studentEmail, password: hashedOldPassword});
-        teacher = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: teacherEmail, password: hashedOldPassword, subjects: []});
+        teacher = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: teacherEmail, password: hashedOldPassword, subjects: [], is_active: true});
     });
     
     afterAll(async () => {
@@ -318,5 +319,19 @@ describe('Authentication API', () => {
         });
         expect(response.status).toBe(200);
         expect(response.body.message).toBe('User account deleted successfully');
+    });
+
+    it('Should not allow an inactive teacher to delete their account', async () => {
+        const inactiveTeacherEmail = 'inactiveteache2@example.com';
+        const inactiveTeacher = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: inactiveTeacherEmail, password: hashedOldPassword, subjects: [], is_active: false});
+        
+        const response = await request(app)
+          .delete('/authentication/delete-account')
+          .send({
+            email: inactiveTeacherEmail,
+        });
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe('User is not active');
+        await Teacher.destroy({ where: { email: inactiveTeacherEmail } });
     });
 });
