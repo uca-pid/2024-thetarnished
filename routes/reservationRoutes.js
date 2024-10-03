@@ -7,7 +7,8 @@ const {
     cancelReservation,
     terminateClass,
     confirmPayment,
-    cancelGroupClass
+    cancelGroupClass,
+    getTerminatedClassesById
 } = require('../controllers/reservationController');
 
 const router = express.Router();
@@ -20,6 +21,8 @@ router.delete('/cancel/:id', cancelReservation);
 router.delete('/terminate/:id', terminateClass);
 router.put('/confirm', confirmPayment);
 router.delete('/cancel-group/:id', cancelGroupClass);
+router.get('/terminated-classes/:id', getTerminatedClassesById);
+
 
 module.exports = router;
 

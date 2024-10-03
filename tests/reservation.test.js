@@ -275,6 +275,7 @@ describe('Reservation Controller Tests', () => {
       schedule_id: monthlyScheduleId, // Use the monthly schedule ID
       datetime: moment().format('YYYY-MM-DD HH:mm:ss'), // Current datetime
       payment_method: 'CASH',
+      day_of_month: 1
   });
   
   reservationId = reservation.id;
@@ -332,6 +333,7 @@ describe('Reservation Controller Tests', () => {
       schedule_id: monthlyScheduleId, // Use the monthly schedule ID
       datetime: moment().format('YYYY-MM-DD HH:mm:ss'), // Current datetime
       payment_method: 'CASH',
+      day_of_month: 1
   });
   
   reservationId = reservation.id;
@@ -393,6 +395,7 @@ const subject = await Subject.create({
     schedule_id: monthlyScheduleId, // Use the monthly schedule ID
     datetime: moment().format('YYYY-MM-DD HH:mm:ss'), // Current datetime
     payment_method: 'CASH',
+    day_of_month: 1
 });
 
 reservationId = reservation.id;
@@ -412,8 +415,8 @@ reservationId = reservation.id;
   expect(updatedReservation.reservation_status).toBe('in debt');
 
   // Verify the response from the API
-  expect(res.status).toBe(401);
-  expect(res.body.message).toBe('Payment not confirmed');
+  expect(res.status).toBe(200);
+  expect(res.body.message).toBe('Transaction rejected successfully');
 });
 
 it('should return 404 if the reservation does not exist when confirming payment', async () => {
@@ -534,6 +537,7 @@ const res = await request(app)
       subject_id: subjectId,
       teacher_id: teacherId,
       schedule_id: monthlyId,
+      day_of_month: 1
     });
 
     const reservationId = reservation.id;

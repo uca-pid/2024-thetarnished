@@ -1,7 +1,6 @@
 const Reservation = require('../models/reservationModel');
 const moment = require('moment');
 const sequelize = require('../config/database');
-const Schedule = require('../models/monthlyScheduleModel');
 const { Op } = require('sequelize');
 const Student = require('../models/studentModel');
 const Subject = require('../models/subjectModel');
@@ -23,7 +22,7 @@ const createReservation = async (req, res) => {
             .subtract(3, 'hours') 
             .format('YYYY-MM-DD HH:mm:ss');
         
-        const schedule = await Schedule.findByPk(schedule_id);
+        const schedule = await MonthlySchedule.findByPk(schedule_id);
 
         if(schedule.currentstudents >= schedule.maxstudents){
             return res.status(409).json({
@@ -43,6 +42,7 @@ const createReservation = async (req, res) => {
             }
         }
         const newcurrentstudents = parseInt(schedule.currentstudents) + 1;
+        const day_of_month = new Date(schedule.datetime).getDate();
         
         const reservation = await Reservation.create({
             student_id: student_id,
@@ -51,9 +51,10 @@ const createReservation = async (req, res) => {
             schedule_id: schedule_id,
             datetime: reservationFormattedDate,
             payment_method: payment_method,
+            day_of_month: day_of_month
         });
         const isClassFull = newcurrentstudents === parseInt(schedule.maxstudents) ? true : false; 
-        await Schedule.update({
+        await MonthlySchedule.update({
             istaken: isClassFull,
             currentstudents: newcurrentstudents
         }, {
@@ -114,9 +115,9 @@ const deleteReservation = async (req, res) => {
             return res.status(404).json({ message: 'Reservation not found' });
         }
         scheduleid = reservation.schedule_id;
-        const schedule = await Schedule.findByPk(scheduleid);
+        const schedule = await MonthlySchedule.findByPk(scheduleid);
         const newcurrentstudents = parseInt(schedule.currentstudents) - 1;
-        await Schedule.update({
+        await MonthlySchedule.update({
             istaken: false, //siempre va false porque va a quedar siempre un lugar (ya sea grupal o individual)
             currentstudents: newcurrentstudents
         }, {
@@ -231,10 +232,10 @@ const cancelReservation = async (req, res) => {
         await reservation.save();
 
         const scheduleid = reservation.schedule_id;
-        const schedule = await Schedule.findByPk(scheduleid);
+        const schedule = await MonthlySchedule.findByPk(scheduleid);
 
         const newcurrentstudents = parseInt(schedule.currentstudents) - 1;
-        await Schedule.update({
+        await MonthlySchedule.update({
             istaken: false,
             currentstudents: newcurrentstudents
         }, {
@@ -336,22 +337,59 @@ const confirmPayment = async (req, res) => {
         if (!reservation) {
             return res.status(404).json({ message: 'Reservation not found' });
         }
-
-        if (reservationStatus === 'aceptada') {
+        if(reservationStatus === 'paid' || reservationStatus === 'in debt' ){
+            return res.status(400).json({ message: 'reservation already processed' });
+        }
+        if (reservationStatus === 'aceptada' ) { //&& reservationStatus !== 'paid'
             reservation.reservation_status = 'paid';
         } else {
             reservation.reservation_status = 'in debt';
-            await reservation.save(); // Save the change for 'in debt' status
-            return res.status(401).json({ message: 'Payment not confirmed' });
+            await reservation.save(); 
+            return res.status(200).json({ message: 'Transaction rejected successfully' });
         }
 
-        await reservation.save(); // Save the change for 'paid' status
+        await reservation.save(); 
         return res.status(200).json({ message: 'Payment confirmed successfully' });
     } catch (error) {
         /*istanbul ignore next*/
         return res.status(500).json({ message: 'Error confirming payment', error });
     }
 };
+const getTerminatedClassesById = async (req, res) => {
+    try {
+        const { id } = req.params; // Extract teacher's ID from the route parameter
+
+        // Find all reservations with status 'terminated' for the specific teacher
+        const terminatedClasses = await Reservation.findAll({
+            where: {
+                teacher_id: id, // Filter by the teacher's ID
+                reservation_status: 'terminated'
+            },
+            include: [
+              {
+                model: Student,
+                attributes: ['firstname', 'lastname'],
+              },
+              {
+                model: Subject,
+                attributes: ['subjectname'],
+              },
+            ],
+            attributes: ['id', 'datetime', 'schedule_id'],
+            order: [['datetime', 'ASC']],
+        });
+
+        if (terminatedClasses.length === 0) {
+            return res.status(404).json({ message: 'No terminated classes found for this teacher' });
+        }
+
+        return res.status(200).json(terminatedClasses);
+    } catch (error) {
+        return res.status(500).json({ message: 'Error fetching terminated classes', error });
+    }
+};
+
+
        
 module.exports = {
     createReservation,
@@ -361,5 +399,6 @@ module.exports = {
     cancelReservation,
     terminateClass,
     confirmPayment,
-    cancelGroupClass
+    cancelGroupClass,
+    getTerminatedClassesById
 };
