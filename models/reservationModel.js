@@ -61,14 +61,6 @@ const Reservation = sequelize.define('Reservation', {
     allowNull: false,
   },
 
-  day_of_month: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    validate: {
-      min: 1,
-      max: 31
-    }
-  }
 }, 
 {
   tableName: 'reservations',

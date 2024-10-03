@@ -275,7 +275,7 @@ describe('Reservation Controller Tests', () => {
       schedule_id: monthlyScheduleId, // Use the monthly schedule ID
       datetime: moment().format('YYYY-MM-DD HH:mm:ss'), // Current datetime
       payment_method: 'CASH',
-      day_of_month: 1
+
   });
   
   reservationId = reservation.id;
@@ -333,7 +333,7 @@ describe('Reservation Controller Tests', () => {
       schedule_id: monthlyScheduleId, // Use the monthly schedule ID
       datetime: moment().format('YYYY-MM-DD HH:mm:ss'), // Current datetime
       payment_method: 'CASH',
-      day_of_month: 1
+
   });
   
   reservationId = reservation.id;
@@ -395,7 +395,7 @@ const subject = await Subject.create({
     schedule_id: monthlyScheduleId, // Use the monthly schedule ID
     datetime: moment().format('YYYY-MM-DD HH:mm:ss'), // Current datetime
     payment_method: 'CASH',
-    day_of_month: 1
+
 });
 
 reservationId = reservation.id;
@@ -537,7 +537,7 @@ const res = await request(app)
       subject_id: subjectId,
       teacher_id: teacherId,
       schedule_id: monthlyId,
-      day_of_month: 1
+
     });
 
     const reservationId = reservation.id;

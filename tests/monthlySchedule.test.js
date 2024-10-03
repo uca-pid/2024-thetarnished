@@ -78,6 +78,20 @@ describe('Test the /group-classes endpoint with real database', () => {
         jest.restoreAllMocks();
     });
 
+    it('Should handle a valid request but with no schedules to update', async () => {
+        jest.spyOn(Monthlyschedule, 'findAll').mockResolvedValue([]);
+
+        const vacationData = {
+            teacherid: teacherID.toString(),
+            startdate: '2024-10-01',
+            enddate: '2024-10-10'
+        };
+
+        const res = await request(app).post('/classes/assign-vacation').send(vacationData);
+
+        expect(res.statusCode).toBe(404);
+        expect(res.text).toBe('Schedules not found');
+    });
     it('Should return group classes when they are available for booking', async () => {
         const res = await request(app).get('/classes/group-classes');
 
@@ -134,12 +148,12 @@ describe('Test the /group-classes endpoint with real database', () => {
     it('Should successfully assign vacation and mark schedules as taken', async () => {
         const vacationData = {
             teacherid: teacherID.toString(),
-            startdate: '2024-10-01',
-            enddate: '2024-10-10'
+            startdate: '2026-10-01',
+            enddate: '2026-10-10'
         };
 
         await Monthlyschedule.create({
-            datetime: '2024-10-08 09:00:00',
+            datetime: '2026-10-08 09:00:00',
             teacherid: teacherID,
             maxstudents: 5,
             currentstudents: 0,
@@ -147,7 +161,7 @@ describe('Test the /group-classes endpoint with real database', () => {
         });
         
         await Monthlyschedule.create({
-            datetime: '2024-10-07 09:00:00',
+            datetime: '2026-10-07 09:00:00',
             teacherid: teacherID,
             maxstudents: 5,
             currentstudents: 0,
@@ -165,24 +179,8 @@ describe('Test the /group-classes endpoint with real database', () => {
     it('Should return 404 if no schedules found in the date range', async () => {
         const vacationData = {
             teacherid: teacherID.toString(),
-            startdate: '2024-11-01',
-            enddate: '2024-11-10'
-        };
-
-        const res = await request(app).post('/classes/assign-vacation').send(vacationData);
-
-        expect(res.statusCode).toBe(404);
-        expect(res.text).toBe('Schedules not found');
-    });
-
-
-    it('Should handle a valid request but with no schedules to update', async () => {
-        jest.spyOn(Monthlyschedule, 'findAll').mockResolvedValue([]);
-
-        const vacationData = {
-            teacherid: teacherID.toString(),
-            startdate: '2024-10-01',
-            enddate: '2024-10-10'
+            startdate: '2098-11-01',
+            enddate: '2099-11-10'
         };
 
         const res = await request(app).post('/classes/assign-vacation').send(vacationData);

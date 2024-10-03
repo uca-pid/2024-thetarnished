@@ -51,7 +51,7 @@ describe('Student API', () => {
         subject_id: subjectId,
         schedule_id: monthlyscheduleid,
         datetime: "2023-05-29 10:00:00",
-        day_of_month: 1
+
     });
     });
   

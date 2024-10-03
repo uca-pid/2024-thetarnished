@@ -177,6 +177,7 @@ const loginUser = async (req, res) => {
 
         if (role === 'TEACHER') {
             userData.isActive = user.is_active;
+            userData.on_vacation = user.on_vacation;
         }
 
         return res.status(200).json({

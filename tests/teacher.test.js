@@ -352,7 +352,7 @@ describe('Teacher API', () => {
       subject_id: subjectId,
       schedule_id: firstTeacherMonthlyScheduleId,
       datetime: "2039-05-29 10:00:00",
-      day_of_month: 1
+
   });
 
   const response = await request(app).delete(`/teachers/delete/${secondTeacherID}`);
