@@ -1,45 +1,44 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-const Schedule = sequelize.define('Schedule', {
-  scheduleid: {
+const MonthlySchedule = sequelize.define('MonthlySchedule', {
+  monthlyscheduleid: {
     type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: false, 
+    autoIncrement: false,
     defaultValue: sequelize.literal('unique_rowid()')
   },
-  start_time: {
-    type: DataTypes.TIME,
-    allowNull: false
-  },
-  end_time: {
-    type: DataTypes.TIME,
+  datetime: {
+    type: DataTypes.DATE,
     allowNull: false
   },
   teacherid: {
     type: DataTypes.BIGINT,
-    allowNull: false, 
+    allowNull: true,
     references: {
-      model: 'teachers', 
+      model: 'teachers',
       key: 'teacherid'
     },
     onDelete: 'CASCADE'
   },
-  dayofweek: {
-    type: DataTypes.INTEGER,
+  maxstudents: {
+    type: DataTypes.BIGINT,
     allowNull: false,
-    validate: {
-      min: 1,
-      max: 7
-    }
+    defaultValue: 1
+  },
+  currentstudents: {
+    type: DataTypes.BIGINT,
+    allowNull: false,
+    defaultValue: 0
   },
   istaken: {
     type: DataTypes.BOOLEAN,
+    allowNull: false,
     defaultValue: false
-  }
+  },
 }, {
-  tableName: 'schedule',
+  tableName: 'monthlyschedule',
   timestamps: false
 });
 
-module.exports = Schedule;
+module.exports = MonthlySchedule;

@@ -31,13 +31,13 @@ const postForgotPassword = async (req, res) => {
             id: foundUser.studentid || foundUser.teacherid
         };
         const token = jwt.sign(payload, secret, { expiresIn: '15m' });
-        const resetLink = `http://localhost:5173/reset-password/${payload.id}/${token}`;
+        const resetLink = `https://linkandlearn.fpenonori.com/reset-password/${payload.id}/${token}`;
         console.log(resetLink);
         const filePath = path.join(__dirname, '../resetPasswordTemplate.html');
         let htmlContent = fs.readFileSync(filePath, 'utf-8');
         htmlContent = htmlContent.replace('${resetLink}', resetLink);
         setImmediate(() => {
-            sendEmailToUser(email, 'Password reset link', '', htmlContent)
+            sendEmailToUser(email, 'Password reset link', htmlContent)
        .catch(() => {});
         });
         res.status(200).json({ message: 'Password reset link has been sent to your email' });

@@ -50,7 +50,19 @@ const Reservation = sequelize.define('Reservation', {
     },
     onDelete: 'CASCADE',
   },
-}, {
+  reservation_status: {
+    type: DataTypes.STRING,
+    defaultValue: 'booked', 
+    allowNull: false,
+  },
+  payment_method: {
+    type: DataTypes.STRING,
+    defaultValue: 'cash', 
+    allowNull: false,
+  },
+
+}, 
+{
   tableName: 'reservations',
   timestamps: false,
 });

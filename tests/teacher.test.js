@@ -1,35 +1,79 @@
 const request = require('supertest');
 const app = require('../app');
 const Teacher = require('../models/teacherModel');
-const sequelize = require('../config/database');
 const Subject = require('../models/subjectModel');
 const SubjectTeacher = require('../models/subjectTeacherModel');
 const bcrypt = require('bcrypt');
-const Schedule = require('../models/scheduleModel');
+const Schedule = require('../models/weeklyScheduleModel');
+const MonthlySchedule = require('../models/monthlyScheduleModel');
+const Student = require('../models/studentModel')
+const Reservation = require('../models/reservationModel');
+const { updateTeacherSubjects } = require('../controllers/teacherController');
+const { Sequelize } = require('sequelize');
+
+
+
+
 
 describe('Teacher API', () => { 
 
-    let teacher;
+    let teacherID;
     const teacherFirstName = 'John';
     const teacherLastName = 'Doe';
     const teacherEmail = 'testTeacher1@example.com';
     const oldPassword = 'oldpassword';
-    let teacherID;
-
+    let secondTeacherID;
+    let studentId;
+    const secondTeacherEmail ='john.doeUnicoMail@example.com';
+    const studentEmail = 'jane.doeUnicoMail@example.com';
+    let scheduleId;
+    let subjectId;
+    let firstTeacherMonthlySchedule;
+    jest.setTimeout(20000);
+    
     beforeAll(async () => {
         const hashedOldPassword = await bcrypt.hash(oldPassword, 10);
         subjectTest = await Subject.create({
             subjectname: 'authSubjectTest'
         });
         subjectTestID = subjectTest.subjectid;
-        teacher = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: teacherEmail, password: hashedOldPassword});
+        const teacher = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: teacherEmail, password: hashedOldPassword});
         teacherID = teacher.teacherid;
+
+        const secondteacher = await Teacher.create(
+          { firstname: 'John', lastname: 'Doe', email: 'john.doeUnicoMail@example.com', password: 'password' });
+        secondTeacherID = secondteacher.teacherid;
+      
+        const student = await Student.create(
+          { firstname: 'Jane', lastname: 'Doe', email: 'jane.doeUnicoMail@example.com', password: 'password' });
+        studentId = student.studentid;
+      
+        const schedule = await Schedule.create(
+          { start_time: '09:00:00',
+            end_time: '10:00:00',
+            teacherid: secondTeacherID,
+            dayofweek: 1,
+            maxstudents: 1 });
+        scheduleId = schedule.weeklyscheduleid;
+        
+        firstTeacherMonthlySchedule = await MonthlySchedule.create({
+          datetime: "2023-05-29 10:00:00", //quizas esta fecha cause problemas
+          teacherid: secondTeacherID,
+
+        });
+        firstTeacherMonthlyScheduleId = firstTeacherMonthlySchedule.monthlyscheduleid
+        const subject = await Subject.create(
+          { subjectname: 'Mathematics' });
+        subjectId = subject.subjectid;
+
     });
 
     
     afterAll(async () => {
       await SubjectTeacher.destroy({ where: { teacherid: teacherID } });
       await Teacher.destroy({ where: { email: teacherEmail } });
+      await Teacher.destroy({ where: { email: secondTeacherEmail } });
+      await Student.destroy({ where: { email: studentEmail} });
       await Subject.destroy({ where: { subjectname: 'authSubjectTest' } });
     });
 
@@ -42,7 +86,7 @@ describe('Teacher API', () => {
     });
 
     const response = await request(app)
-      .get(`/teachers/${teacher.teacherid}`);
+      .get(`/teachers/${teacherID}`);
   
     expect(response.status).toBe(200);
     expect(response.body.email).toBe(teacherEmail);
@@ -63,7 +107,7 @@ describe('Teacher API', () => {
     };
 
     const response = await request(app)
-      .put(`/teachers/update/${teacher.teacherid}`)
+      .put(`/teachers/update/${teacherID}`)
       .send(updatedTeacherData);
 
     expect(response.status).toBe(200);
@@ -73,10 +117,10 @@ describe('Teacher API', () => {
 
   it("Should delete a teacher", async () => {
     const response = await request(app)
-    .delete(`/teachers/delete/${teacher.teacherid}`)
+    .delete(`/teachers/delete/${teacherID}`)
 
     expect(response.status).toBe(200);
-    const teacherFound = await Teacher.findByPk(teacher.id);
+    const teacherFound = await Teacher.findByPk(teacherID);
     expect(teacherFound).toBeNull();
   });
 
@@ -251,7 +295,7 @@ describe('Teacher API', () => {
       start_time: "08:00",
       end_time: "09:00",
       dayofweek: 1,
-      istaken: false
+      maxstudents: 1
     });
 
     const secondTeacherSchedule = await Schedule.create({
@@ -259,21 +303,36 @@ describe('Teacher API', () => {
       start_time: "08:00",
       end_time: "09:00",
       dayofweek: 2,
-      istaken: false
+      maxstudents: 1
+    });
+
+    await MonthlySchedule.create({
+      datetime: "2023-05-29 10:00:00", //quizas esta fecha cause problemas
+      teacherid: firstCommonTeacher.teacherid,
+
+
+    });
+
+    await MonthlySchedule.create({
+      datetime: "2023-05-29 11:00:00", //quizas esta fecha cause problemas
+      teacherid: firstCommonTeacher.teacherid,
+
+
     });
 
     const response = await request(app).get(`/teachers/all-dictating/${commonTestSubject.subjectid}`);
 
-    expect(response.status).toBe(200);
-    expect(response.body.length).toBeGreaterThanOrEqual(1);
-    
-    await Schedule.destroy({ where: { scheduleid: firstTeacherSchedule.scheduleid } });
-    await Schedule.destroy({ where: { scheduleid: secondTeacherSchedule.scheduleid } });
+
+    await Schedule.destroy({ where: { weeklyscheduleid: firstTeacherSchedule.weeklyscheduleid } });
+    await Schedule.destroy({ where: { weeklyscheduleid: secondTeacherSchedule.weeklyscheduleid } });
     await SubjectTeacher.destroy({ where: { teacherid: firstCommonTeacher.teacherid } });
     await SubjectTeacher.destroy({ where: { teacherid: secondCommonTeacher.teacherid } });
     await Teacher.destroy({ where: { email: firstCommonTeacher.email } });
     await Teacher.destroy({ where: { email: secondCommonTeacher.email } });
     await Subject.destroy({ where: { subjectname: `${commonTestSubject.subjectname}` } });
+
+    expect(response.status).toBe(200);
+    expect(response.body.length).toBeGreaterThanOrEqual(1);
   });
 
   it("Should retrieve all teachers", async () => {
@@ -284,4 +343,75 @@ describe('Teacher API', () => {
 
     await Teacher.destroy({ where: { email: 'testNewTeacher12345@example.com' } });
   });
+
+  it("should not delete a teacher when having a reservation pending", async() => {
+    
+    const reservation = await Reservation.create({
+      student_id: studentId,
+      teacher_id: secondTeacherID,
+      subject_id: subjectId,
+      schedule_id: firstTeacherMonthlyScheduleId,
+      datetime: "2039-05-29 10:00:00",
+
+  });
+
+  const response = await request(app).delete(`/teachers/delete/${secondTeacherID}`);
+  expect(response.status).toBe(400)
+  });
+
+
+  it('should throw an error if subjects are invalid', async () => {
+    await expect(updateTeacherSubjects('teacher@example.com', null))
+        .rejects.toThrow('Invalid subjects data');
+
+    await expect(updateTeacherSubjects('teacher@example.com', []))
+        .rejects.toThrow('Invalid subjects data');
+  });
+
+it('should throw an error if the teacher is not found', async () => {
+    // Spy on Teacher.findOne and return null (simulate teacher not found)
+    jest.spyOn(Teacher, 'findOne').mockResolvedValue(null);
+
+    await expect(updateTeacherSubjects('teacher@example.com', ['1', '2']))
+        .rejects.toThrow('Teacher not found');
+
+    // Check that Teacher.findOne was called with the correct email
+    expect(Teacher.findOne).toHaveBeenCalledWith({ where: { email: 'teacher@example.com' } });
+});
+
+it('should call destroy and bulkCreate when valid teacher and subjects are provided', async () => {
+    // Spy on Teacher.findOne and return a fake teacher
+    jest.spyOn(Teacher, 'findOne').mockResolvedValue({ teacherid: 1 });
+
+    // Spy on SubjectTeacher.destroy to simulate successful deletion
+    const destroySpy = jest.spyOn(SubjectTeacher, 'destroy').mockResolvedValue(true);
+
+    // Spy on SubjectTeacher.bulkCreate to simulate successful bulk insert
+    const bulkCreateSpy = jest.spyOn(SubjectTeacher, 'bulkCreate').mockResolvedValue(true);
+
+    // Call the helper function
+    await expect(updateTeacherSubjects('teacher@example.com', ['1', '2']))
+        .resolves.not.toThrow();
+
+    // Ensure the destroy method was called with the correct teacher ID
+    expect(destroySpy).toHaveBeenCalledWith({ where: { teacherid: 1 } });
+
+    // Ensure bulkCreate was called with the correct new relations
+    expect(bulkCreateSpy).toHaveBeenCalledWith([
+        { teacherid: 1, subjectid: '1' },
+        { teacherid: 1, subjectid: '2' }
+    ]);
+});
+
+it('should throw an error if the teacher is not found', async () => {
+  // Spy on Teacher.findOne and return null (simulate teacher not found)
+  jest.spyOn(Teacher, 'findOne').mockResolvedValue(null);
+
+  await expect(updateTeacherSubjects('teacher@example.com', ['1', '2']))
+      .rejects.toThrow('Teacher not found');
+
+  // Check that Teacher.findOne was called with the correct email
+  expect(Teacher.findOne).toHaveBeenCalledWith({ where: { email: 'teacher@example.com' } });
+  });
+
 });

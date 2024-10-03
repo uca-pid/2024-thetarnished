@@ -1,7 +1,11 @@
 const Teacher = require('../models/teacherModel');
 const SubjectTeacher = require('../models/subjectTeacherModel');
 const Subject = require('../models/subjectModel');
+const Reservation = require('../models/reservationModel');
 const sequelize = require('../config/database');
+const { Op } = require('sequelize');
+const moment = require('moment');
+const { Sequelize } = require('sequelize');
 
 
 const getAllTeachers = async (req, res) => {
@@ -50,10 +54,28 @@ const updateTeacher = async (req, res) => {
 const deleteTeacher = async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Find the teacher by ID
     const teacher = await Teacher.findByPk(id);
     if (!teacher) {
       return res.status(404).json({ message: 'Teacher not found' });
     }
+
+    // Check if the teacher has any reservations
+    const reservationsCount = await Reservation.count({
+      where: {
+        teacher_id: id,
+        datetime: {
+          [Op.gt]: moment().toDate() 
+        }
+      }
+    });
+
+    if (reservationsCount > 0) {
+      return res.status(400).json({ message: 'Cannot delete teacher with existing reservations' });
+    }
+
+    // If no reservations, delete the teacher
     await teacher.destroy();
     return res.status(200).json({ message: 'Teacher deleted successfully' });
   } catch (error) {
@@ -83,8 +105,7 @@ const assignSubjectToTeacher = async (req, res) => {
 
     return res.status(201).json({ message: 'Subject assigned to teacher successfully' });
   } catch (error) {
-    /* istanbul ignore next */
-    console.error('Error assigning subject to teacher:', error);
+   
     /* istanbul ignore next */
     return res.status(400).json({ message: `Error assigning subject to teacher: ${error.message}` });
   }
@@ -114,14 +135,15 @@ const removeSubjectFromTeacher = async (req, res) => {
     try {
       const { subjectid } = req.params;
       const [teachers] = await sequelize.query(`
-
-        SELECT DISTINCT teachers.teacherid, firstname, lastname, email, subjectid  from teachers 
-        JOIN subjectteacher
-        ON teachers.teacherid = subjectteacher.teacherid
-        JOIN schedule
-        ON teachers.teacherid = schedule.teacherid
-        WHERE subjectid = :subjectid
-        AND istaken = 'false'`
+        SELECT DISTINCT teachers.teacherid, firstname, lastname, email, subjectid  
+        FROM teachers 
+        JOIN subjectteacher 
+        ON teachers.teacherid = subjectteacher.teacherid 
+        JOIN monthlyschedule 
+        ON teachers.teacherid = monthlyschedule.teacherid 
+        WHERE subjectid = :subjectid 
+        AND istaken = 'false' 
+        ORDER BY firstname ASC, lastname ASC`
       , {
 
         replacements: { subjectid: subjectid },
@@ -135,6 +157,29 @@ const removeSubjectFromTeacher = async (req, res) => {
     }
   };
 
+  const updateTeacherSubjects = async (email, subjects) => {
+      try {
+          if (!subjects || !Array.isArray(subjects) || subjects.length === 0) {
+              throw new Error('Invalid subjects data');
+          }
+
+          const teacher = await Teacher.findOne({where: {email: email}});
+          if (!teacher) {
+              throw new Error('Teacher not found');
+          }
+
+          await SubjectTeacher.destroy({ where: { teacherid: teacher.teacherid } });
+
+          const newRelations = subjects.map(subjectId => ({
+              teacherid: teacher.teacherid,
+              subjectid: subjectId
+          }));
+          await SubjectTeacher.bulkCreate(newRelations);
+      } catch (error) {
+          throw error;
+      }
+  };
+
 module.exports = {
   getTeacherById,
   updateTeacher,
@@ -142,5 +187,6 @@ module.exports = {
   assignSubjectToTeacher,
   removeSubjectFromTeacher,
   getAllTeachers,
-  getAllTeachersDictatingASubjectById
+  getAllTeachersDictatingASubjectById,
+  updateTeacherSubjects
 };

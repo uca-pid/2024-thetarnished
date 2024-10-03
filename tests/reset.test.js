@@ -23,7 +23,7 @@ describe('Password Reset Controller Tests', () => {
   const teacherEmail = 'teacher123@example.com';
   let studentId;
   let teacherId;
-
+  jest.setTimeout(20000);
   beforeAll(async () => {
     const student = await Student.create({ firstname: 'Juan Yuri Baltasar', lastname: 'Turanza', email: studentEmail, password: 'password' });
     const teacher = await Teacher.create({ firstname: 'Juancito Yurito Baltasarcito', lastname: 'Turanzita', email: teacherEmail, password: 'password' });

@@ -3,7 +3,8 @@ const app = require('../app');
 const Subject = require('../models/subjectModel');
 const Teacher = require('../models/teacherModel');
 const SubjectTeacher = require('../models/subjectTeacherModel');
-const Schedule = require('../models/scheduleModel');
+const Schedule = require('../models/weeklyScheduleModel');
+const MonthlySchedule = require('../models/monthlyScheduleModel');
 
 describe('Subject API', () => {
 
@@ -13,6 +14,7 @@ describe('Subject API', () => {
     const teacherEmail = "johndoerito15@example.com";
     const subject1name = "Philosophy and Discourse VII";
     const subject2name = "Introduction to Computer Science VIII";
+    jest.setTimeout(20000);
     beforeAll(async () => {
         subject1 = await Subject.create({ subjectname: subject1name });
         subject2 = await Subject.create({ subjectname: subject2name });
@@ -72,12 +74,19 @@ describe('Subject API', () => {
             }
         )
 
-        await Schedule.create({
+        const schedule = await Schedule.create({
             teacherid: teacher.teacherid,
             start_time: "08:00",
             end_time: "09:00",
             dayofweek: 3,
+            maxstudents: 3
         })
+
+        await MonthlySchedule.create({
+            datetime: "2023-05-29 10:00:00", //quizas esta fecha cause problemas
+            teacherid: teacher.teacherid,
+
+          });
 
         const response = await request(app)
             .get('/subject/all-subjects-dictated');

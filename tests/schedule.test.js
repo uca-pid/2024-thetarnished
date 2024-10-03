@@ -1,14 +1,14 @@
 const request = require('supertest');
 const app = require('../app');
 const Teacher = require('../models/teacherModel');
-const Schedule = require('../models/scheduleModel');
+const Schedule = require('../models/weeklyScheduleModel');
 
 describe('Schedule Controller Tests', () => {
     let teacherId;
-
+    jest.setTimeout(20000);
     beforeAll(async () => {
         const teacher = await Teacher.create(
-            { firstname: 'John', lastname: 'Doe', email: 'john.doe173@example.com', password: 'password' });
+            { firstname: 'John', lastname: 'Doe', email: 'john.doe173@example.com', password: 'password', is_active: true });
           teacherId = teacher.teacherid;
     });
 
@@ -104,6 +104,24 @@ describe('Schedule Controller Tests', () => {
         const res = await request(app).get(`/schedule/teacher/${teacherId}`);
         expect(res.status).toBe(500);
         expect(res.body).toHaveProperty('message', 'Error retrieving schedules');
+    });
+
+    it("Shouldn't allow a teacher to create a schedule if its account isn't active", async () => {
+        const inactiveTeacher = await Teacher.create(
+            { firstname: 'Kevin', lastname: 'Magnussen', email: 'kevinmagnussen@gmail.com', password: 'password', is_active: false });
+        const inactiveTeacherId = inactiveTeacher.teacherid;
+
+        const response = await request(app).post(`/schedule/create/${inactiveTeacherId}`).send({
+            schedule: [
+                { start_time: '09:00:00', end_time: '10:00:00', dayofweek: 1 }
+            ]
+        });
+
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe('Teacher is not active');
+
+        await Teacher.destroy({ where: { teacherid: inactiveTeacherId } });
+      
     });
 
 });

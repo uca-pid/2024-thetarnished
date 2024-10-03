@@ -2,7 +2,11 @@ const sequelize = require('../config/database');
 const Subject = require('../models/subjectModel');
 
 const getAllSubjects = async (req, res) =>{
-    const response = await Subject.findAll();
+    const response = await Subject.findAll({
+        order: [
+            ['subjectname', 'ASC']
+        ]
+    });
     return res.status(200).json(response);
 }
 
@@ -38,8 +42,8 @@ const getAllSubjectsDictatedByTeachers = async (req, res) => {
         SELECT DISTINCT s.subjectid, s.subjectname
         FROM subjects s
         INNER JOIN subjectteacher st ON s.subjectid = st.subjectid
-        INNER JOIN schedule sch ON st.teacherid = sch.teacherid
-        WHERE sch.start_time IS NOT NULL AND sch.end_time IS NOT NULL AND sch.istaken = false;
+        INNER JOIN monthlyschedule sch ON st.teacherid = sch.teacherid
+        WHERE sch.istaken = false;
         `);
         
       return res.status(200).json({message: "Subjects retrieved successfully", results});

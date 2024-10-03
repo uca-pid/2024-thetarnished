@@ -26,6 +26,16 @@ const Teacher = sequelize.define('Teacher', {
   password: {
     type: DataTypes.STRING,
     allowNull: false
+  },
+  is_active: { 
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false  
+  },
+  on_vacation: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
   }
 }, {
   tableName: 'teachers',

@@ -1,36 +1,35 @@
-const  DataTypes  = require('sequelize');
+const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-
-const Student = sequelize.define('Student', {
-  studentid: {
-    type: DataTypes.INTEGER,
+const Admin = sequelize.define('Admin', {
+  adminid: {
+    type: DataTypes.BIGINT,
     primaryKey: true,
     autoIncrement: true
   },
   firstname: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: false
   },
   lastname: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: false
   },
   email: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
     validate: {
-      isEmail: true,
-    },
+      isEmail: true
+    }
   },
   password: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: false
   }
 }, {
-  tableName: 'students', 
-  timestamps: false 
+  tableName: 'admins',
+  timestamps: false
 });
 
-module.exports = Student;
+module.exports = Admin;

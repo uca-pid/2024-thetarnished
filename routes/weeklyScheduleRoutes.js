@@ -6,7 +6,7 @@ const {
   createSchedule,
   getAllSchedules,
   getScheduleByTeacher,
-} = require('../controllers/scheduleController');
+} = require('../controllers/weeklyScheduleController');
 
 const router = express.Router();
 

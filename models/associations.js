@@ -1,5 +1,5 @@
 const Teacher = require('./teacherModel');
-const Schedule = require('./scheduleModel');
+const Schedule = require('./weeklyScheduleModel');
 
 const defineAssociations = () => {
 
