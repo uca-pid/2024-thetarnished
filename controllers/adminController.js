@@ -1,5 +1,6 @@
 const Admin = require('../models/adminModel');
 const Teacher = require('../models/teacherModel');
+const dayjs = require('dayjs');
 
 const activateTeacher = async (req, res) => {
     try {
@@ -38,14 +39,28 @@ const getInactiveTeachers = async (req, res) => {
             where: { is_active: false },
             order: [['signup_date', 'ASC']],
         });
+
         if (!inactiveTeachers.length) {
             return res.status(404).json({ message: 'No inactive teachers found' });
         }
-        res.status(200).json(inactiveTeachers);
+        const formattedTeachers = inactiveTeachers.map(teacher => {
+            const formattedDate = dayjs(teacher.signup_date).format('DD-MM-YYYY, HH:mm');
+
+            return {
+                teacherid: teacher.teacherid,
+                firstname: teacher.firstname,
+                lastname: teacher.lastname,
+                email: teacher.email,
+                signup_date: formattedDate,
+                is_active: teacher.is_active
+            };
+        });
+
+        res.status(200).json(formattedTeachers);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
     }
-}
+};
 
 module.exports = {
     activateTeacher,
