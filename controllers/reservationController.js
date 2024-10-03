@@ -266,6 +266,91 @@ const getReservationsByTeacher = async (req, res) => {
 };
 
 
+const getPastReservationsByTeacherId = async (req, res) => {
+    try {
+        const { teacher_id } = req.params;
+
+        const foundTeacher = await Teacher.findByPk(teacher_id);
+        if (!foundTeacher) {
+            return res.status(404).json({ message: 'Teacher not found' });
+        }
+
+        const reservations = await Reservation.findAll({
+            where: {
+              teacher_id,
+              reservation_status: 'booked',
+              datetime: {
+                [Op.lt]: new Date()
+              }
+            },
+            include: [
+              {
+                model: Student,
+                attributes: ['firstname', 'lastname'],
+              },
+              {
+                model: Subject,
+                attributes: ['subjectname'],
+              },
+            ],
+            attributes: ['id', 'datetime', 'schedule_id'],
+            order: [['datetime', 'ASC']],
+          });
+
+        if (reservations.length === 0) {
+            return res.status(404).json({ message: 'No reservations found for this teacher in the next five days.' });
+        }
+
+
+        const scheduleIds = reservations.map(reservation => reservation.schedule_id);
+
+
+        const scheduleReservationCounts = await Reservation.findAll({
+            where: {
+                schedule_id: {
+                    [Op.in]: scheduleIds
+                },
+                reservation_status: 'booked'
+            },
+            attributes: ['schedule_id', [sequelize.fn('COUNT', sequelize.col('id')), 'reservation_count']],
+            group: ['schedule_id']
+        });
+
+
+        const scheduleCountsMap = {};
+        scheduleReservationCounts.forEach(schedule => {
+            scheduleCountsMap[schedule.schedule_id] = schedule.get('reservation_count');
+        });
+
+
+        const uniqueReservationsMap = new Map();
+
+
+        reservations.forEach(reservation => {
+            const isGroupClass = scheduleCountsMap[reservation.schedule_id] > 1;
+
+            if (!uniqueReservationsMap.has(reservation.schedule_id)) {
+                uniqueReservationsMap.set(reservation.schedule_id, {
+                    id: reservation.id,
+                    student_name: isGroupClass ? 'group class' : `${reservation.Student.firstname} ${reservation.Student.lastname}`,
+                    subject_name: reservation.Subject.subjectname,
+                    datetime: reservation.datetime,
+                    group: isGroupClass,
+                    MonthlyID: reservation.schedule_id 
+                });
+            }
+        });
+
+
+        const formattedReservations = Array.from(uniqueReservationsMap.values());
+
+        return res.status(200).json(formattedReservations);
+    } catch (error) {
+        return res.status(500).json({ message: 'Error fetching reservations for teacher', error });
+    }
+};
+
+
 
 const cancelReservation = async (req, res) => {
     try {
@@ -453,5 +538,6 @@ module.exports = {
     terminateClass,
     confirmPayment,
     cancelGroupClass,
-    getInDebtClassesById
+    getInDebtClassesById,
+    getPastReservationsByTeacherId
 };
