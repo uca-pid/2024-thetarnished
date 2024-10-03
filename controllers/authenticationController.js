@@ -143,7 +143,7 @@ const loginUser = async (req, res) => {
         let userid;
         let formattedSchedule = [];
         let subjects = [];
-        let isActive;
+
         
         if (user instanceof Teacher) {
             role = 'TEACHER';
