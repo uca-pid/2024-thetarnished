@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Class Notification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      color: #333333;
+      margin: 0;
+      padding: 0;
+    }
+    .email-container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      text-align: center;
+      background-color: #4CAF50;
+      padding: 10px;
+      border-radius: 8px 8px 0 0;
+      color: #ffffff;
+    }
+    .content {
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .content p {
+      margin: 0 0 10px;
+    }
+    .footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #888888;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="email-container">
+    <div class="header">
+      <h1>Class Notification</h1>
+    </div>
+
+    <div class="content">
+      <p>Dear Professor,</p>
+
+      <p>We would like to inform you that the student <strong>{{fullname}}</strong> has scheduled a class for the subject <strong>{{subjectname}}</strong>.</p>
+
+      <p><strong>Class Details:</strong></p>
+      <ul>
+        <li><strong>Student Name:</strong> {{fullname}}</li>
+        <li><strong>Subject:</strong> {{subjectname}}</li>
+        <li><strong>Date and Time:</strong> {{datetime}}</li>
+      </ul>
+
+      <p>If you have any questions or need further information, please do not hesitate to contact us.</p>
+
+      <p>Best regards,</p>
+      <p>The Coordination Team</p>
+    </div>
+
+    <div class="footer">
+      <p>This is an automated message, please do not reply to this email.</p>
+    </div>
+  </div>
+
+</body>
+</html>
