@@ -95,7 +95,6 @@ const assignVacation = async (req, res) => {
         }
       }
     });
-    console.log(takenschedules);
     if(takenschedules.length > 0){
       return res.status(403).json({ message: 'cannot set vacations while having booked classes on that time gap' });
     }
