@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const studentRoutes = require('./routes/studentRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
@@ -28,7 +29,11 @@ app.use('/authentication', autenthicationRoutes);
 app.use('/subject', subjectRoutes);
 app.use('/schedule', scheduleRoutes);
 app.use('/reservation', reservationRoutes);
-app.use('/classes', monthlyScheduleRoutes)
+app.use('/classes', monthlyScheduleRoutes);
 app.use('/admins', adminRoutes);
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
 module.exports = app;
