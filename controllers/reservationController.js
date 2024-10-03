@@ -6,6 +6,7 @@ const Student = require('../models/studentModel');
 const Subject = require('../models/subjectModel');
 const Teacher = require('../models/teacherModel');
 const MonthlySchedule = require('../models/monthlyScheduleModel');  
+const { sendEmailToUser } = require('./resetController')
 
 
 const createReservation = async (req, res) => {
@@ -60,6 +61,51 @@ const createReservation = async (req, res) => {
         }, {
             where: {monthlyscheduleid: schedule_id}
         });
+
+        const date = new Date(schedule.datetime);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+
+        const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
+
+        const subject = await Subject.findByPk(subject_id);
+        const subjectname = subject.subjectname;
+
+        const teacher = await Teacher.findByPk(teacher_id);
+        const teacherName = `${teacher.firstname} ${teacher.lastname}`;
+        const teacherEmail = student.email;
+
+        const student = await Student.findByPk(student_id);
+        const studentName = `${student.firstname} ${student.lastname}`;
+        const studentEmail = student.email;
+
+        const filePathStudent = path.join(__dirname, '../reservationNotificationForStudentTemplate.html');
+        let htmlContentStudent = fs.readFileSync(filePathStudent, 'utf-8');
+        htmlContentStudent = htmlContent
+            .replace(/{{teacherName}}/g, teacherName)
+            .replace(/{{subjectname}}/g, subjectname)
+            .replace(/{{formattedDate}}/g, formattedDate);
+
+        const filePathTeacher = path.join(__dirname, '../reservationNotificationForStudentTemplate.html');
+        let htmlContentTeacher = fs.readFileSync(filePathTeacher, 'utf-8');
+        htmlContentTeacher = htmlContent
+            .replace(/{{studentName}}/g, studentName)
+            .replace(/{{subjectname}}/g, subjectname)
+            .replace(/{{formattedDate}}/g, formattedDate);
+
+        setImmediate(async () => {
+            try {
+                await sendEmailToUser(teacherEmail, "Reservation Notification", htmlContentTeacher);
+                await sendEmailToUser(studentEmail, "Reservation Notification", htmlContentStudent);
+            } catch (error) {
+            }
+        });
+
+
+
         return res.status(201).json(reservation);
     } catch (error) {
         return res.status(500).json({ message: 'Error creating reservation', error });
