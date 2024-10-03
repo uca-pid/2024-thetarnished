@@ -10,6 +10,6 @@ const router = express.Router();
 router.get('/:id', getStudentById);
 router.put('/update/:id', updateStudent);
 router.delete('/delete/:id', deleteStudent);
-router.get('/get-previous/:id', getPreviousTeachers);
+router.get('/get-previous/:id/:subjectid', getPreviousTeachers);
 
 module.exports = router;

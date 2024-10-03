@@ -71,49 +71,47 @@ const createReservation = async (req, res) => {
             where: {monthlyscheduleid: schedule_id}
         });
 
-        // const date = new Date(schedule.datetime);
-        // const day = String(date.getDate()).padStart(2, '0');
-        // const month = String(date.getMonth() + 1).padStart(2, '0');
-        // const year = date.getFullYear();
-        // const hours = String(date.getHours()).padStart(2, '0');
-        // const minutes = String(date.getMinutes()).padStart(2, '0');
+        const date = new Date(schedule.datetime);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
 
-        // const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
+        const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
 
-        // const subject = await Subject.findByPk(subject_id);
-        // const subjectname = subject.subjectname;
+        const subject = await Subject.findByPk(subject_id);
+        const subjectname = subject.subjectname;
 
-        // const teacher = await Teacher.findByPk(teacher_id);
-        // const teacherName = `${teacher.firstname} ${teacher.lastname}`;
-        // const teacherEmail = teacher.email;
+        const teacher = await Teacher.findByPk(teacher_id);
+        const teacherName = `${teacher.firstname} ${teacher.lastname}`;
+        const teacherEmail = teacher.email;
 
-        // const student = await Student.findByPk(student_id);
-        // const studentName = `${student.firstname} ${student.lastname}`;
-        // const studentEmail = student.email;
+        const student = await Student.findByPk(student_id);
+        const studentName = `${student.firstname} ${student.lastname}`;
+        const studentEmail = student.email;
 
-        // const filePathStudent = path.join(__dirname, '../reservationNotificationForStudentTemplate.html');
-        // let htmlContentStudent = fs.readFileSync(filePathStudent, 'utf-8');
-        // htmlContentStudent = htmlContentStudent
-        //     .replace(/{{teacherName}}/g, teacherName)
-        //     .replace(/{{subjectname}}/g, subjectname)
-        //     .replace(/{{formattedDate}}/g, formattedDate);
+        const filePathStudent = path.join(__dirname, '../reservationNotificationForStudentTemplate.html');
+        let htmlContentStudent = fs.readFileSync(filePathStudent, 'utf-8');
+        htmlContentStudent = htmlContentStudent
+            .replace(/{{teacherName}}/g, teacherName)
+            .replace(/{{subjectname}}/g, subjectname)
+            .replace(/{{formattedDate}}/g, formattedDate);
 
-        // const filePathTeacher = path.join(__dirname, '../reservationNotificationForTeacherTemplate.html');
-        // let htmlContentTeacher = fs.readFileSync(filePathTeacher, 'utf-8');
-        // htmlContentTeacher = htmlContentTeacher
-        //     .replace(/{{studentName}}/g, studentName)
-        //     .replace(/{{subjectname}}/g, subjectname)
-        //     .replace(/{{formattedDate}}/g, formattedDate);
+        const filePathTeacher = path.join(__dirname, '../reservationNotificationForTeacherTemplate.html');
+        let htmlContentTeacher = fs.readFileSync(filePathTeacher, 'utf-8');
+        htmlContentTeacher = htmlContentTeacher
+            .replace(/{{studentName}}/g, studentName)
+            .replace(/{{subjectname}}/g, subjectname)
+            .replace(/{{formattedDate}}/g, formattedDate);
 
-        // setImmediate(async () => {
-        //     try {
-        //         await sendEmailToUser(teacherEmail, "Reservation Notification", htmlContentTeacher);
-        //         await sendEmailToUser(studentEmail, "Reservation Notification", htmlContentStudent);
-        //     } catch (error) {
-        //     }
-        // });
-
-
+        setImmediate(async () => {
+            try {
+                await sendEmailToUser(teacherEmail, "Reservation Notification", htmlContentTeacher);
+                await sendEmailToUser(studentEmail, "Reservation Notification", htmlContentStudent);
+            } catch (error) {
+            }
+        });
 
         return res.status(201).json(reservation);
     } catch (error) {

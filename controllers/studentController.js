@@ -77,18 +77,20 @@ const updateStudent = async (req, res) => {
 
   const getPreviousTeachers = async (req, res) => {
     try {
-      const { id } = req.params;
+      const { id, subjectid } = req.params;
   
       const [teachers] = await sequelize.query(`
         SELECT DISTINCT ON (teachers.teacherid) teachers.teacherid, teachers.firstname, teachers.lastname, teachers.email, reservations.id
         FROM teachers
         JOIN reservations
         ON teachers.teacherid = reservations.teacher_id
-        WHERE reservations.student_id = :studentid
+        JOIN subjectteacher 
+        ON teachers.teacherid = subjectteacher.teacherid
+        WHERE reservations.student_id = :studentid AND subjectteacher.subjectid = :subjectid
         ORDER BY teachers.teacherid, reservations.id DESC
         LIMIT 3;
       `, {
-        replacements: { studentid: id }, 
+        replacements: { studentid: id, subjectid: subjectid }, 
       });
   
       return res.status(200).json(teachers);

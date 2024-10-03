@@ -31,6 +31,11 @@ const Teacher = sequelize.define('Teacher', {
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: false  
+  },
+  on_vacation: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
   }
 }, {
   tableName: 'teachers',
