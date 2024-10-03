@@ -180,6 +180,7 @@ const getMonthlyScheduleByTeacherId = async (req, res) => {
           teacherid: schedule.teacherid.toString(),
           dayofmonth: dayOfMonth,
           dayofweek: dayOfWeek,
+          maxstudents: schedule.maxstudents,
         };
       });
 
