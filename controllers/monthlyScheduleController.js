@@ -171,7 +171,7 @@ const getMonthlyScheduleByTeacherId = async (req, res) => {
         const startTime = new Date(schedule.datetime).toTimeString().split(' ')[0]; 
         const endTime = new Date(new Date(schedule.datetime).getTime() + 60 * 60 * 1000).toTimeString().split(' ')[0]; 
         const dayOfMonth = new Date(schedule.datetime).getDate(); 
-        let jsDayOfWeek = new Date(schedule.datetime).getDay(); 
+        let jsDayOfWeek = new Date(schedule.datetime).getDay(); // 0 (Sunday) to 6 (Saturday)
         const dayOfWeek = jsDayOfWeek === 0 ? 7 : jsDayOfWeek;
         return {
           scheduleid: schedule.monthlyscheduleid.toString(),
@@ -180,7 +180,6 @@ const getMonthlyScheduleByTeacherId = async (req, res) => {
           teacherid: schedule.teacherid.toString(),
           dayofmonth: dayOfMonth,
           dayofweek: dayOfWeek,
-          maxstudents: schedule.maxstudents,
         };
       });
 
