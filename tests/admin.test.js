@@ -4,9 +4,12 @@ const Admin = require('../models/adminModel');
 const sequelize = require('../config/database');
 const bcrypt = require('bcrypt');
 const Teacher = require('../models/teacherModel');
+const jwt = require('jsonwebtoken');
 
+jest.setTimeout(20000);
 describe('Admin API', () => {
 
+    let adminToken;
     let admin;
     let adminID;
     let adminHashedPassword;
@@ -23,6 +26,7 @@ describe('Admin API', () => {
     const teacherPassword = 'password';
 
     beforeAll(async () => {
+        adminToken = await jwt.sign({ adminid: adminID, role: 'ADMIN' }, process.env.JWT_AUTH_SECRET);
         adminHashedPassword = await bcrypt.hash(password, 10);
         teacherHashedPassword = await bcrypt.hash(teacherPassword, 10);
         admin = await Admin.create({ firstname: adminName, lastname: adminLastname, email: adminEmail, password: adminHashedPassword });
@@ -31,8 +35,8 @@ describe('Admin API', () => {
         teacherID = teacher.teacherid;
     });
 
-    beforeEach(() => {
-        teacher.is_active = false;
+    beforeEach(async () => {
+        await Teacher.update({ is_active: false }, { where: { teacherid: teacherID } });
     });
 
     afterEach(() => {
@@ -49,17 +53,21 @@ describe('Admin API', () => {
     it('Should allow an admin to login if proper credentials are provided', async () => {
         const response = await request(app)
             .post('/authentication/login')
-            .send({ email: adminEmail, password: password });
+            .send({ email: adminEmail, password: password })
+
+        const data = jwt.decode(response.body.token, process.env.JWT_AUTH_SECRET);
+        
         expect(response.status).toBe(200);
         expect(response.body.message).toBe('Login successful');
-        expect(response.body.user.role).toBe('ADMIN');
+        expect(data.role).toBe('ADMIN');
     });
 
     it('Should not allow an admin to login if improper password is provided', async () => {
         const wrongPassword = 'wrongpassword';
         const response = await request(app)
             .post('/authentication/login')
-            .send({ email: adminEmail, password: wrongPassword });
+            .send({ email: adminEmail, password: wrongPassword })
+
         expect(response.status).toBe(401);
         expect(response.body.message).toBe('Invalid password');
     });
@@ -68,7 +76,8 @@ describe('Admin API', () => {
         const wrongEmail = 'wrongemail@gmail.com';
         const response = await request(app)
             .post('/authentication/login')
-            .send({ email: wrongEmail, password: password });
+            .send({ email: wrongEmail, password: password })
+
         expect(response.status).toBe(404);
         expect(response.body.message).toBe('User not found');
     });
@@ -77,7 +86,8 @@ describe('Admin API', () => {
         expect(teacher.is_active).toBe(false);
 
         const response = await request(app)
-            .post(`/admins/activate-teacher/${teacherID}`);
+            .post(`/admins/activate-teacher/${teacherID}`)
+            .set('Authorization', `Bearer ${adminToken}`);
         
         const allowedTeacher = await Teacher.findByPk(teacherID);
 
@@ -89,7 +99,9 @@ describe('Admin API', () => {
     it('Should not allow an admin to activate a teacher if an invalid teacher id is provided', async () => {
         expect(teacher.is_active).toBe(false);
         const response = await request(app)
-            .post(`/admins/activate-teacher/112358`);
+            .post(`/admins/activate-teacher/112358`)
+            .set('Authorization', `Bearer ${adminToken}`);
+
         expect(response.status).toBe(404);
         expect(response.body.message).toBe('Teacher not found');
     });
@@ -98,7 +110,7 @@ describe('Admin API', () => {
         
         jest.spyOn(Teacher, 'findByPk').mockRejectedValue(new Error('Server error'));
 
-        const response = await request(app).post(`/admins/activate-teacher/112358`);
+        const response = await request(app).post(`/admins/activate-teacher/112358`).set('Authorization', `Bearer ${adminToken}`);
 
         expect(response.status).toBe(500);
         expect(response.body.message).toBe('Server error');
@@ -108,7 +120,7 @@ describe('Admin API', () => {
         const newTeacher = await Teacher.create({ firstname: 'Esteban', lastname: 'Ocon', email: 'estebanocon@gmail.com', password: teacherHashedPassword, is_active: true });
         const newTeacherID = newTeacher.teacherid;
 
-        const response = await request(app).post(`/admins/disable-teacher/${newTeacherID}`);
+        const response = await request(app).post(`/admins/disable-teacher/${newTeacherID}`).set('Authorization', `Bearer ${adminToken}`);
         expect(response.status).toBe(200);
         expect(response.body.message).toBe('Teacher disabled successfully');
 
@@ -120,7 +132,8 @@ describe('Admin API', () => {
 
     it('Should not allow an admin to disable a teacher if an invalid teacher id is provided', async () => {
         const response = await request(app)
-            .post(`/admins/disable-teacher/112358`);
+            .post(`/admins/disable-teacher/112358`)
+            .set('Authorization', `Bearer ${adminToken}`);
         expect(response.status).toBe(404);
         expect(response.body.message).toBe('Teacher not found');
     });
@@ -129,7 +142,7 @@ describe('Admin API', () => {
         
         jest.spyOn(Teacher, 'findByPk').mockRejectedValue(new Error('Server error'));
 
-        const response = await request(app).post(`/admins/disable-teacher/112358`);
+        const response = await request(app).post(`/admins/disable-teacher/112358`).set('Authorization', `Bearer ${adminToken}`);;
 
         expect(response.status).toBe(500);
         expect(response.body.message).toBe('Server error');
@@ -142,7 +155,7 @@ describe('Admin API', () => {
         const firstInactiveTeacherID = firstInactiveTeacher.teacherid;
         const secondInactiveTeacher = await Teacher.create({ firstname: 'Valtieri', lastname: 'Bottas', email: 'valtieribottas@gmail.com', password: teacherHashedPassword, is_active: false });
         const secondInactiveTeacherID = secondInactiveTeacher.teacherid;
-        const response = await request(app).get('/admins/inactive-teachers');
+        const response = await request(app).get('/admins/inactive-teachers').set('Authorization', `Bearer ${adminToken}`);
         
         expect(response.status).toBe(200);
         expect(response.body.length).toBeGreaterThan(0);
@@ -155,7 +168,7 @@ describe('Admin API', () => {
         
         jest.spyOn(Teacher, 'findAll').mockResolvedValue([]);
         
-        const response = await request(app).get('/admins/inactive-teachers');
+        const response = await request(app).get('/admins/inactive-teachers').set('Authorization', `Bearer ${adminToken}`);
 
         expect(response.status).toBe(404);
         expect(response.body.message).toBe('No inactive teachers found');
@@ -165,7 +178,7 @@ describe('Admin API', () => {
         
         jest.spyOn(Teacher, 'findAll').mockRejectedValue(new Error('Server error'));
         
-        const response = await request(app).get('/admins/inactive-teachers');
+        const response = await request(app).get('/admins/inactive-teachers').set('Authorization', `Bearer ${adminToken}`);
 
         expect(response.status).toBe(500);
         expect(response.body.message).toBe('Server error');

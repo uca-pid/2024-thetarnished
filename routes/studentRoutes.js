@@ -1,6 +1,8 @@
 const express = require('express');
 const {getStudentById, updateStudent, deleteStudent, getPreviousTeachers} = require('../controllers/studentController');
 const app = express();
+const authorizeRoles = require('../middleware/authMiddleware');
+
 app.use(express.json()); 
 
 

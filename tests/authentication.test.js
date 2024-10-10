@@ -6,12 +6,15 @@ const Teacher = require('../models/teacherModel');
 const bcrypt = require('bcrypt');
 const SubjectTeacher = require('../models/subjectTeacherModel');
 const Schedule = require('../models/weeklyScheduleModel');
+const jwt = require('jsonwebtoken');
 
 
 describe('Authentication API', () => {
     
     let student;
     let teacher;
+    let studentToken;
+    let teacherToken;
     let hashedOldPassword;
     const teacherFirstName = 'John';
     const teacherLastName = 'Doe';
@@ -35,6 +38,8 @@ describe('Authentication API', () => {
         teacher = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: teacherEmail, password: hashedOldPassword, subjects: [], is_active: true}); 
         teacherToDelete = await Teacher.create({ firstname: teacherFirstName, lastname: teacherLastName, email: "testTeacher35@example.com", password: hashedOldPassword, subjects: []});
         studentToDelete = await Student.create({ firstname: studentFirstName, lastname: studentLastName, email: "testStudent192@example.com", password: hashedOldPassword});
+        studentToken = await jwt.sign({ studentid: student.studentid, role: 'STUDENT' }, process.env.JWT_AUTH_SECRET);
+        teacherToken = await jwt.sign({ teacherid: teacher.teacherid, role: 'TEACHER' }, process.env.JWT_AUTH_SECRET);
     });
     
     afterAll(async () => {
@@ -137,8 +142,11 @@ describe('Authentication API', () => {
                 email: teacherEmail,
                 password: oldPassword,
         });
+
+        const data = jwt.decode(loginResponse.body.token, process.env.JWT_AUTH_SECRET);
+
         expect(loginResponse.status).toBe(200);
-        expect(loginResponse.body.user.role).toBe('TEACHER');
+        expect(data.role).toBe('TEACHER');
     });
 
     it('should login a teacher who is already dictating subjects', async () => {
@@ -167,9 +175,11 @@ describe('Authentication API', () => {
                 email: teacherEmail,
                 password: oldPassword,
         });
+
+        const data = jwt.decode(loginResponse.body.token, process.env.JWT_AUTH_SECRET);
         expect(loginResponse.status).toBe(200);
-        expect(loginResponse.body.user.role).toBe('TEACHER');
-        expect(loginResponse.body.user.subjects.length).toBe(2);
+        expect(data.role).toBe('TEACHER');
+        expect(loginResponse.body.user_subjects.length).toBe(2);
 
         await Subject.destroy({ where: { subjectid: subject1.subjectid } });
         await Subject.destroy({ where: { subjectid: subject2.subjectid } });
@@ -184,8 +194,11 @@ describe('Authentication API', () => {
                 email: teacherEmail,
                 password: oldPassword,
         });
+
+        const data = jwt.decode(loginResponse.body.token, process.env.JWT_AUTH_SECRET);
+
         expect(loginResponse.status).toBe(200);
-        expect(loginResponse.body.user.role).toBe('TEACHER');
+        expect(data.role).toBe('TEACHER');
         await Schedule.destroy({ where: { weeklyscheduleid: schedule.weeklyscheduleid } });
     });
 
@@ -215,7 +228,8 @@ describe('Authentication API', () => {
     it('Should not change the password if the user is not found', async () => {
         const response = await request(app)
           .put('/authentication/change-password')
-          .send({ oldPassword: oldPassword, newPassword: newPassword, email: "anothernonexistentuser@gmail.com" });
+          .send({ oldPassword: oldPassword, newPassword: newPassword, email: "anothernonexistentuser@gmail.com" })
+          .set('Authorization', `Bearer ${studentToken}`);
     
         expect(response.status).toBe(404);
         expect(response.body.message).toBe('User not found');
@@ -224,7 +238,8 @@ describe('Authentication API', () => {
     it('Should return 401 if the old password is incorrect', async () => {
         const response = await request(app)
           .put('/authentication/change-password')
-          .send({ oldPassword: "wrongpassword", newPassword: newPassword, email: studentEmail });
+          .send({ oldPassword: "wrongpassword", newPassword: newPassword, email: studentEmail })
+          .set('Authorization', `Bearer ${studentToken}`);
     
         expect(response.status).toBe(401);
         expect(response.body.message).toBe('Invalid password');
@@ -233,7 +248,8 @@ describe('Authentication API', () => {
     it('Should successfully change password for a student', async () => {
         const response = await request(app)
           .put('/authentication/change-password')
-          .send({ oldPassword: oldPassword, newPassword: newPassword, email: studentEmail });
+          .send({ oldPassword: oldPassword, newPassword: newPassword, email: studentEmail })
+          .set('Authorization', `Bearer ${studentToken}`);
 
         expect(response.status).toBe(200);
         expect(response.body.message).toBe('Password changed successfully');
@@ -242,7 +258,8 @@ describe('Authentication API', () => {
     it('Should successfully change password for a teacher', async () => {
         const response = await request(app)
           .put('/authentication/change-password')
-          .send({ oldPassword: oldPassword, newPassword: newPassword, email: teacherEmail });
+          .send({ oldPassword: oldPassword, newPassword: newPassword, email: teacherEmail })
+          .set('Authorization', `Bearer ${teacherToken}`);
 
         expect(response.status).toBe(200);
         expect(response.body.message).toBe('Password changed successfully');
@@ -255,7 +272,8 @@ describe('Authentication API', () => {
             firstname: 'Jackson',
             lastname: 'Doe',
             email: studentEmail,
-          });
+          })
+          .set('Authorization', `Bearer ${studentToken}`);
 
         expect(response.status).toBe(200);
         expect(response.body.message).toBe('Profile updated successfully');
@@ -269,7 +287,8 @@ describe('Authentication API', () => {
             lastname: 'Doe',
             email: teacherEmail,
             subjects: [`${subjectTestID}`]
-          });
+          })
+          .set('Authorization', `Bearer ${teacherToken}`);
 
         expect(response.status).toBe(200);
         expect(response.body.message).toBe('Profile updated successfully');
@@ -282,7 +301,8 @@ describe('Authentication API', () => {
             firstname: 'Jackson',
             lastname: 'Doe',
             email: 'invalidemail@hotmail.com',
-          });
+          })
+          .set('Authorization', `Bearer ${studentToken}`);
           expect(response.status).toBe(404);
           expect(response.body.message).toBe('User not found');
     }); 
@@ -294,16 +314,21 @@ describe('Authentication API', () => {
                 firstname: 'Jackson',
                 lastname: 'Doe',
                 email: 'invalidemail@hotmail.com',
-              });
+              })
+              .set('Authorization', `Bearer ${studentToken}`);
+
               expect(response.status).toBe(404);
               expect(response.body.message).toBe('User not found');
     });
+
     it('Should allow a student to delete their account', async () => {
         const response = await request(app)
           .delete('/authentication/delete-account')
           .send({
             email: studentEmail,
-        });
+        })
+        .set('Authorization', `Bearer ${studentToken}`);
+
         expect(response.status).toBe(200);
         expect(response.body.message).toBe('User account deleted successfully');
     });
@@ -313,7 +338,9 @@ describe('Authentication API', () => {
           .delete('/authentication/delete-account')
           .send({
             email: 'invalidemail@hotmail.com',
-        });
+        })
+        .set('Authorization', `Bearer ${studentToken}`);
+
         expect(response.status).toBe(404);
         expect(response.body.message).toBe('User not found');
     });
@@ -323,7 +350,9 @@ describe('Authentication API', () => {
           .delete('/authentication/delete-account')
           .send({
             email: teacherEmail,
-        });
+        })
+        .set('Authorization', `Bearer ${teacherToken}`);
+        
         expect(response.status).toBe(200);
         expect(response.body.message).toBe('User account deleted successfully');
     });
@@ -334,7 +363,9 @@ describe('Authentication API', () => {
           .post(`/authentication/delete-account/xd@asd.com`)
           .send({
             password: 'xd',
-        });
+        })
+        .set('Authorization', `Bearer ${studentToken}`);
+
         expect(response.status).toBe(404);
         expect(response.body.message).toBe('User not found');
     });
@@ -344,7 +375,9 @@ describe('Authentication API', () => {
           .post(`/authentication/delete-account/${teacherToDelete.email}`)
           .send({
             password: 'invalidpassword',
-        });
+        })
+        .set('Authorization', `Bearer ${teacherToken}`);
+
         expect(response.status).toBe(401);
         expect(response.body.message).toBe('Invalid password');
     });
@@ -354,7 +387,9 @@ describe('Authentication API', () => {
         .post(`/authentication/delete-account/${studentToDelete.email}`)
           .send({
             password: 'invalidpassword',
-        });
+        })
+        .set('Authorization', `Bearer ${studentToken}`);
+
         expect(response.status).toBe(401);
         expect(response.body.message).toBe('Invalid password');
     });
@@ -364,7 +399,9 @@ describe('Authentication API', () => {
           .post(`/authentication/delete-account/${teacherToDelete.email}`)
           .send({
             password: oldPassword,
-        });
+        })
+        .set('Authorization', `Bearer ${teacherToken}`);
+
         expect(response.status).toBe(200);
         expect(response.body.message).toBe("Password is correct");
     });
@@ -374,7 +411,9 @@ describe('Authentication API', () => {
           .post(`/authentication/delete-account/${studentToDelete.email}`)
           .send({
             password: oldPassword,
-        });
+        })
+        .set('Authorization', `Bearer ${studentToken}`);
+
         expect(response.status).toBe(200);
         expect(response.body.message).toBe("Password is correct");
     });

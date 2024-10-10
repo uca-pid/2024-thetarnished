@@ -9,8 +9,8 @@ const activateTeacher = async (req, res) => {
         if (!teacher) {
             return res.status(404).json({ message: 'Teacher not found' });
         }
-        teacher.is_active = true;
-        await teacher.save();
+        const teacherId = teacher.teacherid;
+        await Teacher.update({ is_active: true }, { where: { teacherid: id } });
         res.status(200).json({ message: 'Teacher activated successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });

@@ -22,12 +22,12 @@ describe('Authorization Middleware tests', () =>{
     let studentToken;
     let adminToken;
 
-    beforeAll(() => {
+    beforeAll(async() => {
 
         process.env.JWT_AUTH_SECRET = 'test_secret';
-        teacherToken = jwt.sign({ teacherid: 1, role: 'teacher' }, process.env.JWT_AUTH_SECRET);
-        studentToken = jwt.sign({ studentid: 1, role: 'student' }, process.env.JWT_AUTH_SECRET);
-        adminToken = jwt.sign({ adminid: 1, role: 'admin' }, process.env.JWT_AUTH_SECRET);
+        teacherToken = await jwt.sign({ teacherid: 1, role: 'teacher' }, process.env.JWT_AUTH_SECRET);
+        studentToken = await jwt.sign({ studentid: 1, role: 'student' }, process.env.JWT_AUTH_SECRET);
+        adminToken = await jwt.sign({ adminid: 1, role: 'admin' }, process.env.JWT_AUTH_SECRET);
 
     });
 
