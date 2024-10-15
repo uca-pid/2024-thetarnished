@@ -9,7 +9,8 @@ const {
     confirmPayment,
     cancelGroupClass,
     getInDebtClassesById,
-    getPastReservationsByTeacherId
+    getPastReservationsByTeacherId,
+    getTerminatedReservationsByTeacherId
 } = require('../controllers/reservationController');
 
 const router = express.Router();
@@ -24,6 +25,8 @@ router.delete('/terminate/:id', terminateClass);
 router.put('/confirm', confirmPayment);
 router.delete('/cancel-group/:id', cancelGroupClass);
 router.get('/in-debt-classes/:id', getInDebtClassesById);
+router.get('/teacher-terminated-reservations-by/:teacher_id', getTerminatedReservationsByTeacherId);
+
 
 
 module.exports = router;

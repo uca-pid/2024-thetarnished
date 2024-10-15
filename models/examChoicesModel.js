@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Question = require('./questionModel');
 
 const Choice = sequelize.define('Choice', {
   choice_id: {
@@ -12,7 +11,7 @@ const Choice = sequelize.define('Choice', {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
-      model: Question,
+      model: 'ExamQuestions',
       key: 'question_id',
     },
     onDelete: 'CASCADE',

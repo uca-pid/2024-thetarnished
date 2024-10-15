@@ -1,6 +1,9 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 const Teacher = require('./teacherModel');
+const Subject = require('./subjectModel');
+const Reservation = require('./reservationModel'); 
+const ExamQuestion = require('./examQuestionModel');
 
 const Exam = sequelize.define('Exam', {
   exam_id: {
@@ -15,7 +18,23 @@ const Exam = sequelize.define('Exam', {
       model: Teacher,
       key: 'teacherid',
     },
-    onDelete: 'CASCADE',
+  },
+  subject_id: {
+    type: DataTypes.BIGINT,
+    allowNull: false,
+    references: {
+      model: Subject,
+      key: 'subjectid',
+    },
+  },
+  reservation_id: {  
+    type: DataTypes.BIGINT,
+    allowNull: true,  
+    references: {
+      model: Reservation,
+      key: 'id',
+    },
+    onDelete: 'SET NULL', 
   },
   exam_name: {
     type: DataTypes.STRING(255),
@@ -30,5 +49,6 @@ const Exam = sequelize.define('Exam', {
   tableName: 'exams',
   timestamps: false,
 });
+
 
 module.exports = Exam;

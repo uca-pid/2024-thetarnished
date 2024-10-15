@@ -1,8 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Exam = require('./examModel');
 
-const Question = sequelize.define('Question', {
+const ExamQuestion = sequelize.define('ExamQuestion', {
   question_id: {
     type: DataTypes.BIGINT,
     primaryKey: true,
@@ -12,7 +11,7 @@ const Question = sequelize.define('Question', {
     type: DataTypes.BIGINT,
     allowNull: false,
     references: {
-      model: Exam,
+      model: 'Exams',
       key: 'exam_id',
     },
     onDelete: 'CASCADE',
@@ -26,4 +25,4 @@ const Question = sequelize.define('Question', {
   timestamps: false,
 });
 
-module.exports = Question;
+module.exports = ExamQuestion;
