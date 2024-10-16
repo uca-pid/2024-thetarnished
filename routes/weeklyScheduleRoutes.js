@@ -12,8 +12,8 @@ const authorizeRoles = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.post('/create/:teacherid', authorizeRoles('ADMIN', 'TEACHER', 'STUDENT'), createSchedule);
-router.get('/all', authorizeRoles('ADMIN', 'TEACHER', 'STUDENT'), getAllSchedules);
-router.get('/teacher/:teacherid', authorizeRoles('ADMIN', 'TEACHER', 'STUDENT'), getScheduleByTeacher);
+router.post('/create/:teacherid', authorizeRoles('TEACHER'), createSchedule);
+router.get('/all', authorizeRoles('TEACHER', 'STUDENT'), getAllSchedules);
+router.get('/teacher/:teacherid', authorizeRoles('TEACHER', 'STUDENT'), getScheduleByTeacher);
 
 module.exports = router;

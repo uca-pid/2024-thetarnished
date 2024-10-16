@@ -7,9 +7,10 @@ app.use(express.json());
 
 const router = express.Router();
 
-router.get('/all-subjects-dictated', getAllSubjectsDictatedByTeachers);
-router.get('/all-subjects', authorizeRoles('ADMIN', 'TEACHER', 'STUDENT'), getAllSubjects);
-router.get('/:id', authorizeRoles('ADMIN', 'TEACHER', 'STUDENT'), getSubjectById);
-router.post('/create', authorizeRoles('ADMIN', 'TEACHER', 'STUDENT'), createSubject);
+router.get('/all-subjects-dictated', authorizeRoles('STUDENT'), getAllSubjectsDictatedByTeachers);
+router.get('/all-subjects', getAllSubjects);
+router.get('/:id', getSubjectById);
+router.post('/create', authorizeRoles('ADMIN'), createSubject);
 
 module.exports = router;
+

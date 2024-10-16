@@ -171,9 +171,7 @@ const loginUser = async (req, res) => {
             firstname: user.firstname,
             lastname: user.lastname,
             email: user.email,
-            role: role,
-            schedule: formattedSchedule,
-            subjects: subjects
+            role: role
         };
 
         if (role === 'TEACHER') {

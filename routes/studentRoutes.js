@@ -12,6 +12,6 @@ const router = express.Router();
 router.get('/:id', authorizeRoles('STUDENT', 'TEACHER', 'ADMIN'), getStudentById);
 router.put('/update/:id', authorizeRoles('STUDENT', 'ADMIN'), updateStudent);
 router.delete('/delete/:id', authorizeRoles('STUDENT', 'ADMIN'), deleteStudent);
-router.get('/get-previous/:id/:subjectid', authorizeRoles('STUDENT', 'ADMIN', 'TEACHER'), getPreviousTeachers);
+router.get('/get-previous/:id/:subjectid', authorizeRoles('STUDENT'), getPreviousTeachers);
 
 module.exports = router;
