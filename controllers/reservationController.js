@@ -291,12 +291,7 @@ const getTerminatedReservationsByTeacherId = async (req, res) => {
         if (reservations.length === 0) {
             return res.status(404).json({ message: 'No terminated classes found for this teacher' });
         }
-        // en caso de que se prefiera un booleano en vez de un string, se puede hacer lo siguiente:
-        // const formattedReservations = reservations.map(reservation => ({
-        //     ...reservation.toJSON(),  
-        //     paid: reservation.reservation_status === 'paid' ? true : false,  
-        // }));
-        // return res.status(200).json(formattedReservations);
+
         return res.status(200).json(reservations);
     }
         catch{
