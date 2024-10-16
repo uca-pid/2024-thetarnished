@@ -10,7 +10,7 @@ const Student = require('../models/studentModel')
 const Reservation = require('../models/reservationModel');
 const { updateTeacherSubjects } = require('../controllers/teacherController');
 const { Sequelize } = require('sequelize');
-
+const jwt = require('jsonwebtoken');
 
 
 
@@ -18,6 +18,8 @@ const { Sequelize } = require('sequelize');
 describe('Teacher API', () => { 
 
     let teacherID;
+    let teacherToken;
+    let studentToken;
     const teacherFirstName = 'John';
     const teacherLastName = 'Doe';
     const teacherEmail = 'testTeacher1@example.com';
@@ -32,6 +34,9 @@ describe('Teacher API', () => {
     jest.setTimeout(20000);
     
     beforeAll(async () => {
+
+        studentToken = jwt.sign({ email: studentEmail, role: 'STUDENT' }, process.env.JWT_AUTH_SECRET, { expiresIn: '1h' });
+        teacherToken = jwt.sign({ email: teacherEmail, role: 'TEACHER' }, process.env.JWT_AUTH_SECRET, { expiresIn: '1h' });
         const hashedOldPassword = await bcrypt.hash(oldPassword, 10);
         subjectTest = await Subject.create({
             subjectname: 'authSubjectTest'
@@ -86,7 +91,8 @@ describe('Teacher API', () => {
     });
 
     const response = await request(app)
-      .get(`/teachers/${teacherID}`);
+      .get(`/teachers/${teacherID}`)
+      .set('Authorization', `Bearer ${teacherToken}`);
   
     expect(response.status).toBe(200);
     expect(response.body.email).toBe(teacherEmail);
@@ -95,7 +101,9 @@ describe('Teacher API', () => {
 
   it('Should not get a teacher by invalid id', async () => {
     const response = await request(app)
-      .get('/teachers/112358');
+      .get('/teachers/112358')
+      .set('Authorization', `Bearer ${teacherToken}`);
+
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Teacher not found');
   });
@@ -108,7 +116,8 @@ describe('Teacher API', () => {
 
     const response = await request(app)
       .put(`/teachers/update/${teacherID}`)
-      .send(updatedTeacherData);
+      .send(updatedTeacherData)
+      .set('Authorization', `Bearer ${teacherToken}`);
 
     expect(response.status).toBe(200);
     expect(response.body.firstname).toBe('Jack');
@@ -118,6 +127,7 @@ describe('Teacher API', () => {
   it("Should delete a teacher", async () => {
     const response = await request(app)
     .delete(`/teachers/delete/${teacherID}`)
+    .set('Authorization', `Bearer ${teacherToken}`);
 
     expect(response.status).toBe(200);
     const teacherFound = await Teacher.findByPk(teacherID);
@@ -131,13 +141,15 @@ describe('Teacher API', () => {
         name: 'invalidId',
         lastname: 'invalidId',
         subjects: [],
-      });
+      })
+      .set('Authorization', `Bearer ${teacherToken}`);
+
       expect(response.status).toBe(404);
   });
 
   it("Should not be possible to delete a teacher with invalid id", async () => {
     const response = await request(app)
-    .delete('/teachers/delete/112358');
+    .delete('/teachers/delete/112358').set('Authorization', `Bearer ${teacherToken}`);
     expect(response.status).toBe(404);
   });
 
@@ -152,7 +164,8 @@ describe('Teacher API', () => {
       .post(`/teachers/assign-subject/${newTeacher.teacherid}`)
       .send({
         subjectid: `${testSubject.subjectid}`, 
-      });
+      })
+      .set('Authorization', `Bearer ${teacherToken}`);
       
     expect(response.status).toBe(201);
     expect(response.body.message).toBe('Subject assigned to teacher successfully');
@@ -167,7 +180,8 @@ describe('Teacher API', () => {
       .post('/teachers/assign-subject/112358')
       .send({
         subjectid: existentSubjectId, 
-      });
+      })
+      .set('Authorization', `Bearer ${teacherToken}`);
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Teacher not found');
   });
@@ -180,7 +194,8 @@ describe('Teacher API', () => {
       .post(`/teachers/assign-subject/${newTeacher.teacherid}`)
       .send({
         subjectid: `${nonExistentSubjectId}`, 
-      });
+      })
+      .set('Authorization', `Bearer ${teacherToken}`);
   
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Subject not found');
@@ -207,7 +222,9 @@ describe('Teacher API', () => {
       .delete(`/teachers/remove-subject/${newTeacher.teacherid}`)
       .send({
         subjectid: `${Subject1.subjectid}`,
-      });
+      })
+      .set('Authorization', `Bearer ${teacherToken}`);
+
     expect(response.status).toBe(200);
     expect(response.body.message).toBe('Subject removed from teacher successfully');
     await SubjectTeacher.destroy({ where: { teacherid: newTeacher.teacherid } });
@@ -222,7 +239,8 @@ describe('Teacher API', () => {
       .delete(`/teachers/remove-subject/${nonExistentTeacherId}`)
       .send({
         subjectid: subjectTest.subjectid,
-      });
+      })
+      .set('Authorization', `Bearer ${teacherToken}`);
 
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Teacher not found');
@@ -251,7 +269,8 @@ describe('Teacher API', () => {
     .delete(`/teachers/remove-subject/${yetAnotherTeacher.teacherid}`)
     .send({
       subjectid: nonExistentSubjectId,
-    });
+    })
+    .set('Authorization', `Bearer ${teacherToken}`);
     
     expect(response.status).toBe(404);
     await SubjectTeacher.destroy({ where: { teacherid: yetAnotherTeacher.teacherid } });
@@ -284,11 +303,11 @@ describe('Teacher API', () => {
 
     await request(app).post(`/teachers/assign-subject/${firstCommonTeacher.teacherid}`).send({
       subjectid: `${commonTestSubject.subjectid}`,
-    });
+    }).set('Authorization', `Bearer ${teacherToken}`);
     
     await request(app).post(`/teachers/assign-subject/${secondCommonTeacher.teacherid}`).send({
       subjectid: `${commonTestSubject.subjectid}`,
-    });
+    }).set('Authorization', `Bearer ${teacherToken}`);
 
     const firstTeacherSchedule = await Schedule.create({
       teacherid: firstCommonTeacher.teacherid,
@@ -320,7 +339,8 @@ describe('Teacher API', () => {
 
     });
 
-    const response = await request(app).get(`/teachers/all-dictating/${commonTestSubject.subjectid}`);
+    const response = await request(app).get(`/teachers/all-dictating/${commonTestSubject.subjectid}`)
+    .set('Authorization', `Bearer ${teacherToken}`);
 
 
     await Schedule.destroy({ where: { weeklyscheduleid: firstTeacherSchedule.weeklyscheduleid } });
@@ -337,14 +357,15 @@ describe('Teacher API', () => {
 
   it("Should retrieve all teachers", async () => {
     await Teacher.create({ firstname: 'John', lastname: 'Doe', email: 'testNewTeacher12345@example.com', password: 'password'});
-    const response = await request(app).get('/teachers/all-teachers');
+    const response = await request(app).get('/teachers/all-teachers')
+    .set('Authorization', `Bearer ${teacherToken}`);
     expect(response.status).toBe(200);
     expect(response.body.length).toBeGreaterThanOrEqual(1);
 
     await Teacher.destroy({ where: { email: 'testNewTeacher12345@example.com' } });
   });
 
-  it("should not delete a teacher when having a reservation pending", async() => {
+  it("Should not delete a teacher when having a reservation pending", async() => {
     
     const reservation = await Reservation.create({
       student_id: studentId,
@@ -353,14 +374,16 @@ describe('Teacher API', () => {
       schedule_id: firstTeacherMonthlyScheduleId,
       datetime: "2039-05-29 10:00:00",
 
+    });
+
+    const response = await request(app).delete(`/teachers/delete/${secondTeacherID}`)
+    .set('Authorization', `Bearer ${teacherToken}`);
+
+    expect(response.status).toBe(400)
   });
 
-  const response = await request(app).delete(`/teachers/delete/${secondTeacherID}`);
-  expect(response.status).toBe(400)
-  });
 
-
-  it('should throw an error if subjects are invalid', async () => {
+  it('Should throw an error if subjects are invalid', async () => {
     await expect(updateTeacherSubjects('teacher@example.com', null))
         .rejects.toThrow('Invalid subjects data');
 
@@ -368,7 +391,7 @@ describe('Teacher API', () => {
         .rejects.toThrow('Invalid subjects data');
   });
 
-it('should throw an error if the teacher is not found', async () => {
+it('Should throw an error if the teacher is not found', async () => {
     // Spy on Teacher.findOne and return null (simulate teacher not found)
     jest.spyOn(Teacher, 'findOne').mockResolvedValue(null);
 
@@ -379,7 +402,7 @@ it('should throw an error if the teacher is not found', async () => {
     expect(Teacher.findOne).toHaveBeenCalledWith({ where: { email: 'teacher@example.com' } });
 });
 
-it('should call destroy and bulkCreate when valid teacher and subjects are provided', async () => {
+it('Should call destroy and bulkCreate when valid teacher and subjects are provided', async () => {
     // Spy on Teacher.findOne and return a fake teacher
     jest.spyOn(Teacher, 'findOne').mockResolvedValue({ teacherid: 1 });
 

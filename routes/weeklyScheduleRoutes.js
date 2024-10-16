@@ -8,10 +8,12 @@ const {
   getScheduleByTeacher,
 } = require('../controllers/weeklyScheduleController');
 
+const authorizeRoles = require('../middleware/authMiddleware');
+
 const router = express.Router();
 
-router.post('/create/:teacherid', createSchedule);
-router.get('/all', getAllSchedules);
-router.get('/teacher/:teacherid', getScheduleByTeacher);
+router.post('/create/:teacherid', authorizeRoles('ADMIN', 'TEACHER', 'STUDENT'), createSchedule);
+router.get('/all', authorizeRoles('ADMIN', 'TEACHER', 'STUDENT'), getAllSchedules);
+router.get('/teacher/:teacherid', authorizeRoles('ADMIN', 'TEACHER', 'STUDENT'), getScheduleByTeacher);
 
 module.exports = router;
