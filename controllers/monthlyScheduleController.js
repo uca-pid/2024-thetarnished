@@ -2,6 +2,7 @@ const { Op } = require('sequelize');
 const MonthlySchedule = require('../models/monthlyScheduleModel');
 const Teacher = require('../models/teacherModel');
 const moment = require('moment');
+const Reservation = require('../models/reservationModel');
 
 const createMonthlySchedule = async (datetime, teacherid, maxstudents, currentstudents) => {
   try {
@@ -171,7 +172,76 @@ const getMonthlyScheduleByTeacherId = async (req, res) => {
         const startTime = new Date(schedule.datetime).toTimeString().split(' ')[0]; 
         const endTime = new Date(new Date(schedule.datetime).getTime() + 60 * 60 * 1000).toTimeString().split(' ')[0]; 
         const dayOfMonth = new Date(schedule.datetime).getDate(); 
-        let jsDayOfWeek = new Date(schedule.datetime).getDay(); // 0 (Sunday) to 6 (Saturday)
+        let jsDayOfWeek = new Date(schedule.datetime).getDay(); 
+        const dayOfWeek = jsDayOfWeek === 0 ? 7 : jsDayOfWeek;
+        return {
+          scheduleid: schedule.monthlyscheduleid.toString(),
+          start_time: startTime,
+          end_time: endTime,
+          teacherid: schedule.teacherid.toString(),
+          dayofmonth: dayOfMonth,
+          dayofweek: dayOfWeek,
+          maxstudents: schedule.maxstudents,
+        };
+      });
+
+      res.status(200).json(formattedSchedule);
+    } else {
+      res.status(404).send('Monthly schedule not found');
+    }
+  } catch (error) {
+    /*istanbul ignore next*/
+    res.status(500).send('Server error');
+  }
+};
+
+const getMonthlySubjectScheduleByTeacherId = async (req, res) => {
+  try {
+    const { teacherid } = req.params;
+    const { subjectid } = req.body;
+
+    const monthlySchedules = await MonthlySchedule.findAll({
+      where: {
+        teacherid: teacherid,
+        istaken: false,
+      },
+      order: [['datetime', 'ASC']],
+    });
+  
+    let filteredSchedules = [];
+  
+
+    for (const schedule of monthlySchedules) {
+      const reservations = await Reservation.findAll({
+        where: {
+          schedule_id: schedule.monthlyscheduleid,
+        }
+      });
+      if (reservations.length === 0) {
+        filteredSchedules.push(schedule);
+        continue; 
+      }
+      let allMatch = true;
+  
+      for (const reservation of reservations) {
+        if (reservation.subject_id !== subjectid) {
+          allMatch = false;
+          break; 
+        }
+      }
+  
+
+      if (allMatch) {
+        filteredSchedules.push(schedule);
+      }
+    }
+
+    if (filteredSchedules.length > 0) {
+      const formattedSchedule = filteredSchedules.map((schedule) => {
+        const startTime = new Date(schedule.datetime).toTimeString().split(' ')[0]; 
+        const endTime = new Date(new Date(schedule.datetime).getTime() + 60 * 60 * 1000).toTimeString().split(' ')[0]; 
+        const dayOfMonth = new Date(schedule.datetime).getDate(); 
+        let jsDayOfWeek = new Date(schedule.datetime).getDay(); 
         const dayOfWeek = jsDayOfWeek === 0 ? 7 : jsDayOfWeek;
         return {
           scheduleid: schedule.monthlyscheduleid.toString(),
@@ -200,5 +270,6 @@ module.exports = {
   createMonthlySchedule,
   assignVacation,
   getMonthlyScheduleByTeacherId,
-  stopVacation
+  stopVacation,
+  getMonthlySubjectScheduleByTeacherId
 };

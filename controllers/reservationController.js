@@ -132,20 +132,26 @@ const getReservationsByStudentId = async (req, res) => {
         }
 
         const reservations = await Reservation.findAll({
-            where: { student_id },
+            where: {
+                student_id: student_id,  
+                reservation_status: 'booked',  
+                datetime: {
+                    [Op.gt]: new Date(),
+                },
+            },
             include: [
-              {
-                model: Teacher,
-                attributes: ['firstname', 'lastname'],
-              },
-              {
-                model: Subject,
-                attributes: ['subjectname'],
-              },
+                {
+                    model: Teacher,
+                    attributes: ['firstname', 'lastname'],
+                },
+                {
+                    model: Subject,
+                    attributes: ['subjectname'],
+                },
             ],
             attributes: ['id', 'datetime'],
-            order: [['datetime', 'ASC']], 
-          });
+            order: [['datetime', 'ASC']],
+        });
           
 
         if (reservations.length === 0) {
@@ -264,6 +270,33 @@ const getReservationsByTeacher = async (req, res) => {
         return res.status(500).json({ message: 'Error fetching reservations for teacher', error });
     }
 };
+
+const getTerminatedReservationsByTeacherId = async (req, res) => {
+    try {
+        const { teacher_id } = req.params;
+        const foundTeacher = await Teacher.findByPk(teacher_id);
+        if (!foundTeacher) {
+            return res.status(404).json({ message: 'Teacher not found' });
+        }
+        const reservations = await Reservation.findAll({
+            where: {
+                teacher_id: teacher_id,  
+                reservation_status: {
+                    [Op.in]: ['terminated', 'paid', 'in debt'],  
+                },
+                
+            },
+            order: [['datetime', 'ASC']],
+        });
+        if (reservations.length === 0) {
+            return res.status(404).json({ message: 'No terminated classes found for this teacher' });
+        }
+
+        return res.status(200).json(reservations);
+    }
+        catch{
+            return res.status(500).json({ message: 'Error fetching terminated reservations for teacher', error });
+        }};
 
 
 const getPastReservationsByTeacherId = async (req, res) => {
@@ -539,5 +572,6 @@ module.exports = {
     confirmPayment,
     cancelGroupClass,
     getInDebtClassesById,
-    getPastReservationsByTeacherId
+    getPastReservationsByTeacherId,
+    getTerminatedReservationsByTeacherId
 };

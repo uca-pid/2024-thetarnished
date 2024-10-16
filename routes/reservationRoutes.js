@@ -9,12 +9,14 @@ const {
     confirmPayment,
     cancelGroupClass,
     getInDebtClassesById,
-    getPastReservationsByTeacherId
+    getPastReservationsByTeacherId,
+    getTerminatedReservationsByTeacherId
 } = require('../controllers/reservationController');
 
 const authorizeRoles = require('../middleware/authMiddleware');
 
 const router = express.Router();
+
 
 router.post('/create', authorizeRoles('STUDENT', 'TEACHER', 'ADMIN'), createReservation);
 router.delete('/delete/:id', authorizeRoles('STUDENT', 'TEACHER', 'ADMIN'), deleteReservation);
@@ -26,6 +28,7 @@ router.delete('/terminate/:id', authorizeRoles('STUDENT', 'TEACHER', 'ADMIN'), t
 router.put('/confirm', authorizeRoles('STUDENT', 'TEACHER', 'ADMIN'), confirmPayment);
 router.delete('/cancel-group/:id', authorizeRoles('STUDENT', 'TEACHER', 'ADMIN'), cancelGroupClass);
 router.get('/in-debt-classes/:id', authorizeRoles('STUDENT', 'TEACHER', 'ADMIN'), getInDebtClassesById);
+
 
 
 module.exports = router;
