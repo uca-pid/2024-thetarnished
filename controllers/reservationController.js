@@ -274,29 +274,59 @@ const getReservationsByTeacher = async (req, res) => {
 const getTerminatedReservationsByTeacherId = async (req, res) => {
     try {
         const { teacher_id } = req.params;
+
         const foundTeacher = await Teacher.findByPk(teacher_id);
         if (!foundTeacher) {
             return res.status(404).json({ message: 'Teacher not found' });
         }
-        const reservations = await Reservation.findAll({
+
+        const terminatedReservations = await Reservation.findAll({
             where: {
                 teacher_id: teacher_id,  
                 reservation_status: {
                     [Op.in]: ['terminated', 'paid', 'in debt'],  
                 },
-                
             },
+            include: [
+                {
+                    model: Student,
+                    attributes: ['firstname', 'lastname'],
+                },
+                {
+                    model: Subject,
+                    attributes: ['subjectname'],
+                },
+            ],
+            attributes: ['id', 'datetime', 'schedule_id', 'reservation_status'], 
             order: [['datetime', 'ASC']],
         });
-        if (reservations.length === 0) {
+
+        if (terminatedReservations.length === 0) {
             return res.status(404).json({ message: 'No terminated classes found for this teacher' });
         }
 
-        return res.status(200).json(reservations);
+        const formattedReservations = terminatedReservations.map(reservation => {
+            return {
+                id: reservation.id,
+                datetime: reservation.datetime,
+                schedule_id: reservation.schedule_id,
+                paid: reservation.reservation_status === 'paid', 
+                Student: {
+                    firstname: reservation.Student.firstname,
+                    lastname: reservation.Student.lastname,
+                },
+                Subject: {
+                    subjectname: reservation.Subject.subjectname,
+                }
+            };
+        });
+
+        return res.status(200).json(formattedReservations);
+
+    } catch (error) {
+        return res.status(500).json({ message: 'Error fetching terminated reservations for teacher', error });
     }
-        catch{
-            return res.status(500).json({ message: 'Error fetching terminated reservations for teacher', error });
-        }};
+};
 
 
 const getPastReservationsByTeacherId = async (req, res) => {
