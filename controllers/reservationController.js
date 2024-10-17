@@ -137,7 +137,7 @@ const getReservationsByStudentId = async (req, res) => {
             include: [
                 {
                     model: Teacher,
-                    attributes: ['firstname', 'lastname'],
+                    attributes: ['firstname', 'lastname', 'teacherid'],
                 },
                 {
                     model: Subject,
@@ -202,7 +202,7 @@ const getReservationsByTeacher = async (req, res) => {
             include: [
               {
                 model: Student,
-                attributes: ['firstname', 'lastname'],
+                attributes: ['firstname', 'lastname', 'studentid'],
               },
               {
                 model: Subject,
@@ -250,6 +250,7 @@ const getReservationsByTeacher = async (req, res) => {
                     id: reservation.id,
                     student_name: isGroupClass ? 'group class' : `${reservation.Student.firstname} ${reservation.Student.lastname}`,
                     subject_name: reservation.Subject.subjectname,
+                    student_id: reservation.Student.studentid,
                     datetime: reservation.datetime,
                     group: isGroupClass,
                     MonthlyID: reservation.schedule_id 
