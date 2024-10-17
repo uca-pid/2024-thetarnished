@@ -61,11 +61,11 @@
             <h1>Class Confirmation</h1>
         </div>
         <div class="content">
-            <p>Dear [Professor's Name],</p>
-            <p>You have a class scheduled with [Student's Name] on [Date] at [Time]. Please confirm the class by clicking the button below.</p>
+            <p>Dear {{teacherName}},</p>
+            <p>You have a {{subjectname}} class scheduled with {{studentName}} on {{formattedDate}}. Please confirm the class by clicking the button below.</p>
             
             <div class="button-container">
-                <a href="[CONFIRMATION_LINK]" class="confirm-button">Confirm Class</a>
+                <a href="{{CONFIRMATION_LINK}}" class="confirm-button" style="color: #ffffff;">Confirm Class</a>
             </div>
 
             <p>If you did not schedule this class, please contact us immediately.</p>

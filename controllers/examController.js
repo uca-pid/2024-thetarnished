@@ -155,7 +155,7 @@ const getExamsByStudentId = async (req, res) => {
             });
         });
 
-        // Convert the object into an array structure
+ 
         const result = Object.values(formattedExams).map(exam => {
             return {
                 ...exam,
