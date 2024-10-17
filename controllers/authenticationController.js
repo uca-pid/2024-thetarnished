@@ -179,7 +179,7 @@ const loginUser = async (req, res) => {
             userData.on_vacation = user.on_vacation;
         }
 
-        const token = jwt.sign(userData, process.env.JWT_AUTH_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign(userData, process.env.JWT_AUTH_SECRET, { expiresIn: '3h' });
         return res.status(200).json({
             message: 'Login successful',
             token: token,
