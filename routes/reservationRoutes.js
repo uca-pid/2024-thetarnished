@@ -20,7 +20,7 @@ const router = express.Router();
 
 router.post('/create', authorizeRoles('STUDENT'), createReservation);
 router.delete('/delete/:id', authorizeRoles('TEACHER'), deleteReservation);
-router.get('/student/:student_id', authorizeRoles('STUDENT'), getReservationsByStudentId);
+router.get('/student/:student_id', authorizeRoles('STUDENT', 'TEACHER'), getReservationsByStudentId);
 router.get('/teacher/:teacher_id', authorizeRoles('TEACHER') ,getReservationsByTeacher);
 router.get('/teacher-past-reservations-by/:teacher_id', authorizeRoles('TEACHER'), getPastReservationsByTeacherId);
 router.delete('/cancel/:id', authorizeRoles('TEACHER'), cancelReservation);

@@ -202,7 +202,7 @@ const getReservationsByTeacher = async (req, res) => {
             include: [
               {
                 model: Student,
-                attributes: ['firstname', 'lastname', 'studentid'],
+                attributes: ['firstname', 'lastname', 'studentid', 'rating'],
               },
               {
                 model: Subject,
@@ -251,6 +251,7 @@ const getReservationsByTeacher = async (req, res) => {
                     student_name: isGroupClass ? 'group class' : `${reservation.Student.firstname} ${reservation.Student.lastname}`,
                     subject_name: reservation.Subject.subjectname,
                     student_id: reservation.Student.studentid,
+                    student_rating: reservation.Student.rating,
                     datetime: reservation.datetime,
                     group: isGroupClass,
                     MonthlyID: reservation.schedule_id 
@@ -286,14 +287,14 @@ const getTerminatedReservationsByTeacherId = async (req, res) => {
             include: [
                 {
                     model: Student,
-                    attributes: ['firstname', 'lastname'],
+                    attributes: ['studentid', 'firstname', 'lastname', 'rating'],
                 },
                 {
                     model: Subject,
                     attributes: ['subjectname'],
                 },
             ],
-            attributes: ['id', 'datetime', 'schedule_id', 'reservation_status'], 
+            attributes: ['id', 'israted', 'datetime', 'schedule_id', 'reservation_status'], 
             order: [['datetime', 'ASC']],
         });
 
@@ -304,12 +305,15 @@ const getTerminatedReservationsByTeacherId = async (req, res) => {
         const formattedReservations = terminatedReservations.map(reservation => {
             return {
                 id: reservation.id,
+                israted: reservation.israted,
                 datetime: reservation.datetime,
                 schedule_id: reservation.schedule_id,
                 paid: reservation.reservation_status === 'paid', 
                 Student: {
+                    student_id: reservation.Student.studentid,
                     firstname: reservation.Student.firstname,
                     lastname: reservation.Student.lastname,
+                    rating: reservation.Student.rating,
                 },
                 Subject: {
                     subjectname: reservation.Subject.subjectname,

@@ -122,7 +122,7 @@ const sendEmailToUser = async (email, subject, html) => {
                 clientId: CLIENT_ID,
                 clientSecret: CLIENT_SECRET,
                 refreshToken: REFRESH_TOKEN,
-                accessToken: accessToken,
+                accessToken: accessToken.token,
             },
         });
 
