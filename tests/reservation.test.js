@@ -7,11 +7,14 @@ const MonthlySchedule = require('../models/monthlyScheduleModel');
 const Student = require('../models/studentModel');
 const Reservation = require('../models/reservationModel');
 const moment = require('moment');
+const jwt = require('jsonwebtoken'); 
 jest.setTimeout(20000);
 
 describe('Reservation Controller Tests', () => {
   let teacherId;
   let studentId;
+  let studentToken;
+  let teacherToken;
   let scheduleId;
   let secondScheduleId;
   let subjectId;
@@ -28,6 +31,8 @@ describe('Reservation Controller Tests', () => {
       { firstname: 'John', lastname: 'Doe', email: 'john.doe5@example.com', password: 'password' });
     teacherId = teacher.teacherid;
 
+    teacherToken = jwt.sign({ teacherId: teacherId, role: 'TEACHER' }, process.env.JWT_AUTH_SECRET, { expiresIn: '1h' });
+
     const newTeacher = await Teacher.create(
       { firstname: 'John', lastname: 'Doe', email: 'john.doe6@example.com', password: 'password' });
     newTeacherId = newTeacher.teacherid;
@@ -35,6 +40,8 @@ describe('Reservation Controller Tests', () => {
     const student = await Student.create(
       { firstname: 'Jane', lastname: 'Doe', email: 'jane.doe7@example.com', password: 'password' });
     studentId = student.studentid;
+
+    studentToken = jwt.sign({ studentId: studentId, role: 'STUDENT' }, process.env.JWT_AUTH_SECRET, { expiresIn: '1h' });
 
     const newStudent = await Student.create(
       { firstname: 'Jane', lastname: 'Doe', email: 'jane.doe8@example.com', password: 'password' });
@@ -112,7 +119,7 @@ describe('Reservation Controller Tests', () => {
     jest.restoreAllMocks();
   });
 
-  it('should create a new reservation', async () => {
+  it('Should create a new reservation', async () => {
     const res = await request(app)
       .post('/reservation/create')
       .send({
@@ -122,13 +129,14 @@ describe('Reservation Controller Tests', () => {
         dayofweek: moment().isoWeekday(),
         start_time: '00:00:00',
         schedule_id: firstTeacherMonthlySchedule.monthlyscheduleid,
-      });
+      })
+      .set('Authorization', `Bearer ${studentToken}`);
 
     expect(res.status).toBe(201);
     reservationId = res.body.id;
   });
 
-  it('should create a new reservation the same day as today', async () => {
+  it('Should create a new reservation the same day as today', async () => {
     const res = await request(app)
       .post('/reservation/create')
       .send({
@@ -138,12 +146,14 @@ describe('Reservation Controller Tests', () => {
         dayofweek: moment().isoWeekday(),
         start_time: '00:00:00',
         schedule_id: secondTeacherMonthlySchedule.monthlyscheduleid,
-      });
+      })
+      .set('Authorization', `Bearer ${studentToken}`);
 
     expect(res.status).toBe(201);
     
   });
-  it('should create a new reservation today in the future', async () => {
+
+  it('Should create a new reservation today in the future', async () => {
     const res = await request(app)
       .post('/reservation/create')
       .send({
@@ -153,14 +163,15 @@ describe('Reservation Controller Tests', () => {
         dayofweek: moment().isoWeekday(),
         start_time: '23:59:59',
         schedule_id: thirdTeacherMonthlySchedule.monthlyscheduleid,
-      });
+      })
+      .set('Authorization', `Bearer ${studentToken}`);
 
     expect(res.status).toBe(201);
     
   });
   
 
-  it('should not create a reservation if one already exists', async () => {
+  it('Should not create a reservation if one already exists', async () => {
     const res = await request(app)
       .post('/reservation/create')
       .send({
@@ -170,13 +181,14 @@ describe('Reservation Controller Tests', () => {
         dayofweek: 1,
         start_time: '09:00:00',
         schedule_id: firstTeacherMonthlySchedule.monthlyscheduleid,
-      });
+      })
+      .set('Authorization', `Bearer ${studentToken}`);
   
     expect(res.status).toBe(409);
     expect(res.body.message).toBe('This schedule is full');
   });
 
-  it('should return 500 if an error occurs during reservation creation', async () => {
+  it('Should return 500 if an error occurs during reservation creation', async () => {
     jest.spyOn(Reservation, 'create').mockImplementation(() => {
       throw new Error('Database error');
     });
@@ -190,7 +202,8 @@ describe('Reservation Controller Tests', () => {
         dayofweek: 1,
         start_time: '09:00:00',
         schedule_id: scheduleId,
-      });
+      })
+      .set('Authorization', `Bearer ${studentToken}`);
 
     expect(res.status).toBe(500);
     expect(res.body.message).toBe('Error creating reservation');
@@ -198,37 +211,41 @@ describe('Reservation Controller Tests', () => {
     Reservation.create.mockRestore();
   });
 
-  it('should get all reservations for a student', async () => {
+  it('Should get all reservations for a student', async () => {
     const res = await request(app)
       .get(`/reservation/student/${studentId}`)
+      .set('Authorization', `Bearer ${studentToken}`);
       
     expect(res.status).toBe(200);
     expect(res.body.length).toBeGreaterThan(0);
   });
 
-  it('should return 404 if no reservations found for student', async () => {
+  it('Should return 404 if no reservations found for student', async () => {
     const res = await request(app)
       .get(`/reservation/student/${newStudentId}`)
+      .set('Authorization', `Bearer ${studentToken}`);
       
     expect(res.status).toBe(404);
     expect(res.body.message).toBe('No reservations found for this student.');
   });
 
-  it('should return 404 if the student doess not exist', async () => {
+  it('Should return 404 if the student doess not exist', async () => {
     const res = await request(app)
       .get(`/reservation/student/123`)
+      .set('Authorization', `Bearer ${studentToken}`);
     
     expect(res.status).toBe(404);
     expect(res.body.message).toBe('Student not found');
   });
 
-  it('should return 500 if an error occurs during student reservation retrieval', async () => {
+  it('Should return 500 if an error occurs during student reservation retrieval', async () => {
     jest.spyOn(Reservation, 'findAll').mockImplementation(() => {
       throw new Error('Database error');
     });
     
     const res = await request(app)
       .get(`/reservation/student/${studentId}`)
+      .set('Authorization', `Bearer ${studentToken}`);
 
     expect(res.status).toBe(500);
     expect(res.body.message).toBe('Error fetching reservations for student');
@@ -236,7 +253,7 @@ describe('Reservation Controller Tests', () => {
     Reservation.findAll.mockRestore();
   });
 
-  it('should terminate class', async() => {
+  it('Should terminate class', async() => {
     
     let teacherId, studentId, monthlyScheduleId, subjectId, reservationId;
      // Create Teacher
@@ -282,7 +299,8 @@ describe('Reservation Controller Tests', () => {
 
   const res = await request(app)
             .delete(`/reservation/terminate/${reservationId}`)
-            .send({ valor: 100 }); // Send any required payload
+            .send({ valor: 100 })
+            .set('Authorization', `Bearer ${studentToken}`); // Send any required payload
             const reservationCreated = await Reservation.findByPk(reservationId);
             await MonthlySchedule.destroy({ where: { monthlyscheduleid: monthlyScheduleId } });
 
@@ -294,7 +312,7 @@ describe('Reservation Controller Tests', () => {
 
   });
 
-  it('should confirm the payment successfully', async () => {
+  it('Should confirm the payment successfully', async () => {
 
     let teacherId, studentId, monthlyScheduleId, subjectId, reservationId;
      // Create Teacher
@@ -346,7 +364,8 @@ describe('Reservation Controller Tests', () => {
     // Send a request to the confirmPayment route (assumed to be a POST request)
     const res = await request(app)
         .put('/reservation/confirm') // Adjust this to your actual route
-        .send(reqBody);
+        .send(reqBody)
+        .set('Authorization', `Bearer ${studentToken}`);
 
     // Check if the reservation status was updated correctly
     const updatedReservation = await Reservation.findByPk(reservationId);
@@ -356,7 +375,7 @@ describe('Reservation Controller Tests', () => {
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Payment confirmed successfully');
 });
-it('should deny the payment', async () => {
+it('Should deny the payment', async () => {
 
   let teacherId, studentId, monthlyScheduleId, subjectId, reservationId;
    // Create Teacher
@@ -408,7 +427,8 @@ reservationId = reservation.id;
   // Send a request to the confirmPayment route (assumed to be a POST request)
   const res = await request(app)
       .put('/reservation/confirm') // Adjust this to your actual route
-      .send(reqBody);
+      .send(reqBody)
+      .set('Authorization', `Bearer ${studentToken}`);
 
   // Check if the reservation status was updated correctly
   const updatedReservation = await Reservation.findByPk(reservationId);
@@ -419,7 +439,7 @@ reservationId = reservation.id;
   expect(res.body.message).toBe('Transaction rejected successfully');
 });
 
-it('should return 404 if the reservation does not exist when confirming payment', async () => {
+it('Should return 404 if the reservation does not exist when confirming payment', async () => {
   const reqBody = { //esto mockeamos que es lo que nos mandan ellos.
     id_reserva: "123133", // Use the real reservation ID
     email: 'juancito@example.com', // Example email
@@ -427,59 +447,67 @@ it('should return 404 if the reservation does not exist when confirming payment'
 };
 const res = await request(app)
       .put('/reservation/confirm') // Adjust this to your actual route
-      .send(reqBody);
+      .send(reqBody)
+      .set('Authorization', `Bearer ${studentToken}`);
 
   
     expect(res.status).toBe(404);
     expect(res.body.message).toBe('Reservation not found');
   });
-  it('should return 404 if the reservation does not exist when terminating a class', async () => {
+  
+  it('Should return 404 if the reservation does not exist when terminating a class', async () => {
   const res = await request(app)
             .delete(`/reservation/terminate/3838`)
-            expect(res.status).toBe(404);
+            expect(res.status).toBe(404)
+            .set('Authorization', `Bearer ${studentToken}`);
     expect(res.body.message).toBe('Reservation not found');
   });
 
   
-  it('should return 404 if the reservation does not exist', async () => {
+  it('Should return 404 if the reservation does not exist', async () => {
     const res = await request(app)
       .delete(`/reservation/delete/123`)
+      .set('Authorization', `Bearer ${studentToken}`);
 
     expect(res.status).toBe(404);
     expect(res.body.message).toBe('Reservation not found');
   });
 
-  it('should get all reservations for a teacher in the next 5 days', async () => {
+  it('Should get all reservations for a teacher in the next 5 days', async () => {
     const res = await request(app)
       .get(`/reservation/teacher/${teacherId}`)
+      .set('Authorization', `Bearer ${studentToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body.length).toBeGreaterThan(0);
   });
 
-  it('should return 404 if no reservations found for teacher', async () => {
+  it('Should return 404 if no reservations found for teacher', async () => {
     const res = await request(app)
       .get(`/reservation/teacher/${newTeacherId}`)
-      
+      .set('Authorization', `Bearer ${studentToken}`);
+
     expect(res.status).toBe(404);
     expect(res.body.message).toBe('No reservations found for this teacher in the next five days.');
   });
 
-  it('should return 404 if the teacher does not exist', async () => {
+  it('Should return 404 if the teacher does not exist', async () => {
     const res = await request(app)
       .get(`/reservation/teacher/123`)
+      .set('Authorization', `Bearer ${studentToken}`);
     
     expect(res.status).toBe(404);
     expect(res.body.message).toBe('Teacher not found');
   });
 
-  it('should return 500 if an error occurs during teacher reservation retrieval', async () => {
+  it('Should return 500 if an error occurs during teacher reservation retrieval', async () => {
     jest.spyOn(Reservation, 'findAll').mockImplementation(() => {
       throw new Error('Database error');
     });
     
     const res = await request(app)
       .get(`/reservation/teacher/${teacherId}`)
+      .set('Authorization', `Bearer ${studentToken}`);
 
     expect(res.status).toBe(500);
     expect(res.body.message).toBe('Error fetching reservations for teacher');
@@ -487,21 +515,23 @@ const res = await request(app)
     Reservation.findAll.mockRestore();
   });
 
-  it('should delete an existing reservation', async () => {
+  it('Should delete an existing reservation', async () => {
     const res = await request(app)
       .delete(`/reservation/delete/${reservationId}`)
+      .set('Authorization', `Bearer ${studentToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Reservation deleted successfully');
   });
 
-  it('should return 500 if an error occurs during reservation delete', async () => {
+  it('Should return 500 if an error occurs during reservation delete', async () => {
     jest.spyOn(Reservation, 'findByPk').mockImplementation(() => {
       throw new Error('Database error');
     });
 
     const res = await request(app)
       .delete(`/reservation/delete/${reservationId}`)
+      .set('Authorization', `Bearer ${studentToken}`);
 
     expect(res.status).toBe(500);
     expect(res.body.message).toBe('Error deleting reservation');
@@ -542,7 +572,8 @@ const res = await request(app)
 
     const reservationId = reservation.id;
 
-    const res = await request(app).delete(`/reservation/cancel/${reservationId}`);
+    const res = await request(app).delete(`/reservation/cancel/${reservationId}`)
+    .set('Authorization', `Bearer ${studentToken}`);
 
 
     const monthlySchedule2 = await MonthlySchedule.findByPk(monthlyId);
@@ -564,7 +595,8 @@ const res = await request(app)
 
     jest.spyOn(Reservation, 'findByPk').mockResolvedValue(null);
 
-    const res = await request(app).delete('/reservation/cancel/999');
+    const res = await request(app).delete('/reservation/cancel/999')
+    .set('Authorization', `Bearer ${studentToken}`);
 
     expect(res.statusCode).toBe(404);
     expect(res.body.message).toBe('Reservation not found');
@@ -579,7 +611,8 @@ const res = await request(app)
         schedule_id: 1,
     });
 
-    const res = await request(app).delete('/reservation/cancel/1');
+    const res = await request(app).delete('/reservation/cancel/1')
+    .set('Authorization', `Bearer ${studentToken}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.message).toBe("Cannot cancel a reservation with status 'canceled'");
@@ -594,7 +627,8 @@ const res = await request(app)
         schedule_id: 1,
     });
 
-    const res = await request(app).delete('/reservation/cancel/1');
+    const res = await request(app).delete('/reservation/cancel/1')
+    .set('Authorization', `Bearer ${studentToken}`);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.message).toBe("Cannot cancel a reservation with status 'finished'");
@@ -605,7 +639,8 @@ const res = await request(app)
 
     jest.spyOn(Reservation, 'findByPk').mockRejectedValue(new Error('Database error'));
 
-    const res = await request(app).delete('/reservation/cancel/1');
+    const res = await request(app).delete('/reservation/cancel/1')
+    .set('Authorization', `Bearer ${studentToken}`);
 
     expect(res.statusCode).toBe(500);
     expect(res.body.message).toBe('Error canceling reservation');
@@ -630,7 +665,8 @@ const res = await request(app)
 
     jest.spyOn(MonthlySchedule, 'update').mockResolvedValue([1]);
 
-    const res = await request(app).delete('/reservation/cancel-group/1');
+    const res = await request(app).delete('/reservation/cancel-group/1')
+    .set('Authorization', `Bearer ${studentToken}`);
 
     expect(res.statusCode).toBe(200);
     expect(res.body).toEqual({ message: 'Reservation canceled successfully' });
@@ -640,7 +676,8 @@ const res = await request(app)
 
     jest.spyOn(Reservation, 'findByPk').mockResolvedValue(null);
 
-    const res = await request(app).delete('/reservation/cancel-group/1');
+    const res = await request(app).delete('/reservation/cancel-group/1')
+    .set('Authorization', `Bearer ${studentToken}`);
 
     expect(res.statusCode).toBe(404);
     expect(res.body).toEqual({ message: 'Reservation not found' });
@@ -650,7 +687,8 @@ const res = await request(app)
 
     jest.spyOn(Reservation, 'findByPk').mockRejectedValue(new Error('Database error'));
 
-    const res = await request(app).delete('/reservation/cancel-group/1');
+    const res = await request(app).delete('/reservation/cancel-group/1')
+    .set('Authorization', `Bearer ${studentToken}`);
 
     expect(res.statusCode).toBe(500);
     expect(res.body).toEqual({ message: 'Error canceling reservation', error: expect.anything() });

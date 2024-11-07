@@ -16,6 +16,7 @@ const path = require('path');
 const { Op } = require('sequelize');
 const e = require('express');
 const { updateTeacherSubjects } = require('./teacherController');
+const jwt = require('jsonwebtoken');
 
 
 
@@ -170,9 +171,7 @@ const loginUser = async (req, res) => {
             firstname: user.firstname,
             lastname: user.lastname,
             email: user.email,
-            role: role,
-            schedule: formattedSchedule,
-            subjects: subjects
+            role: role
         };
 
         if (role === 'TEACHER') {
@@ -180,9 +179,12 @@ const loginUser = async (req, res) => {
             userData.on_vacation = user.on_vacation;
         }
 
+        const token = jwt.sign(userData, process.env.JWT_AUTH_SECRET, { expiresIn: '1h' });
         return res.status(200).json({
             message: 'Login successful',
-            user: userData
+            token: token,
+            user_schedule: formattedSchedule,
+            user_subjects: subjects
         });
     } catch (error) {
         /* istanbul ignore next */

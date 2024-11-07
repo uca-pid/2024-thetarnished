@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const studentRoutes = require('./routes/studentRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
@@ -8,6 +9,7 @@ const resetRoutes = require('./routes/resetRoutes');
 const reservationRoutes = require('./routes/reservationRoutes');
 const monthlyScheduleRoutes = require('./routes/monthlyScheduleRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const examRoutes = require('./routes/examRoutes');
 const defineAssociations = require('./models/associations');
 const cors = require('cors');
 
@@ -28,7 +30,12 @@ app.use('/authentication', autenthicationRoutes);
 app.use('/subject', subjectRoutes);
 app.use('/schedule', scheduleRoutes);
 app.use('/reservation', reservationRoutes);
-app.use('/classes', monthlyScheduleRoutes)
+app.use('/classes', monthlyScheduleRoutes);
 app.use('/admins', adminRoutes);
+app.use('/exam', examRoutes);
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
 module.exports = app;

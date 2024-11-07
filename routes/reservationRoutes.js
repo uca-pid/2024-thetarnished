@@ -9,21 +9,28 @@ const {
     confirmPayment,
     cancelGroupClass,
     getInDebtClassesById,
-    getPastReservationsByTeacherId
+    getPastReservationsByTeacherId,
+    getTerminatedReservationsByTeacherId,
+    confirmReservation
 } = require('../controllers/reservationController');
+
+const authorizeRoles = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.post('/create', createReservation);
-router.delete('/delete/:id', deleteReservation);
-router.get('/student/:student_id', getReservationsByStudentId);
-router.get('/teacher/:teacher_id', getReservationsByTeacher);
-router.get('/teacher-past-reservations-by/:teacher_id', getPastReservationsByTeacherId);
-router.delete('/cancel/:id', cancelReservation);
-router.delete('/terminate/:id', terminateClass);
-router.put('/confirm', confirmPayment);
-router.delete('/cancel-group/:id', cancelGroupClass);
-router.get('/in-debt-classes/:id', getInDebtClassesById);
+router.post('/create', authorizeRoles('STUDENT'), createReservation);
+router.delete('/delete/:id', authorizeRoles('TEACHER'), deleteReservation);
+router.get('/student/:student_id', authorizeRoles('STUDENT', 'TEACHER'), getReservationsByStudentId);
+router.get('/teacher/:teacher_id', authorizeRoles('TEACHER') ,getReservationsByTeacher);
+router.get('/teacher-past-reservations-by/:teacher_id', authorizeRoles('TEACHER'), getPastReservationsByTeacherId);
+router.delete('/cancel/:id', authorizeRoles('TEACHER'), cancelReservation);
+router.delete('/terminate/:id', authorizeRoles('TEACHER'), terminateClass);
+router.put('/confirm', authorizeRoles('TEACHER'), confirmPayment);
+router.delete('/cancel-group/:id', authorizeRoles('TEACHER'), cancelGroupClass);
+router.get('/in-debt-classes/:id', authorizeRoles('TEACHER'), getInDebtClassesById);
+router.get('/terminated-reservations-by/:teacher_id', authorizeRoles('TEACHER'), getTerminatedReservationsByTeacherId);
+router.put('/confirm-reservation/:id', confirmReservation);
+
 
 
 module.exports = router;

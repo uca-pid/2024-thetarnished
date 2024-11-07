@@ -3,6 +3,7 @@ const app = require('../app');
 const Monthlyschedule = require('../models/monthlyScheduleModel');
 const Teacher = require('../models/teacherModel');
 const Schedule = require('../models/weeklyScheduleModel');
+const jwt = require('jsonwebtoken');
 
 
 
@@ -10,6 +11,7 @@ describe('Test the /group-classes endpoint with real database', () => {
     
     let teacher;
     let teacherID;
+    let teacherToken;
     let weeklyIndividualSchedule;
     let weeklyIndividualScheduleID;
     let monthlyIndividualSchedule;
@@ -27,7 +29,8 @@ describe('Test the /group-classes endpoint with real database', () => {
             password: 'password'
         });
         teacherID = teacher.teacherid;
-        
+        teacherToken = jwt.sign({ teacherId: teacherID, role: 'TEACHER' }, process.env.JWT_AUTH_SECRET, { expiresIn: '1h' });
+
         weeklyIndividualSchedule = await Schedule.create({
             start_time: '09:00:00',
             end_time: '10:00:00',
@@ -87,13 +90,15 @@ describe('Test the /group-classes endpoint with real database', () => {
             enddate: '2024-10-10'
         };
 
-        const res = await request(app).post('/classes/assign-vacation').send(vacationData);
+        const res = await request(app).post('/classes/assign-vacation').send(vacationData)
+        .set('Authorization', `Bearer ${teacherToken}`);
 
         expect(res.statusCode).toBe(404);
         expect(res.text).toBe('Schedules not found');
     });
     it('Should return group classes when they are available for booking', async () => {
-        const res = await request(app).get('/classes/group-classes');
+        const res = await request(app).get('/classes/group-classes')
+        .set('Authorization', `Bearer ${teacherToken}`);
 
    
         expect(res.statusCode).toBe(200);
@@ -101,7 +106,8 @@ describe('Test the /group-classes endpoint with real database', () => {
     });
 
     it('Should return individual classes when they are available for booking', async () => {
-        const res = await request(app).get('/classes/individual-classes');
+        const res = await request(app).get('/classes/individual-classes')
+        .set('Authorization', `Bearer ${teacherToken}`);
 
         expect(res.statusCode).toBe(200);
         if (res.body.length > 0) {
@@ -112,34 +118,37 @@ describe('Test the /group-classes endpoint with real database', () => {
     it('Should return 404 when no group classes are found', async () => {
         jest.spyOn(Monthlyschedule, 'findAll').mockResolvedValue([]);
 
-        const res = await request(app).get('/classes/group-classes');
+        const res = await request(app).get('/classes/group-classes')
+        .set('Authorization', `Bearer ${teacherToken}`);
 
         expect(res.statusCode).toBe(404);
         expect(res.body.message).toBe('No group classes found');
     });
 
-    it('should return 404 when no individual classes are found', async () => {
+    it('Should return 404 when no individual classes are found', async () => {
         jest.spyOn(Monthlyschedule, 'findAll').mockResolvedValue([]);
 
-        const res = await request(app).get('/classes/individual-classes');
-
+        const res = await request(app).get('/classes/individual-classes')
+        .set('Authorization', `Bearer ${teacherToken}`);
         expect(res.statusCode).toBe(404);
         expect(res.body.message).toBe('No individual classes found');
     });
 
-    it('should return 500 on server error for group classes', async () => {
+    it('Should return 500 on server error for group classes', async () => {
         jest.spyOn(Monthlyschedule, 'findAll').mockRejectedValue(new Error('Database error'));
 
-        const res = await request(app).get('/classes/group-classes');
+        const res = await request(app).get('/classes/group-classes')
+        .set('Authorization', `Bearer ${teacherToken}`);
 
         expect(res.statusCode).toBe(500);
         expect(res.text).toBe('Server error');
     });
 
-    it('should return 500 on server error for individual classes', async () => {
+    it('Should return 500 on server error for individual classes', async () => {
         jest.spyOn(Monthlyschedule, 'findAll').mockRejectedValue(new Error('Database error'));
 
-        const res = await request(app).get('/classes/individual-classes');
+        const res = await request(app).get('/classes/individual-classes')
+        .set('Authorization', `Bearer ${teacherToken}`);
 
         expect(res.statusCode).toBe(500);
         expect(res.text).toBe('Server error');
@@ -168,7 +177,8 @@ describe('Test the /group-classes endpoint with real database', () => {
 
         });
 
-        const res = await request(app).post('/classes/assign-vacation').send(vacationData);
+        const res = await request(app).post('/classes/assign-vacation').send(vacationData)
+        .set('Authorization', `Bearer ${teacherToken}`);
     
         expect(res.statusCode).toBe(200);
         expect(res.body.length).toBe(2); // Two schedules should be updated
@@ -183,7 +193,8 @@ describe('Test the /group-classes endpoint with real database', () => {
             enddate: '2099-11-10'
         };
 
-        const res = await request(app).post('/classes/assign-vacation').send(vacationData);
+        const res = await request(app).post('/classes/assign-vacation').send(vacationData)
+        .set('Authorization', `Bearer ${teacherToken}`);
 
         expect(res.statusCode).toBe(404);
         expect(res.text).toBe('Schedules not found');
@@ -199,7 +210,8 @@ describe('Test the /group-classes endpoint with real database', () => {
             enddate: '2024-10-10'
         };
 
-        const res = await request(app).post('/classes/assign-vacation').send(vacationData);
+        const res = await request(app).post('/classes/assign-vacation').send(vacationData)
+        .set('Authorization', `Bearer ${teacherToken}`);
 
         expect(res.statusCode).toBe(500);
         expect(res.text).toBe('Server error');
@@ -218,7 +230,8 @@ describe('Test the /group-classes endpoint with real database', () => {
         
         jest.spyOn(Monthlyschedule, 'findAll').mockResolvedValue(mockSchedule);
     
-        const res = await request(app).get('/classes/get-monthly-schedule-by/1');
+        const res = await request(app).get('/classes/get-monthly-schedule-by/1')
+        .set('Authorization', `Bearer ${teacherToken}`);
     
         expect(res.statusCode).toBe(200);
         expect(res.body).toEqual([
@@ -237,7 +250,8 @@ describe('Test the /group-classes endpoint with real database', () => {
 
         jest.spyOn(Monthlyschedule, 'findAll').mockResolvedValue([]);
     
-        const res = await request(app).get('/classes/get-monthly-schedule-by/1');
+        const res = await request(app).get('/classes/get-monthly-schedule-by/1')
+        .set('Authorization', `Bearer ${teacherToken}`);
     
         expect(res.statusCode).toBe(404);
         expect(res.text).toBe('Monthly schedule not found');
@@ -248,13 +262,14 @@ describe('Test the /group-classes endpoint with real database', () => {
         jest.spyOn(Monthlyschedule, 'findAll').mockRejectedValue(new Error('Database error'));
     
         // Make a request to the endpoint using supertest
-        const res = await request(app).get('/classes/get-monthly-schedule-by/1');
-    
+        const res = await request(app).get('/classes/get-monthly-schedule-by/1')
+        .set('Authorization', `Bearer ${teacherToken}`);
+
         expect(res.statusCode).toBe(500);
         expect(res.text).toBe('Server error');
       });
 
-      it('should return the formatted schedule with Sunday as day 7', async () => {
+      it('Should return the formatted schedule with Sunday as day 7', async () => {
         const mockSchedule = [
           {
             monthlyscheduleid: 1,
@@ -266,7 +281,8 @@ describe('Test the /group-classes endpoint with real database', () => {
     
         jest.spyOn(Monthlyschedule, 'findAll').mockResolvedValue(mockSchedule);
     
-        const res = await request(app).get('/classes/get-monthly-schedule-by/1');
+        const res = await request(app).get('/classes/get-monthly-schedule-by/1')
+        .set('Authorization', `Bearer ${teacherToken}`);
     
         expect(res.statusCode).toBe(200);
         expect(res.body).toEqual([

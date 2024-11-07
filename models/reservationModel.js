@@ -60,7 +60,16 @@ const Reservation = sequelize.define('Reservation', {
     defaultValue: 'cash', 
     allowNull: false,
   },
-
+  israted: {
+    type: DataTypes.FLOAT,
+    defaultValue: 0, 
+    allowNull: false,
+  },
+  studentrated: {
+    type: DataTypes.FLOAT,
+    defaultValue: 0, 
+    allowNull: false,
+  },
 }, 
 {
   tableName: 'reservations',

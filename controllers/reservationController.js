@@ -61,6 +61,7 @@ const createReservation = async (req, res) => {
             schedule_id: schedule_id,
             datetime: schedule.datetime,
             payment_method: payment_method,
+            reservation_status: 'pending',
 
         });
         const isClassFull = newcurrentstudents === parseInt(schedule.maxstudents) ? true : false; 
@@ -90,25 +91,19 @@ const createReservation = async (req, res) => {
         const student = await Student.findByPk(student_id);
         const studentName = `${student.firstname} ${student.lastname}`;
         const studentEmail = student.email;
-
-        const filePathStudent = path.join(__dirname, '../reservationNotificationForStudentTemplate.html');
-        let htmlContentStudent = fs.readFileSync(filePathStudent, 'utf-8');
-        htmlContentStudent = htmlContentStudent
-            .replace(/{{teacherName}}/g, teacherName)
-            .replace(/{{subjectname}}/g, subjectname)
-            .replace(/{{formattedDate}}/g, formattedDate);
-
-        const filePathTeacher = path.join(__dirname, '../reservationNotificationForTeacherTemplate.html');
+        //const link = `https://linkandlearn.fpenonori.com/confirm-class/${reservation.id}/${reservation.teacher_id}`;
+        const link = `http://localhost:5173/confirm-class/${reservation.id}/${reservation.teacher_id}`;
+        const filePathTeacher = path.join(__dirname, '../classConfirmationTemplate.html');
         let htmlContentTeacher = fs.readFileSync(filePathTeacher, 'utf-8');
         htmlContentTeacher = htmlContentTeacher
             .replace(/{{studentName}}/g, studentName)
             .replace(/{{subjectname}}/g, subjectname)
-            .replace(/{{formattedDate}}/g, formattedDate);
-
+            .replace(/{{formattedDate}}/g, formattedDate)
+            .replace(/{{teacherName}}/g, teacherName)
+            .replace(/{{CONFIRMATION_LINK}}/g, link)
         setImmediate(async () => {
             try {
                 await sendEmailToUser(teacherEmail, "Reservation Notification", htmlContentTeacher);
-                await sendEmailToUser(studentEmail, "Reservation Notification", htmlContentStudent);
             } catch (error) {
             }
         });
@@ -132,20 +127,26 @@ const getReservationsByStudentId = async (req, res) => {
         }
 
         const reservations = await Reservation.findAll({
-            where: { student_id },
+            where: {
+                student_id: student_id,  
+                reservation_status: 'booked',  
+                datetime: {
+                    [Op.gt]: new Date(),
+                },
+            },
             include: [
-              {
-                model: Teacher,
-                attributes: ['firstname', 'lastname'],
-              },
-              {
-                model: Subject,
-                attributes: ['subjectname'],
-              },
+                {
+                    model: Teacher,
+                    attributes: ['firstname', 'lastname', 'teacherid'],
+                },
+                {
+                    model: Subject,
+                    attributes: ['subjectname'],
+                },
             ],
             attributes: ['id', 'datetime'],
-            order: [['datetime', 'ASC']], 
-          });
+            order: [['datetime', 'ASC']],
+        });
           
 
         if (reservations.length === 0) {
@@ -201,7 +202,7 @@ const getReservationsByTeacher = async (req, res) => {
             include: [
               {
                 model: Student,
-                attributes: ['firstname', 'lastname'],
+                attributes: ['firstname', 'lastname', 'studentid', 'rating'],
               },
               {
                 model: Subject,
@@ -249,6 +250,8 @@ const getReservationsByTeacher = async (req, res) => {
                     id: reservation.id,
                     student_name: isGroupClass ? 'group class' : `${reservation.Student.firstname} ${reservation.Student.lastname}`,
                     subject_name: reservation.Subject.subjectname,
+                    student_id: reservation.Student.studentid,
+                    student_rating: reservation.Student.rating,
                     datetime: reservation.datetime,
                     group: isGroupClass,
                     MonthlyID: reservation.schedule_id 
@@ -262,6 +265,66 @@ const getReservationsByTeacher = async (req, res) => {
         return res.status(200).json(formattedReservations);
     } catch (error) {
         return res.status(500).json({ message: 'Error fetching reservations for teacher', error });
+    }
+};
+
+const getTerminatedReservationsByTeacherId = async (req, res) => {
+    try {
+        const { teacher_id } = req.params;
+
+        const foundTeacher = await Teacher.findByPk(teacher_id);
+        if (!foundTeacher) {
+            return res.status(404).json({ message: 'Teacher not found' });
+        }
+
+        const terminatedReservations = await Reservation.findAll({
+            where: {
+                teacher_id: teacher_id,  
+                reservation_status: {
+                    [Op.in]: ['terminated', 'paid', 'in debt'],  
+                },
+            },
+            include: [
+                {
+                    model: Student,
+                    attributes: ['studentid', 'firstname', 'lastname', 'rating'],
+                },
+                {
+                    model: Subject,
+                    attributes: ['subjectname'],
+                },
+            ],
+            attributes: ['id', 'israted', 'datetime', 'schedule_id', 'reservation_status'], 
+            order: [['datetime', 'ASC']],
+        });
+
+        if (terminatedReservations.length === 0) {
+            return res.status(404).json({ message: 'No terminated classes found for this teacher' });
+        }
+
+        const formattedReservations = terminatedReservations.map(reservation => {
+            return {
+                id: reservation.id,
+                israted: reservation.israted,
+                datetime: reservation.datetime,
+                schedule_id: reservation.schedule_id,
+                paid: reservation.reservation_status === 'paid', 
+                Student: {
+                    student_id: reservation.Student.studentid,
+                    firstname: reservation.Student.firstname,
+                    lastname: reservation.Student.lastname,
+                    rating: reservation.Student.rating,
+                },
+                Subject: {
+                    subjectname: reservation.Subject.subjectname,
+                }
+            };
+        });
+
+        return res.status(200).json(formattedReservations);
+
+    } catch (error) {
+        return res.status(500).json({ message: 'Error fetching terminated reservations for teacher', error });
     }
 };
 
@@ -525,8 +588,68 @@ const getInDebtClassesById = async (req, res) => {
     } catch (error) {
         return res.status(500).json({ message: 'Error fetching terminated classes', error });
     }
+
+    
 };
 
+const confirmReservation = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const reservation = await Reservation.findByPk(id);
+        if (!reservation) {
+            return res.status(404).json({ message: 'Reservation not found' });
+        }
+        const schedule = await MonthlySchedule.findByPk(reservation.schedule_id);
+	    const date = new Date(schedule.datetime);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+
+        const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
+
+        const subject = await Subject.findByPk(reservation.subject_id);
+        const subjectname = subject.subjectname;
+
+        const teacher = await Teacher.findByPk(reservation.teacher_id);
+        const teacherName = `${teacher.firstname} ${teacher.lastname}`;
+        const teacherEmail = teacher.email;
+
+        const student = await Student.findByPk(reservation.student_id);
+        const studentName = `${student.firstname} ${student.lastname}`;
+        const studentEmail = student.email;
+        
+        const filePathStudent = path.join(__dirname, '../reservationNotificationForStudentTemplate.html');
+        let htmlContentStudent = fs.readFileSync(filePathStudent, 'utf-8');
+        htmlContentStudent = htmlContentStudent
+            .replace(/{{teacherName}}/g, teacherName)
+            .replace(/{{subjectname}}/g, subjectname)
+            .replace(/{{formattedDate}}/g, formattedDate);
+
+        const filePathTeacher = path.join(__dirname, '../reservationNotificationForTeacherTemplate.html');
+        let htmlContentTeacher = fs.readFileSync(filePathTeacher, 'utf-8');
+        htmlContentTeacher = htmlContentTeacher
+            .replace(/{{studentName}}/g, studentName)
+            .replace(/{{subjectname}}/g, subjectname)
+            .replace(/{{formattedDate}}/g, formattedDate);
+
+        
+        reservation.reservation_status = 'booked';
+        await reservation.save();
+
+        setImmediate(async () => {
+            try {
+                await sendEmailToUser(teacherEmail, "Reservation Notification", htmlContentTeacher);
+                await sendEmailToUser(studentEmail, "Reservation Notification", htmlContentStudent);
+            } catch (error) {
+            }
+        });
+        return res.status(200).json({ message: 'Reservation confirmed successfully' });
+    } catch (error) {
+        return res.status(500).json({ message: 'Error confirming reservation', error });
+    }
+};
 
        
 module.exports = {
@@ -539,5 +662,7 @@ module.exports = {
     confirmPayment,
     cancelGroupClass,
     getInDebtClassesById,
-    getPastReservationsByTeacherId
+    getPastReservationsByTeacherId,
+    getTerminatedReservationsByTeacherId,
+    confirmReservation
 };

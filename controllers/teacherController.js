@@ -3,6 +3,7 @@ const SubjectTeacher = require('../models/subjectTeacherModel');
 const Subject = require('../models/subjectModel');
 const Reservation = require('../models/reservationModel');
 const sequelize = require('../config/database');
+const TeacherComments = require('../models/teacherCommentModel');
 const { Op } = require('sequelize');
 const moment = require('moment');
 const { Sequelize } = require('sequelize');
@@ -32,6 +33,76 @@ const getTeacherById = async (req, res) => {
     return res.status(400).json({ message: `Error getting teacher: ${error.message}` });
   }
 };
+const getTeacherRating = async (req, res) => {
+  try {
+      const { teacher_id } = req.params;
+
+      const teacher = await Teacher.findByPk(teacher_id, {
+          attributes: ['rating'],
+      });
+
+      if (!teacher) {
+          return res.status(404).json({ message: 'Teacher not found' });
+      }
+      if(teacher.rating === null){
+        return res.status(200).json({ rating: 0 });
+    }
+      return res.status(200).json({ rating: teacher.rating });
+  } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Error retrieving teacher rating' });
+  }
+};
+const updateTeacherRating = async (req, res) => {
+  try {
+      const { teacher_id } = req.params;
+      const { newRating, reservationid } = req.body;
+
+      // Validate the new rating value
+      if (newRating < 1 || newRating > 5) {
+          return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+      }
+
+      // Update the studentrated field in the reservation if reservationid is provided
+      if (reservationid) {
+          const reservation = await Reservation.findByPk(reservationid);
+          if (reservation) {
+              reservation.studentrated = newRating;
+              await reservation.save();
+          } else {
+              return res.status(404).json({ message: 'Reservation not found' });
+          }
+      }
+
+      // Find the teacher and validate existence
+      const teacher = await Teacher.findByPk(teacher_id);
+      if (!teacher) {
+          return res.status(404).json({ message: 'Teacher not found' });
+      }
+
+      // Calculate the updated rating
+      const totalRatings = parseInt(teacher.total_ratings, 10) || 0;
+      const currentRating = parseFloat(teacher.rating) || 0;
+      const updatedRating = ((currentRating * totalRatings) + newRating) / (totalRatings + 1);
+
+      // Update teacher's rating and increment total ratings
+      teacher.rating = updatedRating.toFixed(2);
+      teacher.total_ratings = totalRatings + 1;
+
+      await teacher.save();
+
+      return res.status(200).json({ 
+          message: 'Teacher rating updated', 
+          rating: teacher.rating, 
+          total_ratings: teacher.total_ratings 
+      });
+  } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Error updating teacher rating' });
+  }
+};
+
+
 
 const updateTeacher = async (req, res) => {
   try {
@@ -135,7 +206,7 @@ const removeSubjectFromTeacher = async (req, res) => {
     try {
       const { subjectid } = req.params;
       const [teachers] = await sequelize.query(`
-        SELECT DISTINCT teachers.teacherid, firstname, lastname, email, subjectid  
+        SELECT DISTINCT teachers.teacherid, firstname, lastname, email, subjectid, rating  
         FROM teachers 
         JOIN subjectteacher 
         ON teachers.teacherid = subjectteacher.teacherid 
@@ -179,6 +250,54 @@ const removeSubjectFromTeacher = async (req, res) => {
           throw error;
       }
   };
+  const getTeacherComments = async (req, res) => {
+    try {
+        const { teacher_id } = req.params;
+
+        // Retrieve all comments along with commenter_name for the specified teacher ID
+        const comments = await TeacherComments.findAll({
+            where: { teacher_id },
+            attributes: ['comment_id', 'comment', 'commenter_name'],
+            order: [['comment_id', 'ASC']] // Order by comment_id if desired
+        });
+
+        // If no comments found, return a 404 status
+        if (!comments.length) {
+            return res.status(404).json({ message: 'No comments found for this teacher' });
+        }
+
+        // Return the comments in JSON format
+        return res.status(200).json(comments);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Error retrieving teacher comments', error: error.message });
+    }
+};
+
+const createTeacherComment = async (req, res) => {
+    try {
+        const { teacher_id } = req.params;
+        const { comment, commenter_name } = req.body;
+
+        // Check if comment text and commenter_name are provided
+        if (!comment || !commenter_name) {
+            return res.status(400).json({ message: 'Comment text and commenter name are required' });
+        }
+
+        // Create a new comment for the teacher with commenter_name
+        const newComment = await TeacherComments.create({
+            teacher_id,
+            comment,
+            commenter_name
+        });
+
+        return res.status(201).json({ message: 'Comment added successfully', newComment });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Error creating teacher comment', error: error.message });
+    }
+};
+
 
 module.exports = {
   getTeacherById,
@@ -188,5 +307,9 @@ module.exports = {
   removeSubjectFromTeacher,
   getAllTeachers,
   getAllTeachersDictatingASubjectById,
-  updateTeacherSubjects
+  updateTeacherSubjects,
+  getTeacherRating,
+  updateTeacherRating,
+  getTeacherComments,
+  createTeacherComment
 };
